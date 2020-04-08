@@ -1,7 +1,7 @@
 # TranSAT
 A Translated SAT Solver
 
-Based on the [OKlibrary](https://github.com/OKullmann/oklibrary/) GenericSAT N-Queens solver [here](https://github.com/OKullmann/oklibrary/tree/master/Satisfiability/Transformers/Generators/Queens/GenericSAT).
+Based on the [OKlibrary](https://github.com/OKullmann/oklibrary/) GenericSAT N-Queens solver [(here)](https://github.com/OKullmann/oklibrary/tree/master/Satisfiability/Transformers/Generators/Queens/GenericSAT).
 
 #### Sources
 
