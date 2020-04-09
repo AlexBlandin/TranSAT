@@ -1,12 +1,12 @@
 /*
-JUST BUILD:
-  musl-gcc -fplan9-extensions -static transat.c -o transat
+JUST BUILD && RUN:
+  musl-gcc -fplan9-extensions -static transat.c -o transat && ./transat
 
 OPTIMISE:
   musl-gcc -fplan9-extensions -static \
             -Wall -Wextra -Wno-unused-value -Wno-unused-variable \
             -Ofast -march=native -fwhole-program \
-            -DNDEBUG transat.c -o transat
+            -DNDEBUG transat.c -o transat && ./transat
 
 */
 
@@ -27,15 +27,16 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           22317699616364044, 234907967154122528};
 
 int main() {
-  u32 *sb = NULL; // stretchy buffer
-  u32 my_int = 10;
+  seed_rng();
+  u64 *sb = NULL; // stretchy buffer
+  u64 my_int = 10;
   sb_push(sb, my_int);
   sb_push(sb, 3);
   sb_push(sb, 0);
-  sb_push(sb, 42);
+  sb_push(sb, randint()%100);
   sb_count(sb); // == 1
   sb_last(sb);  // lvalue of last item, == 42
-  printf("Hello world! Say it again %d times louder!\n", sb[3]);
+  printf("Hello world! Say it again %ld times louder!\n", sb[3]);
   sb_free(sb);
   return 0;
 }

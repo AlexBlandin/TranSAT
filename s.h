@@ -119,7 +119,7 @@ bool prime(u32 n) {
 
 static u64 rng_state[4]; // xoshiro256** state
 #define xs_rotl(x, k) ((x << k) | (x >> (64 - k)))
-u64 rng(void) { // xoshiro256** PRNG
+u64 randint(void) { // xoshiro256** PRNG
   const u64 result = xs_rotl(rng_state[1] * 5, 7) * 9, t = rng_state[1] << 17;
 
   rng_state[2] ^= rng_state[0];
@@ -134,7 +134,7 @@ u64 rng(void) { // xoshiro256** PRNG
 }
 
 static bool _unseeded = true;
-void rng_seed() {
+void seed_rng() {
   if (_unseeded) {
     srand((unsigned int)time(NULL));
     for (int i = 4; i--;) rng_state[i] = packu64(rand(), rand());
