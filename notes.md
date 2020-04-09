@@ -6,11 +6,11 @@
 
 
 
-#### probably can't do
+#### probably can't do in retrospect
 
 [SIMD](https://software.intel.com/sites/landingpage/IntrinsicsGuide/)
 
-Possible, able to target <= SSE 4.2, may be able to add AVX & AVX 2 for desktop & servers
+target <= SSE 4.2, may be able to add AVX & AVX 2 for desktop & servers
 
     #include <x86intrin.h>
 
