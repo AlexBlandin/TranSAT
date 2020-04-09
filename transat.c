@@ -1,10 +1,12 @@
 /*
 JUST BUILD:
-  musl-gcc -static transat.c -o transat
+  musl-gcc -fplan9-extensions -static transat.c -o transat
 
 OPTIMISE:
-  musl-gcc -static -Wall -Wextra -Wno-unused-value -Ofast -march=native -fwhole-program -DNDEBUG transat.c
--o transat
+  musl-gcc -fplan9-extensions -static \
+            -Wall -Wextra -Wno-unused-value -Wno-unused-variable \
+            -Ofast -march=native -fwhole-program \
+            -DNDEBUG transat.c -o transat
 
 */
 
