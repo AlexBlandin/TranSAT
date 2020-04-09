@@ -14,10 +14,7 @@ GenericSAT from latest relevant commit: [`abc4193`](https://github.com/OKullmann
 musl-gcc -fplan9-extensions -static transat.c -o transat
 ```
 
-#### Optimised build
+#### Build Script
 ```
-musl-gcc -fplan9-extensions -static \
-         -Wall -Wextra -Wno-unused-value -Wno-unused-variable \
-         -Ofast -march=native -fwhole-program \
-         -DNDEBUG transat.c -o transat
+./build transat
 ```

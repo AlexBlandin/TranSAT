@@ -4,8 +4,8 @@ JUST BUILD && RUN:
 
 OPTIMISE:
   musl-gcc -fplan9-extensions -static \
-            -Wall -Wextra -Wno-unused-value -Wno-unused-variable \
-            -Ofast -march=native -fwhole-program \
+            -Wall -Wextra -Wno-unused-value -Wno-unused-variable -Wimplicit-fallthrough=0 \
+            -Ofast -march=native -fwhole-program -funroll-loops \
             -DNDEBUG transat.c -o transat && ./transat
 
 */
