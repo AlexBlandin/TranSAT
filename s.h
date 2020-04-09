@@ -33,8 +33,8 @@ typedef int8_t i8;
 #define i16_MIN INT16_MIN
 #define i8_MIN INT8_MIN
 
-#define f64 double_t
-#define f32 float_t
+typedef double f64;
+typedef float f32;
 #if defined(__HAVE_FLOAT16) && __HAVE_FLOAT16
 #define f16 half_t
 #endif

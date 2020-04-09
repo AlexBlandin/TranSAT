@@ -5,7 +5,7 @@ Based on the [OKlibrary](https://github.com/OKullmann/oklibrary/) GenericSAT N-Q
 
 #### Tools
 
-Built with [musl 1.2.0](https://musl.libc.org/) on [gcc 8.3.0](https://gcc.gnu.org/) using `-fplan9-extensions`.
+Built with [musl 1.2.0](https://musl.libc.org/) on [gcc 8.3.0](https://gcc.gnu.org/) using `-fplan9-extensions`. Use [midipix](https://midipix.org/) to convert musl's system calls to Windows Native API.
 
 GenericSAT from latest relevant commit: [`abc4193`](https://github.com/OKullmann/oklibrary/commit/abc419334da4e73f44dd1c13cc4d3ae78a534b63).
 
