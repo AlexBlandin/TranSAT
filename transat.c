@@ -1,17 +1,3 @@
-/*
-JUST BUILD && RUN:
-  musl-gcc -fplan9-extensions -static transat.c -o transat && ./transat
-
-OPTIMISE:
-  musl-gcc -fplan9-extensions -static \
-            -Wall -Wextra -Wno-unused-value -Wno-unused-variable -Wimplicit-fallthrough=0 \
-            -Ofast -march=native -fwhole-program -funroll-loops \
-            -DNDEBUG transat.c -o transat && ./transat
-
-*/
-
-/* Project built against musl 1.2.0 */
-
 // https://github.com/nothings/stb
 #include "stretchy_buffer.h" // requires -Wno-unused-value
 
