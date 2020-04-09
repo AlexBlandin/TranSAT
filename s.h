@@ -35,9 +35,6 @@ typedef int8_t i8;
 
 typedef double f64;
 typedef float f32;
-#if defined(__HAVE_FLOAT16) && __HAVE_FLOAT16
-#define f16 half_t
-#endif
 
 #if !defined(bool) && defined(_Bool)
 #define bool _Bool
