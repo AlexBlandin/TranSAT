@@ -1,21 +1,23 @@
 ./genericsat = ./oklibrary/Satisfiability/Transformers/Generators/Queens/GenericSAT
 
-watched literals
+- watched literals
 
 
 
 
 
-probably can't do
-SIMD (https://software.intel.com/sites/landingpage/IntrinsicsGuide/)
-  Possible, able to target <= SSE 4.2, may be able to add AVX & AVX 2 for desktop & servers
+#### probably can't do
 
-  #include <x86intrin.h>
+[SIMD](https://software.intel.com/sites/landingpage/IntrinsicsGuide/)
 
-  or, for slightly more portability (aka MSVC(/ICC?) support) but a subset,
+Possible, able to target <= SSE 4.2, may be able to add AVX & AVX 2 for desktop & servers
 
-  #include <immintrin.h>
+    #include <x86intrin.h>
 
-  or, conditionally replace with
+or, for slightly more portability (aka MSVC(/ICC?) support) but a subset,
 
-  #include <intrin.h>
+    #include <immintrin.h>
+
+or, conditionally replace with
+
+    #include <intrin.h>
