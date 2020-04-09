@@ -9,6 +9,7 @@ for f in Path(".").glob("*.c"):
     lines = o.readlines()
   with open(f,"w") as o:
     for line in lines:
+      _line = str(line)
       if "#define N " in line:
         N = int(line[9:].strip())
         print(f"N: {N}")
@@ -17,4 +18,10 @@ for f in Path(".").glob("*.c"):
       if "@all" in line:
         lhs, rhs = tuple(line.split("@all",1))
         line = f"{''.join([f'{lhs}qs({q}){rhs}' for q in range(0,N)])}"
-      o.write(f"{line}")
+      if line != _line:
+        print(f"Was: {_line}")
+        print(f"Now: {line}")
+      if input("Do you want to save this? [y/N] ") == "y":
+        o.write(f"{line}")
+      else:
+        o.write(f"{_line}")
