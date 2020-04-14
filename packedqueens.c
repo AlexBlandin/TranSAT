@@ -2,69 +2,80 @@
 
 #define N 32
 
-#define QUEENS Queen q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21, q22, q23, q24, q25, q26, q27, q28, q29, q30, q31
+// n MUST BE A CONSTANT
+#define queen(n) if (n < N) queens.q##n
 
-#define qs(n) if ((n) < N) qs.q##n
-
-// gets to use a bit on each for bounds checking (if no #if) and a bit for open/close
-typedef union _queen {
-  struct {
-    u8 pos : 5;
-    u8 open : 1;
-    u8 bounds : 1;
-  };
-  u8 b;
-} Queen;
-
-// gets to use a bit on each for bounds checking (if not compiletime) and a bit for open/close
+// Aligned to 8byte boundary
 typedef union _queens {
   struct {
-    QUEENS;
+    u8 q0, q1, q2, q3, q4, q5, q6, q7;
+    #if N > 8
+    u8 q8, q9, q10, q11, q12, q13, q14, q15;
+    #endif
+    #if N > 16
+    u8 q16, q17, q18, q19, q20, q21, q22, q23;
+    #endif
+    #if N > 24
+    u8 q24, q25, q26, q27, q28, q29, q30, q31;
+    #endif
   };
-  Queen q[N];
+  u8 q[N];
 } Queens;
 
-int main() {
+static Queens queens;
+static u32 queens_mask = 0; // which queens are placed (bitmask)
+static u8 board[N*N][N*N/8] = {}; // open/forbidden ALCS boards
+
+void init() {
   seed_rng();
-  Queens qs;
+}
+
+int main() {
+  init();
 
   for (u64 i = (u64)1 << 32; i--;) {
     u64 x = randint();
-    qs(0).b = x++;
-    qs(1).b = x++;
-    qs(2).b = x++;
-    qs(3).b = x++;
-    qs(4).b = x++;
-    qs(5).b = x++;
-    qs(6).b = x++;
-    qs(7).b = x++;
-    qs(8).b = x++;
-    qs(9).b = x++;
-    qs(10).b = x++;
-    qs(11).b = x++;
-    qs(12).b = x++;
-    qs(13).b = x++;
-    qs(14).b = x++;
-    qs(15).b = x++;
-    qs(16).b = x++;
-    qs(17).b = x++;
-    qs(18).b = x++;
-    qs(19).b = x++;
-    qs(20).b = x++;
-    qs(21).b = x++;
-    qs(22).b = x++;
-    qs(23).b = x++;
-    qs(24).b = x++;
-    qs(25).b = x++;
-    qs(26).b = x++;
-    qs(27).b = x++;
-    qs(28).b = x++;
-    qs(29).b = x++;
-    qs(30).b = x++;
-    qs(31).b = x++;
+    queen(0) = x++;
+    queen(1) = x++;
+    queen(2) = x++;
+    queen(3) = x++;
+    queen(4) = x++;
+    queen(5) = x++;
+    queen(6) = x++;
+    queen(7) = x++;
+    #if N > 8
+    queen(8) = x++;
+    queen(9) = x++;
+    queen(10) = x++;
+    queen(11) = x++;
+    queen(12) = x++;
+    queen(13) = x++;
+    queen(14) = x++;
+    queen(15) = x++;
+    #endif
+    #if N > 16
+    queen(16) = x++;
+    queen(17) = x++;
+    queen(18) = x++;
+    queen(19) = x++;
+    queen(20) = x++;
+    queen(21) = x++;
+    queen(22) = x++;
+    queen(23) = x++;
+    #endif
+    #if N > 24
+    queen(24) = x++;
+    queen(25) = x++;
+    queen(26) = x++;
+    queen(27) = x++;
+    queen(28) = x++;
+    queen(29) = x++;
+    queen(30) = x++;
+    queen(31) = x++;
+    #endif
   }
 
-  printf("%d\n", qs.q[N - 1].b);
+  printf("%d\n", queens.q[N - 1]);
 
   return 0;
 }
