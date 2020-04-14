@@ -114,6 +114,9 @@ bool prime(u32 n) {
 }
 #endif
 
+// Just prints a newline
+void println(){printf("\n");}
+
 // 2 u32s into a u64, `a` goes into "left" (higher) bits
 #define packu64(a, b) (((u64)(a)) << 32 | (b))
 

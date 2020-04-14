@@ -178,13 +178,17 @@
 #ifndef NO_STRETCHY_BUFFER_SHORT_NAMES
 #define sb_free   stb_sb_free
 #define sb_push   stb_sb_push
+#define sb_pop    ajb_sb_pop
 #define sb_count  stb_sb_count
 #define sb_add    stb_sb_add
 #define sb_last   stb_sb_last
 #endif
 
+// Added pop(a,v), doesn't shrink, returns value or 0
+
 #define stb_sb_free(a)         ((a) ? free(stb__sbraw(a)),0 : 0)
 #define stb_sb_push(a,v)       (stb__sbmaybegrow(a,1), (a)[stb__sbn(a)++] = (v))
+#define ajb_sb_pop(a,v)        (((a) && stb__sbn(a)) ? (a)[--stb__sbn(a)] : 0 )
 #define stb_sb_count(a)        ((a) ? stb__sbn(a) : 0)
 #define stb_sb_add(a,n)        (stb__sbmaybegrow(a,n), stb__sbn(a)+=(n), &(a)[stb__sbn(a)-(n)])
 #define stb_sb_last(a)         ((a)[stb__sbn(a)-1])
