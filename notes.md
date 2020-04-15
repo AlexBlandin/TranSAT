@@ -1,9 +1,15 @@
 ./genericsat = ./oklibrary/Satisfiability/Transformers/Generators/Queens/GenericSAT
 
+- propagation
 - watched literals
 
 
-
+testing can use
+- gcc 8.3
+- gcc 9.3
+- gcc trunk
+- clang 7
+- clang 10
 
 
 #### probably can't do in retrospect
