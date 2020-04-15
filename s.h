@@ -100,18 +100,19 @@ typedef float f32;
 #if defined(__builtin_popcount) && !defined(bitcount)
 #define bitcount __builtin_popcount
 #endif
+
 #if !defined(bitcount)
-/* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
-u32 bitcount64(uint64_t x) {
-  int v = 0;
-  while(x != 0) {
-    x &= x - 1;
-    v++;
+i32 bitcount64(uint64_t v) {
+  i32 r = 0;
+  while(v != 0) {
+    v &= v - 1;
+    r++;
   }
-  return v;
+  return r;
 }
 #endif
 
+/* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
 #if !defined(bitcount32)
 i32 bitcount32(u32 v) {
   v = v - ((v >> 1) & 0x55555555);

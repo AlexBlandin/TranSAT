@@ -22,50 +22,43 @@ typedef union _Rank {
   u8 placed: 1; // AMO means only one so this can be a bit
   u8 forbidden: 5; // this can be 0..N (for unsats.) so needs 5 bits (ceil(lg(24)))
   }; // `open` is easy to calculate, including would mean using u16 (the difference is 70kB at N=20 vs 120kB)
-  u8 _r; // I personally always have a union over bitfields in case I need to address the entire thing
+  u8 rank; // I personally always have a union over bitfields in case I need to address the entire thing
 } Rank;
 
+typedef union _Slot {
+  struct {
+    u16 row: 5; // better to have separated row/col & multiply it than keep dividing
+    u16 col: 5;
+    u16 adg: 6; // save the subtract
+  };
+  u16 slot;
+} Slot;
+
 /* DATA */
+static u64 nq = 0; // solutions
 static Queens queens; // where each queen is
 static u8 queens_count; // how many we have (placed depth)
 static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
-static u8 boards[N*N][N*N/8] = {}; // open/forbidden ALCS boards
-static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks (bc. of coefficients, this actually dominates memory despite cubic < quartic of board)
+static u8 progress[(N*N+7)/8] = {}; // 0 == go left, 1 == go right
+static Slot slots[N*N] = {}; // where we changed (either forbid or placed)
+static u8 boards[N*N][(N*N+7)/8] = {}; // open/forbidden ALCS boards
+static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden row/col/diag/-diag ranks (bc. of coefficients > `boards`)
 
 /*
 > python3
 >>> from humanize import naturalsize as ns
->>> print(" N |  Size\n------------"); [print(f"{N} | {ns(1 + N + (N*4) + (N**4)//8 + N*N*(6*N - 2))}") for N in range(16,25)][0]
+>>> print(" N |  Size\n------------"); [print(f"{N} | {ns(4 + 24 + 1 + N*4 + (N*N+7)//8 + N*N*2 + N*N*((N*N+7)//8) + N*N*(6*N - 2))}") for N in range(16,25)][0]
  N |  Size
 ------------
-16 | 32.3 kB
-17 | 39.4 kB
-18 | 47.6 kB
-19 | 56.8 kB
-20 | 67.3 kB
-21 | 79.1 kB
-22 | 92.3 kB
-23 | 107.0 kB
-24 | 123.4 kB
->>>
-*/
-
-// if I can inline backtracking on forbids I can take out a factor of N, which is HUGE and means L1 & u16 Rank (8.7kB@N=24, not including inlined forbid backtracking)
-/*
-> python3
->>> from humanize import naturalsize as ns
->>> print(" N |  Size\n------------"); [print(f"{N} | {ns(1 + N + (N*4) + (N**3)//8 + N*(6*N - 2))}") for N in range(16,25)][0]
- N |  Size
-------------
-16 | 2.1 kB
-17 | 2.4 kB
-18 | 2.7 kB
-19 | 3.1 kB
-20 | 3.5 kB
-21 | 3.9 kB
-22 | 4.3 kB
-23 | 4.8 kB
-24 | 5.3 kB
+16 | 32.9 kB
+17 | 40.3 kB
+18 | 48.4 kB
+19 | 57.9 kB
+20 | 68.2 kB
+21 | 80.4 kB
+22 | 93.6 kB
+23 | 108.6 kB
+24 | 124.6 kB
 >>>
 */
 
@@ -79,9 +72,9 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 
 void init() {
   seed_rng();
-  assert(N < 24);
-  assert(sizeof(Rank) == 1); // Should just be a byte
+  assert(N <= 24);
+  assert(sizeof(Rank) == 1); // 1 byte
+  assert(sizeof(Slot) == 2); // 2 bytes
 }
-
 
 #endif /* TRANSAT_H_IMPLEMENTED */
