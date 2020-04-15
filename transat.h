@@ -2,12 +2,13 @@
 #define TRANSAT_H_IMPLEMENTED
 
 // 22 is the max
-#define N 22
+#define N 16
 
 // n MUST BE A CONSTANT
 #define queen(n) if (n < N) queens.q##n
-#define sl boards[board].slot
 #define bd boards[board]
+#define sl boards[board].slot
+#define rk boards[board].ranks
 #define sl_dia (sl.row + sl.col)
 #define sl_adg (N - sl.col + sl.row - 1)
 

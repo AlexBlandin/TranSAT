@@ -118,7 +118,7 @@ typedef float f32;
 #endif
 
 #if !defined(bitcount)
-i32 bitcount64(uint64_t v) {
+i32 bitcount64(uint64_t v) { // clang-10 favoured
   i32 r = 0;
   while(v != 0) {
     v &= v - 1;
@@ -130,7 +130,7 @@ i32 bitcount64(uint64_t v) {
 
 /* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
 #if !defined(bitcount32)
-i32 bitcount32(u32 v) {
+i32 bitcount32(u32 v) { // gcc favoured (clang is still pretty quick here)
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
   return (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
