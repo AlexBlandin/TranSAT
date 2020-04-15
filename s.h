@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 typedef uint16_t u16;
@@ -55,6 +56,11 @@ typedef float f32;
 #define false 0
 #endif
 
+#ifndef copy
+// copy n bytes from src to dst
+#define copy(bytes, src, dst) memcpy(&dst, &src, bytes)
+#endif
+
 #ifndef swap
 #define swap(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
 #endif
@@ -91,11 +97,23 @@ typedef float f32;
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
 
-#if defined(__builtin_popcount)
+#if defined(__builtin_popcount) && !defined(bitcount)
 #define bitcount __builtin_popcount
-#elif !defined(bitcount)
+#endif
+#if !defined(bitcount)
 /* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
-i32 bitcount(u32 v) {
+u32 bitcount64(uint64_t x) {
+  int v = 0;
+  while(x != 0) {
+    x &= x - 1;
+    v++;
+  }
+  return v;
+}
+#endif
+
+#if !defined(bitcount32)
+i32 bitcount32(u32 v) {
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
   return (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;

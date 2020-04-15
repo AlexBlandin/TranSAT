@@ -29,7 +29,7 @@ typedef union _Rank {
 static Queens queens; // where each queen is
 static u8 queens_count; // how many we have (placed depth)
 static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
-static u8 board[N*N][N*N/8] = {}; // open/forbidden ALCS boards
+static u8 boards[N*N][N*N/8] = {}; // open/forbidden ALCS boards
 static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks (bc. of coefficients, this actually dominates memory despite cubic < quartic of board)
 
 /*

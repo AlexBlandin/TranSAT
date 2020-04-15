@@ -4,6 +4,30 @@
 #include "s.h" // short.hand
 #include "transat.h" // transat header (types, common funcs, etc)
 
+
+bool satisfied(u16 board);
+
+bool falsified(u16 board);
+
+u64 satstats(u16 board);
+
+u64 falstats(u16 board);
+
+u64 next_open(u16 board);
+
+u64 forbid(u16 next, u8 slot);
+
+u64 place(u16 next, u8 slot);
+
+u64 backtrack(u16 board, Rank ranks[6*N-2]) {
+  if (satisfied(board)) return satstats(board);
+  if (falsified(board)) return falstats(board);
+  u8 slot = next_open(board);
+  u16 next = board+1;
+  copy(N*N/8, boards[board], boards[next]); // should still be faster on these small matrices
+  return forbid(next, slot) + place(next, slot);
+}
+
 int main() {
   init();
 
