@@ -27,7 +27,7 @@ typedef union _Rank {
 
 typedef struct _Ranks {
   Rank rows[N]; // how many are placed/forbidden
-  Rank cols[N]; // (open = N-closed, closed = placed+forbidden))...
+  Rank cols[N]; // (open = N - closed, closed = placed + forbidden))...
   Rank dias[2*N-1];
   Rank adia[2*N-1];
 } Ranks;

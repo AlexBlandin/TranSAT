@@ -29,14 +29,17 @@ u64 placed(u16 board) {
   queens_mask[queens_count++] = 1 << slot.row;
   boards[board].ranks.rows[slot.row].placed = 1;
 
-  for (i16 i = 0; i < N; i++)
-    boards[board].board[slot.row*N + i] = boards[board].board[i*N + slot.col] = 1;
+  for (i16 i = 0; i < N; i++) {
+    boards[board].board[slot.row*N + i] = 1;
+    boards[board].board[i*N + slot.col] = 1;
+    }
 
-  for (i16 i = 0; i < N; i++)
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] =
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col+i,0,N-1)] =
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] =
+  for (i16 i = 0; i < N; i++) {
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col+i,0,N-1)] = 1;
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
     boards[board].board[clamp(slot.row+i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
+  }
 
   return backtrack(board);
 }
