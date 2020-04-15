@@ -6,16 +6,10 @@
 
 // n MUST BE A CONSTANT
 #define queen(n) if (n < N) queens.q##n
-
-// Aligned to 8byte boundaries
-typedef union _Queens {
-  struct {
-    u8 q0, q1, q2, q3, q4, q5, q6, q7;
-    u8 q8, q9, q10, q11, q12, q13, q14, q15;
-    u8 q16, q17, q18, q19, q20, q21, q22, q23;
-  };
-  u8 q[N];
-} Queens;
+#define sl boards[board].slot
+#define bd boards[board]
+#define sl_dia (sl.row + sl.col)
+#define sl_adg (N - sl.col + sl.row - 1)
 
 typedef union _Rank {
   struct {
@@ -33,7 +27,8 @@ typedef struct _Ranks {
 } Ranks;
 
 typedef struct _Board {
-  u8 board[bits(N*N)];
+  u8 forbid[bits(N*N)]; // 0=open, 1=forbid
+  u8 placed[bits(N*N)]; // 0=no queen, 1=queen
   Ranks ranks;
   Slot slot; // where we changed (either forbid or placed)
 } Board;
@@ -45,16 +40,14 @@ typedef struct _Slot {
 
 /* DATA */
 static u64 nq = 0; // solutions
-static Queens queens; // where each queen is
-static u8 queens_count; // how many we have (placed depth)
-static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
+static u16 board = 0; // current board
 static u8 progress[bits(N*N)] = {}; // 0 == go left, 1 == go right
 static Board boards[N*N] = {}; // ALCS boards w/ ranks
 
 /*
 > python3
 >>> from humanize import naturalsize as ns
->>> print(" N |  Size\n------------"); [print(f"{N} | {ns(4 + 24 + 1 + N*4 + (N*N+7)//8 + N*N*2 + N*N*((N*N+7)//8) + N*N*(6*N - 2))}") for N in range(16,25)][0]
+>>> print(" N |  Size\n------------"); [print(f"{N} | {ns(4 + 24 + 1 + N*4 + (2*N*N+7)//8 + N*N*2 + N*N*((N*N+7)//8) + N*N*(6*N - 2))}") for N in range(16,25)][0]
  N |  Size
 ------------
 16 | 32.9 kB
@@ -82,7 +75,7 @@ void init() {
   assert(N <= 24);
   assert(sizeof(Rank) == 1); // 1 byte
   assert(sizeof(Slot) == 2); // 2 bytes
-  assert(sizeof(Board) == bits(N*N)+(6*N-2)); // N*N bits + 6N - 2 bytes
+  assert(sizeof(Board) == 2*bits(N*N)+(6*N-2)); // 2*N*N bits + 6N - 2 bytes
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */

@@ -101,8 +101,8 @@ typedef float f32;
 // N bits to ceil(N/8) bytes
 #define bits(n) ((n + 7) / 8)
 
-// x's value at the N'th bit
-#define bs_at(x, N) ((x)[(N)/8] & (1 << ((N) % 8)))
+// x's value in the N'th bit
+#define bs_in(x, N) ((x)[(N)/8] & (1 << ((N) % 8)))
 
 // set x's N'th bit to 1
 #define bs_set(x, N) ((x)[(N)/8] |= (1 << ((N) % 8)))

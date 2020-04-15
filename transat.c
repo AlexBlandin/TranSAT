@@ -4,72 +4,77 @@
 #include "s.h" // short.hand
 #include "transat.h" // transat header (types, common funcs, etc)
 
-
-bool satisfied(u16 board);
-
-bool falsified(u16 board);
-
 u64 satstats(u16 board);
 
 u64 falstats(u16 board);
 
-Slot next_open(u16 board);
+bool satisfied() {
 
-u64 forbid(u16 board) {
-  Slot slot = boards[board].slot;
-  bs_set(boards[board].board, slot.row*N + slot.col);
-  return backtrack(board);
+
+  nq += satstats(board);
+  return;
 }
 
-u64 placed(u16 board) {
-  Slot slot = boards[board].slot;
-  i8 dia = slot.row + slot.col;
-  i8 adg = slot.row - slot.col;
-  queens.q[slot.row] = slot.col;
-  queens_mask[queens_count++] = 1 << slot.row;
-  boards[board].ranks.rows[slot.row].placed = 1;
+bool falsified() {
 
-  for (i16 i = 0; i < N; i++) {
-    boards[board].board[slot.row*N + i] = 1;
-    boards[board].board[i*N + slot.col] = 1;
+
+  nq += falstats(board);
+  return;
+}
+
+Slot heuristic(u16 board);
+
+u64 transat() {
+  do {
+    if (not bs_in(progress, board)) {
+      assert(board < N*N);
+      if (satisfied() or falsified()) { board--; continue; }
+      assert((board+1) < N*N);
+
+      /* HEURISTICS */
+      boards[board].slot = heuristic(board); // the branching variable as chosen by our heuristics
+
+      // copy
+      copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
+      bs_set(progress, board);
+      board++;
+
+      /* FORBID SLOT */
+      bs_set(boards[board].forbid, boards[board].slot.row*N + boards[board].slot.col);
+      bd.ranks.rows[sl.row].forbidden++;
+      bd.ranks.rows[sl.col].forbidden++;
+      bd.ranks.rows[sl_dia].forbidden++;
+      bd.ranks.rows[sl_adg].forbidden++;
+    } else {
+      // reenter, do other, exit
+      copy(sizeof(Board), boards[board-1], boards[board]);
+      bs_clear(progress, board);
+      nq += placed();
+
+      /* PLACED SLOT */
+      i8 dia = sl.row + sl.col;
+      i8 adg = sl.row - sl.col;
+      bs_set(bd.placed, sl.row*N + sl.col);
+      bd.ranks.rows[sl.row].placed = 1;
+      bd.ranks.rows[sl.col].placed = 1;
+      bd.ranks.rows[sl_dia].placed = 1;
+      bd.ranks.rows[sl_adg].placed = 1;
+
+      // propagate over row/column
+      for (i16 i = 0; i < N; i++) {
+        bs_set(bd.forbid, sl.row*N + i);
+        bs_set(bd.forbid, i*N + sl.col);
+      }
+
+      // propagate over diagonal/antidiagonal
+      for (i16 i = 0; i < N; i++) {
+        bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+        bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1));
+        bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+        bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+      }
     }
-
-  for (i16 i = 0; i < N; i++) {
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col+i,0,N-1)] = 1;
-    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
-    boards[board].board[clamp(slot.row+i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
-  }
-
-  return backtrack(board);
-}
-
-u64 backtrack(u16 board) {
-  u16 branch = board+1; // deeper
-  if (not bs_at(progress, board)) {
-    assert(board < N*N);
-    if (satisfied(board)) return satstats(board);
-    if (falsified(board)) return falstats(board);
-    assert((board+1) < N*N);
-
-    Slot slot = next_open(board); // the branching variable as chosen by our heuristics
-    boards[branch].slot = slot; // keep a note
-
-    // do one
-    bs_set(progress, board); // cleanup on entry
-    copy(sizeof(Board), boards[board], boards[branch]); // should still be faster on these small matrices
-    nq += forbid(branch);
-
-  } else {
-    // reenter, do other, exit
-    bs_clear(progress, board);
-    copy(sizeof(Board), boards[board], boards[branch]);
-    nq += placed(branch);
-
-    // now reset `slot` and get the next one
-
-    // return
-  }
+  } while(board);
 }
 
 int main() {
