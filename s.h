@@ -91,7 +91,9 @@ typedef float f32;
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
 
-#ifndef bitcount
+#if defined(__builtin_popcount)
+#define bitcount __builtin_popcount
+#elif !defined(bitcount)
 /* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
 i32 bitcount(u32 v) {
   v = v - ((v >> 1) & 0x55555555);
