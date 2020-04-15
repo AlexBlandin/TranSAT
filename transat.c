@@ -20,7 +20,7 @@ bool falsified() {
   return open == 0;
 }
 
-// implicit AMO constraint, never return an occupied row/col/diag/adia
+// implicit AMO constraint, never return an already occupied row/col/diag/adia
 Slot heuristic();
 
 u64 transat() {
