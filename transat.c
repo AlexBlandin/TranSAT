@@ -17,7 +17,7 @@ Slot next_open(u16 board);
 
 u64 forbid(u16 board) {
   Slot slot = boards[board].slot;
-  boards[board].board[slot.row*N+slot.col/8] |= 1 << (slot.col%8);
+  bs_set(boards[board].board, slot.row*N + slot.col);
   return backtrack(board);
 }
 
@@ -45,27 +45,31 @@ u64 placed(u16 board) {
 }
 
 u64 backtrack(u16 board) {
-  assert(board < N*N);
-  if (satisfied(board)) return satstats(board);
-  if (falsified(board)) return falstats(board);
-  assert((board+1) < N*N);
-  u16 branch = board+1; // for our clauseset copy
-  bs_clear(progress, board); // cleanup on entry
+  u16 branch = board+1; // deeper
+  if (not bs_at(progress, board)) {
+    assert(board < N*N);
+    if (satisfied(board)) return satstats(board);
+    if (falsified(board)) return falstats(board);
+    assert((board+1) < N*N);
 
-  Slot slot = next_open(board); // the branching variable as chosen by our heuristics
-  boards[branch].slot = slot; // keep a note
+    Slot slot = next_open(board); // the branching variable as chosen by our heuristics
+    boards[branch].slot = slot; // keep a note
 
-  // do one
-  copy(sizeof(Board), boards[board], boards[branch]); // should still be faster on these small matrices
-  nq += forbid(branch);
+    // do one
+    bs_set(progress, board); // cleanup on entry
+    copy(sizeof(Board), boards[board], boards[branch]); // should still be faster on these small matrices
+    nq += forbid(branch);
 
-  // reenter, do other
-  copy(sizeof(Board), boards[board], boards[branch]);
-  nq += placed(branch);
+  } else {
+    // reenter, do other, exit
+    bs_clear(progress, board);
+    copy(sizeof(Board), boards[board], boards[branch]);
+    nq += placed(branch);
 
-  // now reset `slot` and get the next one
+    // now reset `slot` and get the next one
 
-  // return
+    // return
+  }
 }
 
 int main() {
