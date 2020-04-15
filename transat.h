@@ -26,26 +26,46 @@ typedef union _Rank {
 } Rank;
 
 /* DATA */
-static Queens queens;
-static u32 queens_mask[N*N] = {}; // which queens are placed (bitmask)
+static Queens queens; // where each queen is
+static u8 queens_count; // how many we have (placed depth)
+static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
 static u8 board[N*N][N*N/8] = {}; // open/forbidden ALCS boards
 static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks
 
 /*
 > python3
 >>> from humanize import naturalsize as ns
->>> print(" N |  Size\n------------"); [print(f"{N} | {ns(N + (N*N*4) + (N**4)//8 + N*N*(6*N - 2))}") for N in range(16,25)][0]
+>>> print(" N |  Size\n------------"); [print(f"{N} | {ns(1 + N + (N*4) + (N**4)//8 + N*N*(6*N - 2))}") for N in range(16,25)][0]
  N |  Size
 ------------
-16 | 33.3 kB
-17 | 40.5 kB
-18 | 48.8 kB
-19 | 58.2 kB
-20 | 68.8 kB
-21 | 80.8 kB
-22 | 94.2 kB
-23 | 109.1 kB
-24 | 125.6 kB
+16 | 32.3 kB
+17 | 39.4 kB
+18 | 47.6 kB
+19 | 56.8 kB
+20 | 67.3 kB
+21 | 79.1 kB
+22 | 92.3 kB
+23 | 107.0 kB
+24 | 123.4 kB
+>>>
+*/
+
+// if I can prove depth is only N I can take out a factor of N, which is HUGE and means I can store more explicitly
+/*
+> python3
+>>> from humanize import naturalsize as ns
+>>> print(" N |  Size\n------------"); [print(f"{N} | {ns(1 + N + (N*4) + (N**3)//8 + N*(6*N - 2))}") for N in range(16,25)][0]
+ N |  Size
+------------
+16 | 2.1 kB
+17 | 2.4 kB
+18 | 2.7 kB
+19 | 3.1 kB
+20 | 3.5 kB
+21 | 3.9 kB
+22 | 4.3 kB
+23 | 4.8 kB
+24 | 5.3 kB
 >>>
 */
 
@@ -64,4 +84,4 @@ void init() {
 }
 
 
-#endif // TRANSAT_H_IMPLEMENTED
+#endif /* TRANSAT_H_IMPLEMENTED */
