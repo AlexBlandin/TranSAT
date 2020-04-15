@@ -82,6 +82,7 @@ typedef float f32;
 #endif
 
 #ifndef clamp
+// clamp the value of x to the range l..r
 #define clamp(x, l, r) ((x) < (l) ? (l) : (x) > (r) ? (r) : (x))
 #endif
 
@@ -96,6 +97,21 @@ typedef float f32;
 #ifndef is_pow2
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
+
+// N bits to ceil(N/8) bytes
+#define bits(n) ((n + 7) / 8)
+
+// x's value at the N'th bit
+#define bs_at(x, N) ((x)[(N)/8] & (1 << ((N) % 8)))
+
+// set x's N'th bit to 1
+#define bs_set(x, N) ((x)[(N)/8] |= (1 << ((N) % 8)))
+
+// set x's N'th bit to 0
+#define bs_clear(x, N) ((x)[(N)/8] &= ~(1 << ((N) % 8)))
+
+// toggle x's N'th bit
+#define bs_toggle(x, N) ((x)[(N)/8] ^= (1 << ((N) % 8)))
 
 #if defined(__builtin_popcount) && !defined(bitcount)
 #define bitcount __builtin_popcount

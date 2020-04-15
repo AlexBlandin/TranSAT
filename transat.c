@@ -15,36 +15,50 @@ u64 falstats(u16 board);
 
 Slot next_open(u16 board);
 
-u64 forbid(u16 board, Slot slot) {
-  boards[board][slot.row*N+slot.col] |= 1 << (slot.col>>3);
+u64 forbid(u16 board) {
+  Slot slot = boards[board].slot;
+  boards[board].board[slot.row*N+slot.col/8] |= 1 << (slot.col%8);
   return backtrack(board);
 }
 
-u64 placed(u16 board, Slot slot) {
-  u8 diag = slot.row + slot.col; // slot.adg for antidiagonal
+u64 placed(u16 board) {
+  Slot slot = boards[board].slot;
+  i8 dia = slot.row + slot.col;
+  i8 adg = slot.row - slot.col;
   queens.q[slot.row] = slot.col;
   queens_mask[queens_count++] = 1 << slot.row;
-  for (int i = 0; i < N; i++)
-    boards[board][slot.row*N + i] = boards[board][i*N + slot.col] = 1;
+  boards[board].ranks.rows[slot.row].placed = 1;
+
+  for (i16 i = 0; i < N; i++)
+    boards[board].board[slot.row*N + i] = boards[board].board[i*N + slot.col] = 1;
+
+  for (i16 i = 0; i < N; i++)
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] =
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col+i,0,N-1)] =
+    boards[board].board[clamp(slot.row-i,0,N-1)*N + clamp(slot.col-i,0,N-1)] =
+    boards[board].board[clamp(slot.row+i,0,N-1)*N + clamp(slot.col-i,0,N-1)] = 1;
+
   return backtrack(board);
 }
 
 u64 backtrack(u16 board) {
+  assert(board < N*N);
   if (satisfied(board)) return satstats(board);
   if (falsified(board)) return falstats(board);
+  assert((board+1) < N*N);
   u16 branch = board+1; // for our clauseset copy
-  progress[board] = 0; // cleanup on entry
+  bs_clear(progress, board); // cleanup on entry
 
   Slot slot = next_open(board); // the branching variable as chosen by our heuristics
-  slots[board] = slot; // keep a note
+  boards[branch].slot = slot; // keep a note
 
   // do one
-  copy(N*N/8, boards[board], boards[branch]); // should still be faster on these small matrices
-  nq += forbid(branch, slot);
+  copy(sizeof(Board), boards[board], boards[branch]); // should still be faster on these small matrices
+  nq += forbid(branch);
 
   // reenter, do other
-  copy(N*N/8, boards[board], boards[branch]); // should still be faster on these small matrices
-  nq += placed(branch, slot);
+  copy(sizeof(Board), boards[board], boards[branch]);
+  nq += placed(branch);
 
   // now reset `slot` and get the next one
 

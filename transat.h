@@ -25,13 +25,22 @@ typedef union _Rank {
   u8 rank; // I personally always have a union over bitfields in case I need to address the entire thing
 } Rank;
 
-typedef union _Slot {
-  struct {
-    u16 row: 5; // better to have separated row/col & multiply it than keep dividing
-    u16 col: 5;
-    u16 adg: 6; // save the subtract
-  };
-  u16 slot;
+typedef struct _Ranks {
+  Rank rows[N]; // how many are placed/forbidden
+  Rank cols[N]; // (open = N-closed, closed = placed+forbidden))...
+  Rank dias[2*N-1];
+  Rank adia[2*N-1];
+} Ranks;
+
+typedef struct _Board {
+  u8 board[bits(N*N)];
+  Ranks ranks;
+  Slot slot; // where we changed (either forbid or placed)
+} Board;
+
+typedef struct _Slot {
+  i8 row; // better to have separated row/col & multiply it than keep dividing
+  i8 col;
 } Slot;
 
 /* DATA */
@@ -39,10 +48,8 @@ static u64 nq = 0; // solutions
 static Queens queens; // where each queen is
 static u8 queens_count; // how many we have (placed depth)
 static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
-static u8 progress[(N*N+7)/8] = {}; // 0 == go left, 1 == go right
-static Slot slots[N*N] = {}; // where we changed (either forbid or placed)
-static u8 boards[N*N][(N*N+7)/8] = {}; // open/forbidden ALCS boards
-static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden row/col/diag/-diag ranks (bc. of coefficients > `boards`)
+static u8 progress[bits(N*N)] = {}; // 0 == go left, 1 == go right
+static Board boards[N*N] = {}; // ALCS boards w/ ranks
 
 /*
 > python3
@@ -75,6 +82,7 @@ void init() {
   assert(N <= 24);
   assert(sizeof(Rank) == 1); // 1 byte
   assert(sizeof(Slot) == 2); // 2 bytes
+  assert(sizeof(Board) == bits(N*N)+(6*N-2)); // N*N bits + 6N - 2 bytes
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */
