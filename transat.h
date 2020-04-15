@@ -30,7 +30,7 @@ static Queens queens; // where each queen is
 static u8 queens_count; // how many we have (placed depth)
 static u32 queens_mask[N] = {}; // which queens are placed (bitmask)
 static u8 board[N*N][N*N/8] = {}; // open/forbidden ALCS boards
-static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks
+static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks (bc. of coefficients, this actually dominates memory despite cubic < quartic of board)
 
 /*
 > python3
@@ -50,7 +50,7 @@ static Rank ranks[N*N][6*N - 2] = {}; // placed/forbidden ranks
 >>>
 */
 
-// if I can prove depth is only N I can take out a factor of N, which is HUGE and means I can store more explicitly
+// if I can inline backtracking on forbids I can take out a factor of N, which is HUGE and means L1 & u16 Rank (8.7kB@N=24, not including inlined forbid backtracking)
 /*
 > python3
 >>> from humanize import naturalsize as ns
