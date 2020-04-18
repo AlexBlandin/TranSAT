@@ -2,7 +2,9 @@
 #define TRANSAT_H_IMPLEMENTED
 
 // 22 is the max
+#ifndef N
 #define N 16
+#endif
 
 // n MUST BE A CONSTANT
 #define queen(n) if (n < N) queens.q##n
@@ -15,7 +17,7 @@
 typedef union _Rank {
   struct {
   u8 placed: 1; // AMO means only one so this can be a bit
-  u8 forbidden: 5; // this can be 0..N (for unsats.) so needs 5 bits (ceil(lg(24)))
+  u8 forbidden: 5; // how many are locked out
   }; // `open` is easy to calculate, including would mean using u16 (the difference is 70kB at N=20 vs 120kB)
   u8 rank; // I personally always have a union over bitfields in case I need to address the entire thing
 } Rank;
@@ -23,8 +25,8 @@ typedef union _Rank {
 typedef struct _Ranks {
   Rank rows[N]; // how many are placed/forbidden
   Rank cols[N]; // (open = N - closed, closed = placed + forbidden))...
-  Rank dias[2*N-1];
-  Rank adia[2*N-1];
+  Rank dias[2*N-1]; // diagonal open replaces N with the diagonal length
+  Rank adia[2*N-1]; // open = len - closed, len = N - abs(row-col) FOR ADIA NOT DIAS
 } Ranks;
 
 typedef struct _Slot {
@@ -49,8 +51,9 @@ static Board boards[N*N] = {}; // ALCS boards w/ ranks
 
 /*
 > python3
->>> from humanize import naturalsize as ns
->>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=8+2+(N*N+7)//8+N*N*(3+2*(N*N+7)//8+N+N+2*N+2*N-1-1))} | {ns(x/N)}") for N in range(16,25)][0]
+from humanize import naturalsize as ns
+print("\n N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=0*N+8+2+(N*N+7)//8+N*N*(3+2*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
+
  N |  Size   | Maybe (given I can take out a factor of N via the forbids...)
 ---------------------
 16 | 41.5 kB | 2.6 kB

@@ -12,17 +12,58 @@ testing can use
 - clang 10
 
 
-
 Rosetta
- N | Solution    | Time
-----------------------
-14 | 365596      | 0m0.074s
-15 | 2279184     | 0m0.407s
-16 | 14772512    | 0m2.655s
-17 | 95815104    | 0m18.617s
-18 | 666090624   | 2m18.946s
-19 | 4968057848  | 18m7.336s
-20 | 39029188884 | 147m46.599s
+ N | Solution     | Time
+--------------------------------
+14 | 365596       | 0m0.074s
+15 | 2279184      | 0m0.407s
+16 | 14772512     | 0m2.655s
+17 | 95815104     | 0m18.617s
+18 | 666090624    | 2m18.946s
+19 | 4968057848   | 18m7.336s
+20 | 39029188884  | 147m46.599s
+21 | 314666222712 | 1235m0.767s
+
+      If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
+      I would need to take the queens out again to drop from 124kB to 99kB...
+
+>>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=N+8+2+(N*N+7)//8+N*N*(3+1*(N*N+7)//8+(N+N+2*(2*N+2*N-1-1))))} | {ns(x/N)}") for N in range(16,25)][0]
+ N |  Size   | Maybe
+---------------------
+16 | 49.0 kB | 3.1 kB
+17 | 59.6 kB | 3.5 kB
+18 | 71.3 kB | 4.0 kB
+19 | 84.9 kB | 4.5 kB
+20 | 99.7 kB | 5.0 kB
+21 | 117.0 kB | 5.6 kB
+22 | 135.6 kB | 6.2 kB
+23 | 156.7 kB | 6.8 kB
+24 | 179.2 kB | 7.5 kB
+>>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=N+8+2+(N*N+7)//8+N*N*(3+1*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
+ N |  Size   | Maybe
+---------------------
+16 | 41.0 kB | 2.6 kB
+17 | 50.1 kB | 2.9 kB
+18 | 60.0 kB | 3.3 kB
+19 | 71.6 kB | 3.8 kB
+20 | 84.1 kB | 4.2 kB
+21 | 98.9 kB | 4.7 kB
+22 | 114.8 kB | 5.2 kB
+23 | 132.9 kB | 5.8 kB
+24 | 152.2 kB | 6.3 kB
+>>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=0*N+8+2+(N*N+7)//8+N*N*(3+2*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
+ N |  Size   | Maybe
+---------------------
+16 | 49.5 kB | 3.1 kB
+17 | 60.7 kB | 3.6 kB
+18 | 73.3 kB | 4.1 kB
+19 | 88.1 kB | 4.6 kB
+20 | 104.5 kB | 5.2 kB
+21 | 123.5 kB | 5.9 kB
+22 | 144.3 kB | 6.6 kB
+23 | 168.3 kB | 7.3 kB
+24 | 194.2 kB | 8.1 kB
+
 
 
 
