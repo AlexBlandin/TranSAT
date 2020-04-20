@@ -60,6 +60,16 @@ Slot heuristic() {
   return (Slot){row, col};
 }
 
+// clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
+
+/*
+so I need to change it to loop in place for the difference branching variables
+so forbid the slot on return, which should be enough for it to not go crazy
+and I also need to redo `satisfied` and figure out why it just starts going backwards
+so rework the backtracking (from scratch most likely)
+so the most important thing is rework backtracking to only go back when no open fields?
+*/
+
 void transat() {
   do {
     if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
@@ -90,6 +100,8 @@ void transat() {
       // reenter, place instead of forbid, exit
       copy(sizeof(Board), boards[board], boards[board+1]);
       bs_set(backtrack, board); // when we come back, backtrack up
+      bs_clearall(progress, board); // reset all forward progress
+      for (int b = (board/8)+1; b < ((N+7)/8); b++) progress[b] = 0;
       board++;
 
       bd.queens++;
@@ -140,8 +152,8 @@ int main() {
   transat();
 
   if (nq == solutions[N]) // addressed by N as N=0 is included
-    printf("Q(%d) = %llu\n", N, nq);
+    printf("Q(%d) = %"LU"\n", N, nq);
   else
-    printf("Uh oh, we got %llu when it should be %llu\n", nq, solutions[N]);
+    printf("Uh oh, we got %"LU" when it should be %"LU"\n", nq, solutions[N]);
   return 0;
 }

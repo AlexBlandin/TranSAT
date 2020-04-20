@@ -37,6 +37,13 @@ typedef int8_t i8;
 typedef double f64;
 typedef float f32;
 
+#ifdef _WIN32
+#define LU "llu"
+#endif
+#ifndef _WIN32
+#define LU "lu"
+#endif
+
 #if !defined(bool) && defined(_Bool)
 #define bool _Bool
 #endif
@@ -109,6 +116,9 @@ typedef float f32;
 
 // set x's n'th bit to 0
 #define bs_clear(x, n) ((x)[(n)/8] &= ~(1 << ((n) % 8)))
+
+// set x's bits from n on to 0
+#define bs_clearall(x, n) ((x)[(n)/8] &= ~((1 << (((n) % 8) + 1))-1))
 
 // toggle x's n'th bit
 #define bs_toggle(x, n) ((x)[(n)/8] ^= (1 << ((n) % 8)))

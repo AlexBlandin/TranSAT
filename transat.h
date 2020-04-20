@@ -59,23 +59,6 @@ static u8 progress[bits(N*N)]; // 0 = go left, 1 = go right
 static u8 backtrack[bits(N*N)]; // 0 = deepen, 1 = backtrack
 static Board boards[N*N+1]; // ALCS boards w/ ranks
 
-/*
-> python3
-from humanize import naturalsize as ns
-print("\n N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=0*N+8+2+(N*N+7)//8+N*N*(3+2*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
-
- N |  Size   | Maybe (given I can take out a factor of N via the forbids...)
----------------------
-16 | 41.5 kB | 2.6 kB
-17 | 51.2 kB | 3.0 kB
-18 | 61.9 kB | 3.4 kB
-19 | 74.8 kB | 3.9 kB
-20 | 88.9 kB | 4.4 kB
-21 | 105.5 kB | 5.0 kB
-22 | 123.5 kB | 5.6 kB
->>>
-*/
-
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
                           2279184, 14772512, 95815104, 666090624,
