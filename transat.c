@@ -16,7 +16,8 @@ bool satisfied() {
           if ((rk.cols[j].open == 1) and
               (rk.dias[i+j].open == 1) and
               (rk.adia[N-j+i-1].open == 1) and
-              (bs_in(bd.open, i))) {
+              (bd.state[i*N + j] == OPEN)) {
+              //(bs_in(bd.open, i))) {
               nq++;
           }
         }
@@ -41,7 +42,8 @@ Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
   for (u16 i = sl.row * sl.col; i < N*N; i++) {
-    if (bs_in(bd.open, i)) return as_slot(i);
+    if (bd.state[i] == OPEN) return as_slot(i);
+    // if (bs_in(bd.open, i)) return as_slot(i);
   }
   #endif
   #ifdef FIRSTROW
@@ -60,7 +62,8 @@ Slot heuristic() {
 
 void transat() {
   do {
-    if (satisfied() or falsified() or bs_in(backtrack, board) or board + 1 >= N*N) { board--; continue; }
+    if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
+    if (satisfied() or falsified() or bs_in(backtrack, board) or board >= N*N) { board--; continue; }
     if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(); // the branching variable as chosen by our heuristics
@@ -70,8 +73,11 @@ void transat() {
       bs_set(progress, board); // when we come back, "branch"
       board++;
 
+      bd.state[sl.row*N + sl.col] = FORBIDDEN;
+      // bs_set(bd.forbid, sl.row*N + sl.col);
+      // bs_clear(bd.open,sl.row*N + sl.col);
+
       /* ALO Propagation */
-      bs_set(boards[board].forbid, sl.row*N + sl.col);
       rk.rows[sl.row].forbidden++;
       rk.cols[sl.col].forbidden++;
       rk.dias[sl_dia].forbidden++;
@@ -86,11 +92,13 @@ void transat() {
       bs_set(backtrack, board); // when we come back, backtrack up
       board++;
 
-      /* AMO Propagation */
       bd.queens++;
+      bd.state[sl.row*N + sl.col] = PLACED;
+      //bs_set(bd.placed, sl.row*N + sl.col);
+
+      /* AMO Propagation */
       i8 dia = sl.row + sl.col;
       i8 adg = sl.row - sl.col;
-      bs_set(bd.placed, sl.row*N + sl.col);
       rk.rows[sl.row].placed = 1;
       rk.cols[sl.col].placed = 1;
       rk.dias[sl_dia].placed = 1;
@@ -103,18 +111,24 @@ void transat() {
 
       // propagate over row/column
       for (i16 i = 0; i < N; i++) {
-        bs_set(bd.forbid, sl.row*N + i);
-        bs_set(bd.forbid, i*N + sl.col);
-        bs_clear(bd.open, sl.row*N + i);
-        bs_clear(bd.open, i*N + sl.col);
+        bd.state[sl.row*N + i] = FORBIDDEN;
+        bd.state[i*N + sl.col] = FORBIDDEN;
+        // bs_set(bd.forbid, sl.row*N + i);
+        // bs_set(bd.forbid, i*N + sl.col);
+        // bs_clear(bd.open, sl.row*N + i);
+        // bs_clear(bd.open, i*N + sl.col);
       }
 
       // propagate over diagonal/antidiagonal
       for (i16 i = 0; i < N; i++) {
-        bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1));
-        bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1));
-        bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1));
-        bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+        bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1)] = (bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1)] = (bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
+        // bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+        // bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1));
+        // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1));
+        // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
       }
     }
   } while(board);
@@ -129,7 +143,5 @@ int main() {
     printf("Q(%d) = %llu\n", N, nq);
   else
     printf("Uh oh, we got %llu when it should be %llu\n", nq, solutions[N]);
-
-  getchar();
   return 0;
 }

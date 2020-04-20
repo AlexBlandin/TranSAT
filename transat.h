@@ -3,7 +3,7 @@
 
 // 22 is the max
 #ifndef N
-#define N 16
+#define N 4
 #endif
 
 // n MUST BE A CONSTANT
@@ -37,22 +37,27 @@ typedef struct _Slot {
 
 #define as_slot(i) ((Slot) { (i/N), (i%N) })
 
+#define OPEN 0
+#define FORBIDDEN 1
+#define PLACED 2
+
 typedef struct _Board {
-  u8 forbid[bits(N*N)]; // 0 = not forbidden, 1 = forbidden
-  u8 placed[bits(N*N)]; // 0 = no queen, 1 = queen
-  u8 open[bits(N*N)]; // 0 = not open, 1 = open
+  // u8 forbid[bits(N*N)]; // 0 = not forbidden, 1 = forbidden
+  // u8 placed[bits(N*N)]; // 0 = no queen, 1 = queen
+  // u8 open[bits(N*N)]; // 0 = not open, 1 = open
   u8 queens; // how many queens we have
-  Ranks ranks;
   Slot slot; // where we changed (either forbid or placed)
+  u8 state[N*N]; // state, 0 = open, 1 = forbidden, 2 = placed queen
+  Ranks ranks;
 } Board;
 
 
 /* DATA */
 static u64 nq = 0; // solutions
 static u16 board = 0; // current board
-static u8 progress[bits(N*N)] = {}; // 0 = go left, 1 = go right
-static u8 backtrack[bits(N*N)] = {}; // 0 = deepen, 1 = backtrack
-static Board boards[N*N] = {}; // ALCS boards w/ ranks
+static u8 progress[bits(N*N)]; // 0 = go left, 1 = go right
+static u8 backtrack[bits(N*N)]; // 0 = deepen, 1 = backtrack
+static Board boards[N*N+1]; // ALCS boards w/ ranks
 
 /*
 > python3
@@ -86,16 +91,16 @@ void init() {
       rk.rows[j].open = rk.cols[j].open = N;
     for (u16 j = 0; j < (2*N-1); j++)
       rk.dias[j].open = rk.adia[j].open = N;
-    for (u16 j = 0; j < bits(N*N); j++) {
-      bd.open[j] = -1;
-    }
+    for (u16 j = 0; j < N*N; j++)
+      bd.state[j] = OPEN;
+    // for (u16 j = 0; j < bits(N*N); j++)
+    //   bd.open[j] = -1;
   }
   board = 0;
 
   assert(N);
   assert(N <= 21);
   assert(sizeof(Board) * N*N);
-
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */
