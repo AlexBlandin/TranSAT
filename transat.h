@@ -38,8 +38,9 @@ typedef struct _Slot {
 #define as_slot(i) ((Slot) { (i/N), (i%N) })
 
 typedef struct _Board {
-  u8 forbid[bits(N*N)]; // 0 = open, 1 = forbid
+  u8 forbid[bits(N*N)]; // 0 = not forbidden, 1 = forbidden
   u8 placed[bits(N*N)]; // 0 = no queen, 1 = queen
+  u8 open[bits(N*N)]; // 0 = not open, 1 = open
   u8 queens; // how many queens we have
   Ranks ranks;
   Slot slot; // where we changed (either forbid or placed)
@@ -81,12 +82,18 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 void init() {
   seed_rng();
   for (u16 i = 0; i < N*N; i++) {
+    board = i;
     for (u16 j = 0; j < N; j++)
-      boards[i].ranks.rows[j].open = boards[i].ranks.cols[j].open = N;
+      rk.rows[j].open = rk.cols[j].open = N;
     for (u16 j = 0; j < (2*N-1); j++)
-      boards[i].ranks.dias[j].open = boards[i].ranks.adia[j].open = N;
+      rk.dias[j].open = rk.adia[j].open = N;
+    for (u16 j = 0; j < bits(N*N); j++) {
+      bd.open[j] = -1;
+    }
   }
+  board = 0;
   assert(N <= 21);
+  assert(sizeof(Board) * N*N);
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */

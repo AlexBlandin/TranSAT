@@ -16,7 +16,7 @@ bool satisfied() {
           if ((rk.cols[j].open == 1) and
               (rk.dias[i+j].open == 1) and
               (rk.adia[N-j+i-1].open == 1) and
-              (!bs_in(bd.forbid, i*N+j) and !bs_in(bd.placed, i))) {
+              (bs_in(bd.open, i))) {
               nq++;
           }
         }
@@ -38,12 +38,10 @@ bool falsified() {
 
 // NEVER AMO UNSATISFIABLE aka never returns an already occupied slot
 Slot heuristic() {
-  i8 row, col;
+  i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
-  row = sl.row;
-  col = sl.col;
-  for (u16 i = row * col; i < N*N; i++) {
-    if (!bs_in(bd.forbid, i) and !bs_in(bd.placed, i)) return as_slot(i);
+  for (u16 i = sl.row * sl.col; i < N*N; i++) {
+    if (bs_in(bd.open, i)) return as_slot(i);
   }
   #endif
   #ifdef FIRSTROW
@@ -54,13 +52,15 @@ Slot heuristic() {
   #endif
   #ifdef ANTITAW
   #endif
-
+  #if !defined(FIRSTOPEN) and !defined(FIRSTROW) and !defined(SQUAREENUM) and !defined(TAW) and !defined(ANTITAW)
+  #error "You need to choose a heuristic"
+  #endif
   return (Slot){row, col};
 }
 
 void transat() {
   do {
-    if (satisfied() or falsified() or bs_in(backtrack, board) or board >= N*N) { board--; continue; }
+    if (satisfied() or falsified() or bs_in(backtrack, board) or board + 1 >= N*N) { board--; continue; }
     if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(board); // the branching variable as chosen by our heuristics
@@ -105,6 +105,8 @@ void transat() {
       for (i16 i = 0; i < N; i++) {
         bs_set(bd.forbid, sl.row*N + i);
         bs_set(bd.forbid, i*N + sl.col);
+        bs_clear(bd.open, sl.row*N + i);
+        bs_clear(bd.open, i*N + sl.col);
       }
 
       // propagate over diagonal/antidiagonal
