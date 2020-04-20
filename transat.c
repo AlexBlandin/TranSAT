@@ -7,11 +7,23 @@
 #define FIRSTOPEN
 
 bool satisfied() {
-  if (board > N-1) {
-
-    // nq += satstats();
+  u64 _nq = nq;
+  if (bd.queens == N-1) {
+    // for all forced assignments, nq++
+    for (u8 i = 0; i < N; i++) {
+      if ((N - rk.rows[i].forbidden + rk.rows[i].placed) == 1) {
+        for (u8 j = 0; j < N; j++) {
+          if (((N - rk.cols[j].forbidden + rk.cols[j].placed) == 1) and
+               ((N - rk.dias[i+j].forbidden + rk.dias[i+j].placed) == 1) and
+               ((N - rk.dias[N-j+i-1].forbidden + rk.dias[N-j+i-1].placed) == 1) and
+               (!bs_in(bd.forbid, i*N+j) and !bs_in(bd.placed, i))) {
+                nq++;
+          }
+        }
+      }
+    }
   }
-  return false;
+  return nq == _nq;
 }
 
 // ALO unsatisfiable (implicitly never AMO unsatisfiable)
@@ -48,8 +60,7 @@ Slot heuristic() {
 
 void transat() {
   do {
-    assert(board < N*N);
-    if (bs_in(backtrack, board) or satisfied() or falsified()) { board--; continue; }
+    if (board >= N*N or bs_in(backtrack, board) or satisfied() or falsified()) { board--; continue; }
     if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(board); // the branching variable as chosen by our heuristics
@@ -62,9 +73,9 @@ void transat() {
       /* ALO Propagation */
       bs_set(boards[board].forbid, sl.row*N + sl.col);
       rk.rows[sl.row].forbidden++;
-      rk.rows[sl.col].forbidden++;
-      rk.rows[sl_dia].forbidden++;
-      rk.rows[sl_adg].forbidden++;
+      rk.cols[sl.col].forbidden++;
+      rk.dias[sl_dia].forbidden++;
+      rk.adia[sl_adg].forbidden++;
     } else {
       // reenter, place instead of forbid, exit
       copy(sizeof(Board), boards[board], boards[board+1]);
@@ -77,9 +88,9 @@ void transat() {
       i8 adg = sl.row - sl.col;
       bs_set(bd.placed, sl.row*N + sl.col);
       rk.rows[sl.row].placed = 1;
-      rk.rows[sl.col].placed = 1;
-      rk.rows[sl_dia].placed = 1;
-      rk.rows[sl_adg].placed = 1;
+      rk.cols[sl.col].placed = 1;
+      rk.dias[sl_dia].placed = 1;
+      rk.adia[sl_adg].placed = 1;
 
       // propagate over row/column
       for (i16 i = 0; i < N; i++) {
