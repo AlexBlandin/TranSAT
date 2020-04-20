@@ -63,7 +63,7 @@ void transat() {
     if (satisfied() or falsified() or bs_in(backtrack, board) or board + 1 >= N*N) { board--; continue; }
     if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
-      sl = heuristic(board); // the branching variable as chosen by our heuristics
+      sl = heuristic(); // the branching variable as chosen by our heuristics
 
       // copy
       copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
@@ -126,9 +126,10 @@ int main() {
   transat();
 
   if (nq == solutions[N]) // addressed by N as N=0 is included
-    printf("Q(%d) = %lu\n", N, nq);
+    printf("Q(%d) = %llu\n", N, nq);
   else
-    printf("Uh oh, we got %lu when it should be %lu\n", nq, solutions[N]);
+    printf("Uh oh, we got %llu when it should be %llu\n", nq, solutions[N]);
 
+  getchar();
   return 0;
 }
