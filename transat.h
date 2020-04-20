@@ -18,8 +18,9 @@ typedef union _Rank {
   struct {
   u8 placed: 1; // AMO means only one so this can be a bit
   u8 forbidden: 5; // how many are locked out
-  }; // `open` is easy to calculate, including would mean using u16 (the difference is 70kB at N=20 vs 120kB)
-  u8 rank; // I personally always have a union over bitfields in case I need to address the entire thing
+  u8 open: 5;
+  };
+  u16 rank; // I personally always have a union over bitfields in case I need to address the entire thing
 } Rank;
 
 typedef struct _Ranks {
@@ -79,10 +80,13 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 
 void init() {
   seed_rng();
+  for (u16 i = 0; i < N*N; i++) {
+    for (u16 j = 0; j < N; j++)
+      boards[i].ranks.rows[j].open = boards[i].ranks.cols[j].open = N;
+    for (u16 j = 0; j < (2*N-1); j++)
+      boards[i].ranks.dias[j].open = boards[i].ranks.adia[j].open = N;
+  }
   assert(N <= 21);
-  assert(sizeof(Rank) == 1); // 1 byte
-  assert(sizeof(Slot) == 2); // 2 bytes
-  assert(sizeof(Board) == 2*bits(N*N)+(6*N-2)); // 2*N*N bits + 6N - 2 bytes
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */

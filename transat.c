@@ -11,28 +11,28 @@ bool satisfied() {
   if (bd.queens == N-1) {
     // for all forced assignments, nq++
     for (u8 i = 0; i < N; i++) {
-      if ((N - rk.rows[i].forbidden + rk.rows[i].placed) == 1) {
+      if ((rk.rows[i].open) == 1) {
         for (u8 j = 0; j < N; j++) {
-          if (((N - rk.cols[j].forbidden + rk.cols[j].placed) == 1) and
-               ((N - rk.dias[i+j].forbidden + rk.dias[i+j].placed) == 1) and
-               ((N - rk.dias[N-j+i-1].forbidden + rk.dias[N-j+i-1].placed) == 1) and
-               (!bs_in(bd.forbid, i*N+j) and !bs_in(bd.placed, i))) {
-                nq++;
+          if ((rk.cols[j].open == 1) and
+              (rk.dias[i+j].open == 1) and
+              (rk.adia[N-j+i-1].open == 1) and
+              (!bs_in(bd.forbid, i*N+j) and !bs_in(bd.placed, i))) {
+              nq++;
           }
         }
       }
     }
   }
-  return nq == _nq;
+  return nq != _nq;
 }
 
 // ALO unsatisfiable (implicitly never AMO unsatisfiable)
 bool falsified() {
   u32 open = 0;
   for (u8 i = 0; i < N; i++)
-    open += N - rk.rows[i].forbidden + rk.rows[i].placed;
+    open += rk.rows[i].open;
   for (u8 i = 0; i < N; i++)
-    open += N - rk.cols[i].forbidden + rk.cols[i].placed;
+    open += rk.cols[i].open;
   return open == 0;
 }
 
@@ -60,7 +60,7 @@ Slot heuristic() {
 
 void transat() {
   do {
-    if (board >= N*N or bs_in(backtrack, board) or satisfied() or falsified()) { board--; continue; }
+    if (satisfied() or falsified() or bs_in(backtrack, board) or board >= N*N) { board--; continue; }
     if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(board); // the branching variable as chosen by our heuristics
@@ -76,6 +76,10 @@ void transat() {
       rk.cols[sl.col].forbidden++;
       rk.dias[sl_dia].forbidden++;
       rk.adia[sl_adg].forbidden++;
+      rk.rows[sl.row].open--;
+      rk.cols[sl.col].open--;
+      rk.dias[sl_dia].open--;
+      rk.adia[sl_adg].open--;
     } else {
       // reenter, place instead of forbid, exit
       copy(sizeof(Board), boards[board], boards[board+1]);
@@ -92,6 +96,11 @@ void transat() {
       rk.dias[sl_dia].placed = 1;
       rk.adia[sl_adg].placed = 1;
 
+      rk.rows[sl.row].open = 0;
+      rk.cols[sl.col].open = 0;
+      rk.dias[sl_dia].open = 0;
+      rk.adia[sl_adg].open = 0;
+
       // propagate over row/column
       for (i16 i = 0; i < N; i++) {
         bs_set(bd.forbid, sl.row*N + i);
@@ -106,10 +115,6 @@ void transat() {
         bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
       }
     }
-
-    // backtrack
-    board--;
-
   } while(board);
 }
 
