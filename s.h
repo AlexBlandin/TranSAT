@@ -98,20 +98,20 @@ typedef float f32;
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
 
-// N bits to ceil(N/8) bytes
+// n bits to ceil(n/8) bytes
 #define bits(n) ((n + 7) / 8)
 
-// x's value in the N'th bit
-#define bs_in(x, N) ((x)[(N)/8] & (1 << ((N) % 8)))
+// x's value in the n'th bit
+#define bs_in(x, n) ((x)[(n)/8] & (1 << ((n) % 8)))
 
-// set x's N'th bit to 1
-#define bs_set(x, N) ((x)[(N)/8] |= (1 << ((N) % 8)))
+// set x's n'th bit to 1
+#define bs_set(x, n) ((x)[(n)/8] |= (1 << ((n) % 8)))
 
-// set x's N'th bit to 0
-#define bs_clear(x, N) ((x)[(N)/8] &= ~(1 << ((N) % 8)))
+// set x's n'th bit to 0
+#define bs_clear(x, n) ((x)[(n)/8] &= ~(1 << ((n) % 8)))
 
-// toggle x's N'th bit
-#define bs_toggle(x, N) ((x)[(N)/8] ^= (1 << ((N) % 8)))
+// toggle x's n'th bit
+#define bs_toggle(x, n) ((x)[(n)/8] ^= (1 << ((n) % 8)))
 
 #if !defined(bitcount)
 i32 bitcount64(uint64_t v) { // clang-10 favoured bc. 64 bit magic???

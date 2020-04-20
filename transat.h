@@ -30,13 +30,15 @@ typedef struct _Ranks {
 } Ranks;
 
 typedef struct _Slot {
-  i8 row; // better to have separated row/col & multiply it than keep dividing
+  i8 row; // better to have separated row/col & multiply/add it (bc. FMA ops) than divide
   i8 col;
 } Slot;
 
+#define as_slot(i) ((Slot) { (i/N), (i%N) })
+
 typedef struct _Board {
-  u8 forbid[bits(N*N)]; // 0=open, 1=forbid
-  u8 placed[bits(N*N)]; // 0=no queen, 1=queen
+  u8 forbid[bits(N*N)]; // 0 = open, 1 = forbid
+  u8 placed[bits(N*N)]; // 0 = no queen, 1 = queen
   u8 queens; // how many queens we have
   Ranks ranks;
   Slot slot; // where we changed (either forbid or placed)
@@ -46,7 +48,8 @@ typedef struct _Board {
 /* DATA */
 static u64 nq = 0; // solutions
 static u16 board = 0; // current board
-static u8 progress[bits(N*N)] = {}; // 0 == go left, 1 == go right
+static u8 progress[bits(N*N)] = {}; // 0 = go left, 1 = go right
+static u8 backtrack[bits(N*N)] = {}; // 0 = deepen, 1 = backtrack
 static Board boards[N*N] = {}; // ALCS boards w/ ranks
 
 /*
