@@ -81,8 +81,7 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 
 void init() {
   seed_rng();
-  for (u16 i = 0; i < N*N; i++) {
-    board = i;
+  for (board = N*N; board--;) {
     for (u16 j = 0; j < N; j++)
       rk.rows[j].open = rk.cols[j].open = N;
     for (u16 j = 0; j < (2*N-1); j++)
@@ -92,8 +91,11 @@ void init() {
     }
   }
   board = 0;
+
+  assert(N);
   assert(N <= 21);
   assert(sizeof(Board) * N*N);
+
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */
