@@ -173,6 +173,7 @@ void transat() {
         // bs_set(bd.forbid, d2);
         // bs_set(bd.forbid, d3);
         // bs_set(bd.forbid, d4);
+      }
 
       /* recompute the ranks */
       memset(&rk, 0, sizeof(rk)); /* zero */
@@ -201,8 +202,6 @@ void transat() {
             break;
           }
         }
-      }
-
       }
     } else {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
