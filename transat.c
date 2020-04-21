@@ -95,6 +95,8 @@ Slot heuristic() {
 */
 
 void transat() {
+  bool force = false;
+  Slot forced = (Slot){0,0};
   do {
     assert(board <= N*N);
     bd.visits++;
@@ -152,7 +154,12 @@ void transat() {
     /* odd is placed, even is forbid */
     if (bd.visits & 1) {
       /* select branching variable (the slot/space we're focusing on) */
-      sl = heuristic();
+      if (force) {
+        sl = forced;
+        force = false;
+      } else {
+        sl = heuristic();
+      }
 
       copy(sizeof(Board), boards[board], boards[board+1]);
       board++;
@@ -162,17 +169,17 @@ void transat() {
       bd.space[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
 
-      // TODO: FIX PROPOGATION
       /* propagate over row/column AMO */
-      for (i16 i = 0; i < sl.col; i++)
-        bd.space[sl.row*N + i] = FORBIDDEN;
-      for (i16 i = 0; i < sl.row; i++)
+      for (u16 i = 0; i < sl.row; i++)
         bd.space[i*N + sl.col] = FORBIDDEN;
-      for (i16 i = sl.col + 1; i < N; i++)
+      for (u16 i = 0; i < sl.col; i++)
         bd.space[sl.row*N + i] = FORBIDDEN;
-      for (i16 i = sl.row + 1; i < N; i++)
+      for (u16 i = sl.row + 1; i < N; i++)
         bd.space[i*N + sl.col] = FORBIDDEN;
+      for (u16 i = sl.col + 1; i < N; i++)
+        bd.space[sl.row*N + i] = FORBIDDEN;
 
+      // TODO: FIX PROPOGATION
       /* propagate over diagonal/antidiagonal AMO */ // TODO: This is probably wrong
       for (u16 i = 0; i < N; i++) {
         u16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
@@ -188,27 +195,25 @@ void transat() {
       /* forbid a space */
       bd.space[sl.row*N + sl.col] = FORBIDDEN;
 
-      // copy(sizeof(Board), boards[board], boards[board+1]);
-      // board++;
-      // bd.visits = 0;
-
-      // /* ALO propagation (forced move) */
-      // if (rk.rows[sl.row].open - 1 == 1){
-      //   for (u8 i = 0; i < N; i++) {
-      //     if (bd.space[sl.row*N + i] == OPEN) {
-      //       bd.space[sl.row*N + i] = PLACED;
-      //       rk.rows[sl.row].open = 0;
-      //     }
-      //   }
-      // }
-      // if (rk.cols[sl.col].open - 1 == 1) {
-      //   for (u8 i = 0; i < N; i++) {
-      //     if (bd.space[i*N + sl.col] == OPEN) {
-      //       bd.space[i*N + sl.col] = PLACED;
-      //       rk.cols[sl.col].open = 0;
-      //     }
-      //   }
-      // }
+      /* ALO propagation (forced move) */
+      if (rk.rows[sl.row].open - 1 == 1){
+        for (u8 i = 0; i < N; i++) {
+          if (bd.space[sl.row*N + i] == OPEN) {
+            force = true;
+            forced = (Slot){sl.row, i};
+            break;
+          }
+        }
+      }
+      if (rk.cols[sl.col].open - 1 == 1) {
+        for (u8 i = 0; i < N; i++) {
+          if (bd.space[i*N + sl.col] == OPEN) {
+            force = true;
+            forced = (Slot){i, sl.col};
+            break;
+          }
+        }
+      }
 
     }
 
