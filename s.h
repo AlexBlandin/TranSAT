@@ -34,6 +34,20 @@ typedef int8_t i8;
 #define i16_MIN INT16_MIN
 #define i8_MIN INT8_MIN
 
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+typedef int8_t s8;
+
+#define s64_MAX INT64_MAX
+#define s32_MAX INT32_MAX
+#define s16_MAX INT16_MAX
+#define s8_MAX INT8_MAX
+#define s64_MIN INT64_MIN
+#define s32_MIN INT32_MIN
+#define s16_MIN INT16_MIN
+#define s8_MIN INT8_MIN
+
 typedef double f64;
 typedef float f32;
 

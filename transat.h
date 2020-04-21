@@ -1,12 +1,12 @@
 #ifndef TRANSAT_H_IMPLEMENTED
 #define TRANSAT_H_IMPLEMENTED
 
-// 22 is the max
+/* 22 is the max */
 #ifndef N
 #define N 4
 #endif
 
-// n MUST BE A CONSTANT
+/* n MUST BE A CONSTANT */
 #define queen(n) if (n < N) queens.q##n
 #define bd boards[board]
 #define sl boards[board].slot
@@ -16,22 +16,22 @@
 
 typedef union _Rank {
   struct {
-  u8 placed: 1; // AMO means only one so this can be a bit
-  u8 forbidden: 5; // how many are locked out
+  u8 placed: 5; /* AMO means only one so this can be a bit */
+  u8 forbidden: 5; /* how many are locked out */
   u8 open: 5;
   };
-  u16 rank; // I personally always have a union over bitfields in case I need to address the entire thing
+  u16 rank; /* I always have a union over bitfields in case I need to address the entire thing */
 } Rank;
 
 typedef struct _Ranks {
-  Rank rows[N]; // how many are placed/forbidden
-  Rank cols[N]; // (open = N - closed, closed = placed + forbidden))...
-  Rank dias[2*N-1]; // diagonal open replaces N with the diagonal length
-  Rank adia[2*N-1]; // open = len - closed, len = N - abs(row-col) FOR ADIA NOT DIAS
+  Rank rows[N]; /* how many are placed/forbidden */
+  Rank cols[N]; /* (open = N - closed, closed = placed + forbidden))... */
+  Rank dias[2*N-1]; /* diagonal open replaces N with the diagonal length */
+  Rank adia[2*N-1]; /* open = len - closed, len = N - abs(row-col) FOR ADIA NOT DIAS */
 } Ranks;
 
 typedef struct _Slot {
-  i8 row; // better to have separated row/col & multiply/add it (bc. FMA ops) than divide
+  i8 row; /* better to have separated row/col & multiply/add it (bc. FMA ops) than divide */
   i8 col;
 } Slot;
 
@@ -42,22 +42,22 @@ typedef struct _Slot {
 #define PLACED 2
 
 typedef struct _Board {
-  // u8 forbid[bits(N*N)]; // 0 = not forbidden, 1 = forbidden
-  // u8 placed[bits(N*N)]; // 0 = no queen, 1 = queen
-  // u8 open[bits(N*N)]; // 0 = not open, 1 = open
-  u8 queens; // how many queens we have
-  Slot slot; // where we changed (either forbid or placed)
-  u8 state[N*N]; // state, 0 = open, 1 = forbidden, 2 = placed queen
+  // u8 forbid[bits(N*N)]; /* 0 = not forbidden, 1 = forbidden */
+  // u8 placed[bits(N*N)]; /* 0 = no queen, 1 = queen */
+  // u8 open[bits(N*N)]; /* 0 = not open, 1 = open */
+  u8 queens_left; /* how many pieces we have left to place */
+  u16 visits; /* how many times this has been (re)entered, odd is placed, even is forbid */
+  Slot slot; /* where we changed (either forbid or placed) */
+  u8 state[N*N]; /* state, 0 = open, 1 = forbidden, 2 = placed queen */
   Ranks ranks;
 } Board;
 
 
 /* DATA */
-static u64 nq = 0; // solutions
-static u16 board = 0; // current board
-static u8 progress[bits(N*N)]; // 0 = go left, 1 = go right
-static u8 backtrack[bits(N*N)]; // 0 = deepen, 1 = backtrack
-static Board boards[N*N+1]; // ALCS boards w/ ranks
+static u64 nq = 0; /* solutions */
+static s16 board = 0; /* current board */
+static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
+static Board boards[N*N+1]; /* ALCS boards w/ ranks */
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
@@ -76,6 +76,7 @@ void init() {
       rk.dias[j].open = rk.adia[j].open = N;
     for (u16 j = 0; j < N*N; j++)
       bd.state[j] = OPEN;
+    bd.queens_left = N;
     // for (u16 j = 0; j < bits(N*N); j++)
     //   bd.open[j] = -1;
   }

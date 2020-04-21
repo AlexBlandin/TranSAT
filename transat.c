@@ -1,22 +1,23 @@
-// https://github.com/nothings/stb
-#include "stretchy_buffer.h" // requires -Wno-unused-value
+// /* https://github.com/nothings/stb */
+// #include "stretchy_buffer.h" /* requires -Wno-unused-value */
 
-#include "s.h" // short.hand
-#include "transat.h" // transat header (types, common funcs, etc)
+#include "s.h" /* short.hand */
+#include "transat.h" /* transat header (types, common funcs, etc) */
 
 #define FIRSTOPEN
 
+/* Is this board trivial to solve now? */
 bool satisfied() {
   u64 _nq = nq;
-  if (bd.queens == N-1) {
-    // for all forced assignments, nq++
+  if (bd.queens_left == 1) {
+    /* for all forced assignments, nq++ */
     for (u8 i = 0; i < N; i++) {
       if ((rk.rows[i].open) == 1) {
         for (u8 j = 0; j < N; j++) {
           if ((rk.cols[j].open == 1) and
               (rk.dias[i+j].open == 1) and
               (rk.adia[N-j+i-1].open == 1) and
-              (bd.state[i*N + j] == OPEN)) {
+              (bd.state[i*N + j] == OPEN) /* and doesn't violate AMO */) {
               //(bs_in(bd.open, i))) {
               nq++;
           }
@@ -27,17 +28,34 @@ bool satisfied() {
   return nq != _nq;
 }
 
-// ALO unsatisfiable (implicitly never AMO unsatisfiable)
+/* Is this board valid / usable for further queen placement? */
 bool falsified() {
+
+  /* ALO unsatisfiable */
   u32 open = 0;
-  for (u8 i = 0; i < N; i++)
+  for (u8 i = 0; i < N; i++) {
     open += rk.rows[i].open;
-  for (u8 i = 0; i < N; i++)
     open += rk.cols[i].open;
-  return open == 0;
+  }
+  if (open == 0) return true;
+
+  /* AMO unsatisfied */
+  #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
+  /* Only do if using a heuristic that can give AMO unsatisfiable output */
+  for (u8 i = 0; i < N; i++)
+    if (rk.rows[i].placed > 1) return true;
+  for (u8 i = 0; i < N; i++)
+    if (rk.cols[i].placed > 1) return true;
+  for (u8 i = 0; i < (2*N-1); i++)
+    if (rk.dias[i].placed > 1) return true;
+  for (u8 i = 0; i < (2*N-1); i++)
+    if (rk.adia[i].placed > 1) return true;
+  #endif
+
+  return false;
 }
 
-// NEVER AMO UNSATISFIABLE aka never returns an already occupied slot
+/* Pick a space any space but NEVER AN ALREADY OCCUPIED SPACE OR ROW OR COLUMN OR DIAGONAL */
 Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
@@ -54,7 +72,7 @@ Slot heuristic() {
   #endif
   #ifdef ANTITAW
   #endif
-  #if !defined(FIRSTOPEN) and !defined(FIRSTROW) and !defined(SQUAREENUM) and !defined(TAW) and !defined(ANTITAW)
+  #if not (defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW))
   #error "You need to choose a heuristic"
   #endif
   return (Slot){row, col};
@@ -63,65 +81,44 @@ Slot heuristic() {
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 
 /*
-so I need to change it to loop in place for the difference branching variables
-so forbid the slot on return, which should be enough for it to not go crazy
-and I also need to redo `satisfied` and figure out why it just starts going backwards
-so rework the backtracking (from scratch most likely)
-so the most important thing is rework backtracking to only go back when no open fields?
+  TODO: redo `satisfied` and `unsatisfied`
 */
 
 void transat() {
   do {
-    if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
-    if (satisfied() or falsified() or bs_in(backtrack, board) or board >= N*N) { board--; continue; }
-    if (bs_in(progress, board) == 0) {
+    bd.visits++;
+    assert(board <= N*N);
+    // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
+    if (falsified() or satisfied()) { board--; continue; }
+    if (bd.visits & 1 /*bs_in(progress, board) == 0*/) {
       /* HEURISTICS */
       sl = heuristic(); // the branching variable as chosen by our heuristics
 
-      // copy
-      copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
-      bs_set(progress, board); // when we come back, "branch"
-      board++;
-
-      bd.state[sl.row*N + sl.col] = FORBIDDEN;
-      // bs_set(bd.forbid, sl.row*N + sl.col);
-      // bs_clear(bd.open,sl.row*N + sl.col);
-
-      /* ALO Propagation */
-      rk.rows[sl.row].forbidden++;
-      rk.cols[sl.col].forbidden++;
-      rk.dias[sl_dia].forbidden++;
-      rk.adia[sl_adg].forbidden++;
-      rk.rows[sl.row].open--;
-      rk.cols[sl.col].open--;
-      rk.dias[sl_dia].open--;
-      rk.adia[sl_adg].open--;
-    } else {
-      // reenter, place instead of forbid, exit
+      /* place a queen */
       copy(sizeof(Board), boards[board], boards[board+1]);
-      bs_set(backtrack, board); // when we come back, backtrack up
-      bs_clearall(progress, board); // reset all forward progress
-      for (int b = (board/8)+1; b < ((N+7)/8); b++) progress[b] = 0;
+      // bs_clearall(progress, board); // reset all forward progress
+      // for (int b = (board/8)+1; b < ((N+7)/8); b++) progress[b] = 0;
       board++;
 
-      bd.queens++;
+      bd.visits = 0;
+      bd.queens_left--;
       bd.state[sl.row*N + sl.col] = PLACED;
-      //bs_set(bd.placed, sl.row*N + sl.col);
+      // bs_set(bd.placed, sl.row*N + sl.col);
 
       /* AMO Propagation */
       i8 dia = sl.row + sl.col;
       i8 adg = sl.row - sl.col;
-      rk.rows[sl.row].placed = 1;
-      rk.cols[sl.col].placed = 1;
-      rk.dias[sl_dia].placed = 1;
-      rk.adia[sl_adg].placed = 1;
+      rk.rows[sl.row].placed++;
+      rk.cols[sl.col].placed++;
+      rk.dias[sl_dia].placed++;
+      rk.adia[sl_adg].placed++;
 
       rk.rows[sl.row].open = 0;
       rk.cols[sl.col].open = 0;
       rk.dias[sl_dia].open = 0;
       rk.adia[sl_adg].open = 0;
 
-      // propagate over row/column
+      /* propagate over row/column */
       for (i16 i = 0; i < N; i++) {
         bd.state[sl.row*N + i] = FORBIDDEN;
         bd.state[i*N + sl.col] = FORBIDDEN;
@@ -131,7 +128,7 @@ void transat() {
         // bs_clear(bd.open, i*N + sl.col);
       }
 
-      // propagate over diagonal/antidiagonal
+      /* propagate over diagonal/antidiagonal */
       for (i16 i = 0; i < N; i++) {
         bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
         bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
@@ -142,8 +139,26 @@ void transat() {
         // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1));
         // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
       }
+    } else {
+      bd.state[sl.row*N + sl.col] = FORBIDDEN;
+      // bs_set(bd.forbid, sl.row*N + sl.col);
+      // bs_clear(bd.open,sl.row*N + sl.col);
+
+      rk.rows[sl.row].forbidden++;
+      rk.cols[sl.col].forbidden++;
+      rk.dias[sl_dia].forbidden++;
+      rk.adia[sl_adg].forbidden++;
+      rk.rows[sl.row].open--;
+      rk.cols[sl.col].open--;
+      rk.dias[sl_dia].open--;
+      rk.adia[sl_adg].open--;
+
+      // /* propagate */ // is this even neccessary?
+      // copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
+      // // bs_set(progress, board); // when we come back, "branch"
+      // board++;
     }
-  } while(board);
+  } while(board > -1);
 }
 
 int main() {
@@ -151,7 +166,7 @@ int main() {
 
   transat();
 
-  if (nq == solutions[N]) // addressed by N as N=0 is included
+  if (nq == solutions[N]) /* addressed by N as N=0 is included */
     printf("Q(%d) = %"LU"\n", N, nq);
   else
     printf("Uh oh, we got %"LU" when it should be %"LU"\n", nq, solutions[N]);
