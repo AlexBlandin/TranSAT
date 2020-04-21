@@ -73,10 +73,10 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 void init() {
   seed_rng();
   for (board = N*N; board--;) {
-    // for (u16 i = 0; i < N; i++)
-    //   rk.rows[i].open = rk.cols[i].open = N;
-    // for (u16 i = 0; i < (2*N-1); i++)
-    //   rk.dias[i].open = rk.adia[i].open = N;
+    for (u16 i = 0; i < N; i++)
+      rk.rows[i].open = rk.cols[i].open = N;
+    for (u16 i = 0; i < (2*N-1); i++)
+      rk.dias[i].open = rk.adia[i].open = N;
     for (u16 i = 0; i < N*N; i++)
       bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;

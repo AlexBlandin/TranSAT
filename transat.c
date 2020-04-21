@@ -9,47 +9,40 @@
 // TODO: is this correct?
 /* Is this board trivial to solve now? */
 bool satisfied() {
-  u64 _nq = nq; /* previous queens count */
+  u64 prev_nq = nq; /* previous queens count */
   u8 queens = 0;
   switch (bd.queens_left) {
     case 0:
     /* for all valid n-queens configs */
-    for (u8 i = 0; i < N; i++) {
-      if (rk.rows[i].placed == 1) {
-        for (u8 j = 0; j < N; j++) {
-          if (bd.state[i*N + j] == PLACED) {
-              //(bs_in(bd.open, i))) {
-              queens++;
-          }
-        }
-      }
-    }
+    for (u16 i = 0; i < N*N; i++)
+      if (bd.state[i] == PLACED)
+        queens++;
     if (queens == N)
       nq++;
     break;
-    case 1:
-    /* for all forced assignments, nq++ */
-    for (u8 i = 0; i < N; i++) {
-      if (rk.rows[i].open == 1) {
-        for (u8 j = 0; j < N; j++) {
-          if ((rk.cols[j].open == 1) and
-              (rk.dias[i+j].open == 1) and
-              (rk.adia[N-j+i-1].open == 1) and
-              (bd.state[i*N + j] == OPEN) and
-              (rk.cols[j].placed <= 1) and
-              (rk.dias[i+j].placed <= 1) and
-              (rk.adia[N-j+i-1].placed <= 1)) {
-              //(bs_in(bd.open, i))) {
-              nq++;
-          }
-        }
-      }
-    }
-    break;
+    // case 1:
+    // /* for all forced assignments, nq++ */
+    // for (u8 i = 0; i < N; i++) {
+    //   if (rk.rows[i].open == 1) {
+    //     for (u8 j = 0; j < N; j++) {
+    //       if ((rk.cols[j].open == 1) and
+    //           (rk.dias[i+j].open == 1) and
+    //           (rk.adia[N-j+i-1].open == 1) and
+    //           (bd.state[i*N + j] == OPEN) and
+    //           (rk.cols[j].placed <= 1) and
+    //           (rk.dias[i+j].placed <= 1) and
+    //           (rk.adia[N-j+i-1].placed <= 1)) {
+    //           //(bs_in(bd.open, i))) {
+    //           nq++;
+    //       }
+    //     }
+    //   }
+    // }
+    // break;
     default:
     break;
   }
-  return nq != _nq;
+  return nq != prev_nq;
 }
 
 /* Is this board valid / usable for further queen placement? */
@@ -64,26 +57,20 @@ bool falsified() {
     return true;
 
   /* AMO unsatisfied */
-  #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
+  #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
   for (u8 i = 0; i < N; i++)
-    if (rk.rows[i].placed > 1)
-      return true;
-  for (u8 i = 0; i < N; i++)
-    if (rk.cols[i].placed > 1)
+    if ((rk.rows[i].placed > 1) or (rk.cols[i].placed > 1))
       return true;
   for (u8 i = 0; i < (2*N-1); i++)
-    if (rk.dias[i].placed > 1)
-      return true;
-  for (u8 i = 0; i < (2*N-1); i++)
-    if (rk.adia[i].placed > 1)
+    if ((rk.dias[i].placed > 1) or (rk.adia[i].placed > 1))
       return true;
   #endif
 
   return false;
 }
 
-/* Pick a space any open space but NEVER AN ALREADY OCCUPIED SPACE OR ROW OR COLUMN OR DIAGONAL */
+/* Pick a space any (open) space */
 Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
@@ -114,38 +101,6 @@ void transat() {
   do {
     assert(board <= N*N);
     bd.visits++;
-
-    /* compute the ranks */
-    memset(&rk, 0, sizeof(rk)); /* zero */
-    for (s8 i = 0; i < N; i++) {
-      for (s8 j = 0; j < N; j++) {
-        u8 state = bd.state[i*N + j];
-        u8 row = i;
-        u8 col = j;
-        u8 diag = i+j;
-        u8 adia = N - j + i - 1;
-        switch (state) {
-          case PLACED:
-          rk.rows[row].placed++;
-          rk.cols[col].placed++;
-          rk.dias[diag].placed++;
-          rk.adia[adia].placed++;
-          break;
-          case FORBIDDEN:
-          rk.rows[row].forbidden++;
-          rk.cols[col].forbidden++;
-          rk.dias[diag].forbidden++;
-          rk.adia[adia].forbidden++;
-          break;
-          case OPEN:
-          rk.rows[row].open++;
-          rk.cols[col].open++;
-          rk.dias[diag].open++;
-          rk.adia[adia].open++;
-          break;
-        }
-      }
-    }
 
     // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
     if (satisfied() or falsified()) {
@@ -219,32 +174,70 @@ void transat() {
         // bs_set(bd.forbid, d3);
         // bs_set(bd.forbid, d4);
 
+      /* recompute the ranks */
+      memset(&rk, 0, sizeof(rk)); /* zero */
+      for (u8 row = 0; row < N; row++) {
+        for (u8 col = 0; col < N; col++) {
+          u8 diag = row + col;
+          u8 adia = N - col + row - 1;
+          switch (bd.state[row*N + col]) {
+            case PLACED:
+            rk.rows[row].placed++;
+            rk.cols[col].placed++;
+            rk.dias[diag].placed++;
+            rk.adia[adia].placed++;
+            break;
+            case FORBIDDEN:
+            rk.rows[row].forbidden++;
+            rk.cols[col].forbidden++;
+            rk.dias[diag].forbidden++;
+            rk.adia[adia].forbidden++;
+            break;
+            case OPEN:
+            rk.rows[row].open++;
+            rk.cols[col].open++;
+            rk.dias[diag].open++;
+            rk.adia[adia].open++;
+            break;
+          }
+        }
+      }
+
       }
     } else {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
 
+      /* TODO: check if we can inline this to just this under all circumstances and put the full compute in the other one */
+      rk.rows[sl.row].forbidden++;
+      rk.cols[sl.col].forbidden++;
+      rk.dias[sl_dia].forbidden++;
+      rk.adia[sl_adg].forbidden++;
+      rk.rows[sl.row].open--; // -= rk.rows[sl.row].open ? 1 : 0;
+      rk.cols[sl.col].open--; // -= rk.cols[sl.col].open ? 1 : 0;
+      rk.dias[sl_dia].open--; // -= rk.dias[sl_dia].open ? 1 : 0;
+      rk.adia[sl_adg].open--; // -= rk.adia[sl_adg].open ? 1 : 0;
+
       /* ALO propagation (forced move) */
-      if (rk.rows[sl.row].open - 1 == 1) /* if there'd be only one open spot next loop */
-        for (u8 i = 0; i < N; i++)
-          if (bd.state[sl.row*N + i] == OPEN)
+      if (rk.rows[sl.row].open == 1){
+        for (u8 i = 0; i < N; i++) {
+          if (bd.state[sl.row*N + i] == OPEN) {
             bd.state[sl.row*N + i] = PLACED;
-      if (rk.cols[sl.col].open - 1 == 1)
-        for (u8 i = 0; i < N; i++)
-          if (bd.state[i*N + sl.col] == OPEN)
+            rk.rows[sl.row].open = 0;
+          }
+        }
+      }
+      if (rk.cols[sl.col].open == 1) {
+        for (u8 i = 0; i < N; i++) {
+          if (bd.state[i*N + sl.col] == OPEN) {
             bd.state[i*N + sl.col] = PLACED;
+            rk.cols[sl.col].open = 0;
+          }
+        }
+      }
 
       // bs_set(bd.forbid, sl.row*N + sl.col);
       // bs_clear(bd.open,sl.row*N + sl.col);
 
-      // /* TODO: check if we can inline this to just this under all circumstances and put the full compute in the other one */
-      // rk.rows[sl.row].forbidden++;
-      // rk.cols[sl.col].forbidden++;
-      // rk.dias[sl_dia].forbidden++;
-      // rk.adia[sl_adg].forbidden++;
-      // rk.rows[sl.row].open -= rk.rows[sl.row].open ? 1 : 0;
-      // rk.cols[sl.col].open -= rk.cols[sl.col].open ? 1 : 0;
-      // rk.dias[sl_dia].open -= rk.dias[sl_dia].open ? 1 : 0;
-      // rk.adia[sl_adg].open -= rk.adia[sl_adg].open ? 1 : 0;
 
       // /* propagate */ // is this even neccessary?
       // copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
@@ -264,6 +257,6 @@ int main() {
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
     printf("Q(%d) = %"LU"\n", N, nq);
   else
-    printf("Uh oh, we got %"LU" when it should be %"LU"\n", nq, solutions[N]);
+    printf("Q(%d) != %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return 0;
 }
