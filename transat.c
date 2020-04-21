@@ -89,10 +89,9 @@ Slot heuristic() {
 }
 
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
+
 /*
-
   TODO: We seem to be propagating too much
-
 */
 
 void transat() {
@@ -174,7 +173,7 @@ void transat() {
       for (i16 i = sl.row + 1; i < N; i++)
         bd.space[i*N + sl.col] = FORBIDDEN;
 
-      /* propagate over diagonal/antidiagonal AMO */
+      /* propagate over diagonal/antidiagonal AMO */ // TODO: This is probably wrong
       for (u16 i = 0; i < N; i++) {
         u16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
         u16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
