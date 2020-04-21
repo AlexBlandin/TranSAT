@@ -26,8 +26,8 @@ typedef union _Rank {
 typedef struct _Ranks {
   Rank rows[N]; /* how many are placed/forbidden */
   Rank cols[N]; /* (open = N - closed, closed = placed + forbidden))... */
-  Rank dias[2*N-1]; /* diagonal open replaces N with the diagonal length */
-  Rank adia[2*N-1]; /* open = len - closed, len = N - abs(row-col) FOR ADIA NOT DIAS */
+  Rank dias[2*N-1]; /* row + sl */
+  Rank adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
 } Ranks;
 
 typedef struct _Slot {
@@ -55,6 +55,7 @@ typedef struct _Board {
 
 /* DATA */
 static u64 nq = 0; /* solutions */
+static u64 loops = 0; /* how many times around have we gone? */
 static s16 board = 0; /* current board */
 static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
 static Board boards[N*N+1]; /* ALCS boards w/ ranks */
@@ -70,15 +71,15 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 void init() {
   seed_rng();
   for (board = N*N; board--;) {
-    for (u16 j = 0; j < N; j++)
-      rk.rows[j].open = rk.cols[j].open = N;
-    for (u16 j = 0; j < (2*N-1); j++)
-      rk.dias[j].open = rk.adia[j].open = N;
-    for (u16 j = 0; j < N*N; j++)
-      bd.state[j] = OPEN;
+    // for (u16 i = 0; i < N; i++)
+    //   rk.rows[i].open = rk.cols[i].open = N;
+    // for (u16 i = 0; i < (2*N-1); i++)
+    //   rk.dias[i].open = rk.adia[i].open = N;
+    for (u16 i = 0; i < N*N; i++)
+      bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;
-    // for (u16 j = 0; j < bits(N*N); j++)
-    //   bd.open[j] = -1;
+    // for (u16 i = 0; i < bits(N*N); i++)
+    //   bd.open[i] = -1;
   }
   board = 0;
 

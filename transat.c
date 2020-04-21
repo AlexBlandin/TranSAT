@@ -6,6 +6,7 @@
 
 #define FIRSTOPEN
 
+// TODO: is this correct?
 /* Is this board trivial to solve now? */
 bool satisfied() {
   u64 _nq = nq;
@@ -28,6 +29,7 @@ bool satisfied() {
   return nq != _nq;
 }
 
+// TODO: is this correct?
 /* Is this board valid / usable for further queen placement? */
 bool falsified() {
 
@@ -55,6 +57,7 @@ bool falsified() {
   return false;
 }
 
+// TODO: is this correct?
 /* Pick a space any space but NEVER AN ALREADY OCCUPIED SPACE OR ROW OR COLUMN OR DIAGONAL */
 Slot heuristic() {
   i8 row, col; row = col = 0;
@@ -80,16 +83,15 @@ Slot heuristic() {
 
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 
-/*
-  TODO: redo `satisfied` and `unsatisfied`
-*/
-
 void transat() {
   do {
     bd.visits++;
     assert(board <= N*N);
     // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
-    if (falsified() or satisfied()) { board--; continue; }
+    if (loops and (falsified() or satisfied())) {
+      board--;
+      continue;
+    }
     if (bd.visits & 1) { /* odd is placed, even is forbid */
     // if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
@@ -118,6 +120,11 @@ void transat() {
       rk.cols[sl.col].open = 0;
       rk.dias[sl_dia].open = 0;
       rk.adia[sl_adg].open = 0;
+
+      /* TODO: WE FORGOT THE RANKS ON THE PROPAGATED ROWS/COLS/DIAGS
+               IT DOESN'T DECREASE OPEN ON THE OTHER ROWS?COLS/DIAGS */
+
+      /* Is it just easier to recount the ranks each time? Guaranteed to be correct... */
 
       /* propagate over row/column */
       for (i16 i = 0; i < sl.col; i++)
@@ -149,26 +156,62 @@ void transat() {
         // bs_set(bd.forbid, d2);
         // bs_set(bd.forbid, d3);
         // bs_set(bd.forbid, d4);
+
       }
     } else {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
       // bs_set(bd.forbid, sl.row*N + sl.col);
       // bs_clear(bd.open,sl.row*N + sl.col);
 
-      rk.rows[sl.row].forbidden++;
-      rk.cols[sl.col].forbidden++;
-      rk.dias[sl_dia].forbidden++;
-      rk.adia[sl_adg].forbidden++;
-      rk.rows[sl.row].open -= rk.rows[sl.row].open ? 1 : 0;
-      rk.cols[sl.col].open -= rk.cols[sl.col].open ? 1 : 0;
-      rk.dias[sl_dia].open -= rk.dias[sl_dia].open ? 1 : 0;
-      rk.adia[sl_adg].open -= rk.adia[sl_adg].open ? 1 : 0;
+      // /* TODO: check if we can inline this to just this under all circumstances and put the full compute in the other one */
+      // rk.rows[sl.row].forbidden++;
+      // rk.cols[sl.col].forbidden++;
+      // rk.dias[sl_dia].forbidden++;
+      // rk.adia[sl_adg].forbidden++;
+      // rk.rows[sl.row].open -= rk.rows[sl.row].open ? 1 : 0;
+      // rk.cols[sl.col].open -= rk.cols[sl.col].open ? 1 : 0;
+      // rk.dias[sl_dia].open -= rk.dias[sl_dia].open ? 1 : 0;
+      // rk.adia[sl_adg].open -= rk.adia[sl_adg].open ? 1 : 0;
 
       // /* propagate */ // is this even neccessary?
       // copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
       // // bs_set(progress, board); // when we come back, "branch"
       // board++;
     }
+
+    /* compute the ranks */
+    for (s8 i = 0; i < N; i++) {
+      for (s8 j = 0; j < N; j++) {
+        u8 state = bd.state[i*N + j];
+        u8 row = i;
+        u8 col = j;
+        u8 diag = i+j;
+        u8 adia = N - j + i - 1;
+        // TODO: redo completely so just count up like this?
+        switch (state) {
+          case PLACED:
+          rk.rows[row].placed++;
+          rk.cols[col].placed++;
+          rk.dias[diag].placed++;
+          rk.adia[adia].placed++;
+          break;
+          case FORBIDDEN:
+          rk.rows[row].forbidden++;
+          rk.cols[col].forbidden++;
+          rk.dias[diag].forbidden++;
+          rk.adia[adia].forbidden++;
+          break;
+          case OPEN:
+          rk.rows[row].open++;
+          rk.cols[col].open++;
+          rk.dias[diag].open++;
+          rk.adia[adia].open++;
+          break;
+        }
+      }
+    }
+
+    loops++;
   } while(board > -1);
 }
 
