@@ -50,8 +50,6 @@ bool falsified() {
   /* ALO unsatisfiable */
   if ((rk.open_rows == 0) and (rk.open_cols == 0))
     return true;
-  if ((bitcount32(rk.open_rows) < bd.queens_left) or (bitcount32(rk.open_cols) < bd.queens_left))
-    return true;
 
   /* AMO unsatisfied */
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
@@ -133,16 +131,22 @@ void transat() {
       }
     }
 
-    printf("b[%d](%d), sl = (%d, %d), open r/c = (%d, %d), loops = %"LU"\n", board, bd.visits, sl.row, sl.col, bitcount32(rk.open_rows), bitcount32(rk.open_cols), loops);
-    for (u16 i = 0; i < N; i++) {
-      for (u16 j = 0; j < N; j++)
-        printf("%d ", bd.space[i*N + j]);
+    // if (bd.queens_left < 2) {
+      printf("b[%d], ql = %d, sl = (%d, %d), loops = %"LU".\n", board, bd.queens_left, sl.row, sl.col, loops);
+      for (u16 i = 0; i < N; i++) {
+        for (u16 j = 0; j < N; j++)
+          printf("%d ", bd.space[i*N + j]);
+        println();
+      }
       println();
-    }
-    println();
+    // }
 
     if (satisfied() or falsified()) {
-      board--;
+      // if (bd.visits & 1) {
+        board--;
+      // } else {
+      //   bd.forced
+      // }
       continue;
     }
 
@@ -159,6 +163,7 @@ void transat() {
       bd.space[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
 
+      // TODO: FIX PROPOGATION
       /* propagate over row/column AMO */
       for (i16 i = 0; i < sl.col; i++)
         bd.space[sl.row*N + i] = FORBIDDEN;
@@ -184,23 +189,28 @@ void transat() {
       /* forbid a space */
       bd.space[sl.row*N + sl.col] = FORBIDDEN;
 
-      /* ALO propagation (forced move) */
-      if (rk.rows[sl.row].open - 1 == 1){
-        for (u8 i = 0; i < N; i++) {
-          if (bd.space[sl.row*N + i] == OPEN) {
-            bd.space[sl.row*N + i] = PLACED;
-            rk.rows[sl.row].open = 0;
-          }
-        }
-      }
-      if (rk.cols[sl.col].open - 1 == 1) {
-        for (u8 i = 0; i < N; i++) {
-          if (bd.space[i*N + sl.col] == OPEN) {
-            bd.space[i*N + sl.col] = PLACED;
-            rk.cols[sl.col].open = 0;
-          }
-        }
-      }
+      // copy(sizeof(Board), boards[board], boards[board+1]);
+      // board++;
+      // bd.visits = 0;
+
+      // /* ALO propagation (forced move) */
+      // if (rk.rows[sl.row].open - 1 == 1){
+      //   for (u8 i = 0; i < N; i++) {
+      //     if (bd.space[sl.row*N + i] == OPEN) {
+      //       bd.space[sl.row*N + i] = PLACED;
+      //       rk.rows[sl.row].open = 0;
+      //     }
+      //   }
+      // }
+      // if (rk.cols[sl.col].open - 1 == 1) {
+      //   for (u8 i = 0; i < N; i++) {
+      //     if (bd.space[i*N + sl.col] == OPEN) {
+      //       bd.space[i*N + sl.col] = PLACED;
+      //       rk.cols[sl.col].open = 0;
+      //     }
+      //   }
+      // }
+
     }
 
     loops++;
