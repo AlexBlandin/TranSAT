@@ -48,12 +48,9 @@ bool satisfied() {
 /* Is this board valid / usable for further queen placement? */
 bool falsified() {
   /* ALO unsatisfiable */
-  u32 open = 0;
-  for (u8 i = 0; i < N; i++) {
-    open += rk.rows[i].open;
-    open += rk.cols[i].open;
-  }
-  if (open == 0)
+  if ((rk.open_rows == 0) and (rk.open_cols == 0))
+    return true;
+  if ((bitcount32(rk.open_rows) < bd.queens_left) or (bitcount32(rk.open_cols) < bd.queens_left))
     return true;
 
   /* AMO unsatisfied */
@@ -94,6 +91,11 @@ Slot heuristic() {
 }
 
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
+/*
+
+  TODO: We seem to be propagating too much
+
+*/
 
 void transat() {
   do {
@@ -101,33 +103,43 @@ void transat() {
     bd.visits++;
 
     /* recompute the ranks */
-      memset(&rk, 0, sizeof(rk)); /* zero */
-      for (u8 row = 0; row < N; row++) {
-        for (u8 col = 0; col < N; col++) {
-          u8 diag = row + col;
-          u8 adia = N - col + row - 1;
-          switch (bd.space[row*N + col]) {
-            case PLACED:
-            rk.rows[row].placed++;
-            rk.cols[col].placed++;
-            rk.dias[diag].placed++;
-            rk.adia[adia].placed++;
-            break;
-            case FORBIDDEN:
-            rk.rows[row].forbidden++;
-            rk.cols[col].forbidden++;
-            rk.dias[diag].forbidden++;
-            rk.adia[adia].forbidden++;
-            break;
-            case OPEN:
-            rk.rows[row].open++;
-            rk.cols[col].open++;
-            rk.dias[diag].open++;
-            rk.adia[adia].open++;
-            break;
-          }
+    zero(rk);
+    for (u8 row = 0; row < N; row++) {
+      for (u8 col = 0; col < N; col++) {
+        u8 diag = row + col;
+        u8 adia = N - col + row - 1;
+        switch (bd.space[row*N + col]) {
+          case PLACED:
+          rk.rows[row].placed++;
+          rk.cols[col].placed++;
+          rk.dias[diag].placed++;
+          rk.adia[adia].placed++;
+          break;
+          case FORBIDDEN:
+          rk.rows[row].forbidden++;
+          rk.cols[col].forbidden++;
+          rk.dias[diag].forbidden++;
+          rk.adia[adia].forbidden++;
+          break;
+          case OPEN:
+          rk.rows[row].open++;
+          rk.cols[col].open++;
+          rk.dias[diag].open++;
+          rk.adia[adia].open++;
+          rk.open_rows |= 1 << row;
+          rk.open_cols |= 1 << col;
+          break;
         }
       }
+    }
+
+    printf("b[%d](%d), sl = (%d, %d), open r/c = (%d, %d), loops = %"LU"\n", board, bd.visits, sl.row, sl.col, bitcount32(rk.open_rows), bitcount32(rk.open_cols), loops);
+    for (u16 i = 0; i < N; i++) {
+      for (u16 j = 0; j < N; j++)
+        printf("%d ", bd.space[i*N + j]);
+      println();
+    }
+    println();
 
     if (satisfied() or falsified()) {
       board--;
@@ -136,7 +148,7 @@ void transat() {
 
     /* odd is placed, even is forbid */
     if (bd.visits & 1) {
-      /* HEURISTICS */
+      /* select branching variable (the slot/space we're focusing on) */
       sl = heuristic();
 
       copy(sizeof(Board), boards[board], boards[board+1]);
@@ -158,11 +170,11 @@ void transat() {
         bd.space[i*N + sl.col] = FORBIDDEN;
 
       /* propagate over diagonal/antidiagonal AMO */
-      for (i16 i = 0; i < N; i++) {
-        i16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
-        i16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
-        i16 d3 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1);
-        i16 d4 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1);
+      for (u16 i = 0; i < N; i++) {
+        u16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
+        u16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
+        u16 d3 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1);
+        u16 d4 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1);
         bd.space[d1] = (bd.space[d1] == PLACED) ? PLACED : FORBIDDEN;
         bd.space[d2] = (bd.space[d2] == PLACED) ? PLACED : FORBIDDEN;
         bd.space[d3] = (bd.space[d3] == PLACED) ? PLACED : FORBIDDEN;
@@ -203,6 +215,6 @@ int main() {
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
     printf("Q(%d) = %"LU"\n", N, nq);
   else
-    printf("Q(%d) != %"LU", should be %"LU"\n", N, nq, solutions[N]);
+    printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return 0;
 }

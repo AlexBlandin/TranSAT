@@ -77,10 +77,11 @@ typedef float f32;
 #define false 0
 #endif
 
-#ifndef copy
 // copy n bytes from src to dst
 #define copy(n_bytes, src, dst) memcpy(&dst, &src, n_bytes)
-#endif
+
+// zero all bytes of source according to sizeof(src)
+#define zero(src) memset(&src, 0, sizeof(src))
 
 #ifndef swap
 #define swap(a, b) (((a) ^= (b)), ((b) ^= (a)), ((a) ^= (b)))
@@ -172,7 +173,13 @@ bool prime(u32 n) {
 #endif
 
 // Just prints a newline
-void println(){printf("\n");}
+void println(){
+#ifdef _WIN32
+  printf("\r\n");
+#else
+  printf("\n");
+#endif
+}
 
 // 2 u32s into a u64, `a` goes into "left" (higher) bits
 #define packu64(a, b) (((u64)(a)) << 32 | (b))

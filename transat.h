@@ -15,20 +15,19 @@
 #define sl_dia (sl.row + sl.col)
 #define sl_adg (N - sl.col + sl.row - 1)
 
-typedef union _Rank {
-  struct {
-  u8 placed: 5; /* AMO means only one so this can be a bit */
+typedef struct _Rank {
+  u8 open: 5; /* how many spaces are open */
   u8 forbidden: 5; /* how many are locked out */
-  u8 open: 5; /* how many are open */
-  };
-  u16 rank; /* I always have a union over bitfields in case I need to address the entire thing */
+  u8 placed: 5; /* how many queens are there */
 } Rank;
 
 typedef struct _Ranks {
-  Rank rows[N]; /* how many are placed/forbidden */
-  Rank cols[N]; /* (open = N - closed, closed = placed + forbidden))... */
+  Rank rows[N];
+  Rank cols[N];
   Rank dias[2*N-1]; /* row + sl */
   Rank adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
+  u32 open_rows; // bitset of open rows (0 = all full)
+  u32 open_cols; // bitset of open columns
 } Ranks;
 
 typedef struct _Slot {
@@ -82,6 +81,8 @@ void init() {
 
   assert(N);
   assert(N <= 21);
+  assert(sizeof(Rank));
+  assert(sizeof(Ranks));
   assert(sizeof(Board) * N*N);
 }
 
