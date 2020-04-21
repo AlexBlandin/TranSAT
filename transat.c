@@ -95,8 +95,8 @@ Slot heuristic() {
 */
 
 void transat() {
-  bool force = false;
-  Slot forced = (Slot){0,0};
+  bool forced = false;
+  Slot queued = (Slot){0,0};
   do {
     assert(board <= N*N);
     bd.visits++;
@@ -143,20 +143,16 @@ void transat() {
     // }
 
     if (satisfied() or falsified()) {
-      // if (bd.visits & 1) {
-        board--;
-      // } else {
-      //   bd.forced
-      // }
+      board--;
       continue;
     }
 
     /* odd is placed, even is forbid */
     if (bd.visits & 1) {
       /* select branching variable (the slot/space we're focusing on) */
-      if (force) {
-        sl = forced;
-        force = false;
+      if (forced) {
+        sl = queued;
+        forced = false;
       } else {
         sl = heuristic();
       }
@@ -199,8 +195,8 @@ void transat() {
       if (rk.rows[sl.row].open - 1 == 1){
         for (u8 i = 0; i < N; i++) {
           if (bd.space[sl.row*N + i] == OPEN) {
-            force = true;
-            forced = (Slot){sl.row, i};
+            forced = true;
+            queued = (Slot){sl.row, i}; // queue the
             break;
           }
         }
@@ -208,8 +204,8 @@ void transat() {
       if (rk.cols[sl.col].open - 1 == 1) {
         for (u8 i = 0; i < N; i++) {
           if (bd.space[i*N + sl.col] == OPEN) {
-            force = true;
-            forced = (Slot){i, sl.col};
+            forced = true;
+            queued = (Slot){i, sl.col};
             break;
           }
         }
