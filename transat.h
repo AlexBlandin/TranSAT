@@ -45,7 +45,7 @@ typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 visits; /* how many times this has been (re)entered, odd is placed, even is forbid */
   Slot slot; /* where we changed (either forbid or placed) */
-  u8 space[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
+  u8 state[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
   // Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
 
@@ -74,7 +74,7 @@ void init() {
     for (u16 i = 0; i < (2*N-1); i++)
       rk.dias[i].open = rk.adia[i].open = N;
     for (u16 i = 0; i < N*N; i++)
-      bd.space[i] = OPEN; /* in case we change it (unlikely) */
+      bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;
   }
   board = 0;

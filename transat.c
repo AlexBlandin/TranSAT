@@ -15,7 +15,7 @@ bool satisfied() {
     case 0:
     /* for all valid n-queens configs */
     for (u16 i = 0; i < N*N; i++)
-      if (bd.space[i] == PLACED)
+      if (bd.state[i] == PLACED)
         queens++;
     if (queens == N)
       nq++;
@@ -25,13 +25,13 @@ bool satisfied() {
     for (u8 i = 0; i < N; i++) {
       if (rk.rows[i].open == 1) {
         for (u8 j = 0; j < N; j++) {
-          if ((rk.cols[j].open == 1) and
-              (rk.dias[i+j].open == 1) and
-              (rk.adia[N-j+i-1].open == 1) and
-              (bd.space[i*N + j] == OPEN) and
-              (rk.cols[j].placed <= 1) and
-              (rk.dias[i+j].placed <= 1) and
-              (rk.adia[N-j+i-1].placed <= 1)) {
+          if (rk.cols[j].open == 1 and
+              rk.dias[i+j].open == 1 and
+              rk.adia[N-j+i-1].open == 1 and
+              bd.state[i*N + j] == OPEN and
+              rk.cols[j].placed <= 1 and
+              rk.dias[i+j].placed <= 1 and
+              rk.adia[N-j+i-1].placed <= 1) {
               //(bs_in(bd.open, i))) {
               nq++;
           }
@@ -48,17 +48,17 @@ bool satisfied() {
 /* Is this board valid / usable for further queen placement? */
 bool falsified() {
   /* ALO unsatisfiable */
-  if ((rk.open_rows == 0) and (rk.open_cols == 0))
+  if (rk.open_rows == 0 and rk.open_cols == 0)
     return true;
 
   /* AMO unsatisfied */
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
   for (u8 i = 0; i < N; i++)
-    if ((rk.rows[i].placed > 1) or (rk.cols[i].placed > 1))
+    if (rk.rows[i].placed > 1 or rk.cols[i].placed > 1)
       return true;
   for (u8 i = 0; i < (2*N-1); i++)
-    if ((rk.dias[i].placed > 1) or (rk.adia[i].placed > 1))
+    if (rk.dias[i].placed > 1 or rk.adia[i].placed > 1)
       return true;
   #endif
 
@@ -70,7 +70,7 @@ Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
   for (u16 i = sl.row * sl.col; i < N*N; i++) {
-    if (bd.space[i] == OPEN)
+    if (bd.state[i] == OPEN)
       return as_slot(i);
   }
   #endif
@@ -104,10 +104,10 @@ void transat() {
     /* recompute the ranks */
     zero(rk);
     for (u8 row = 0; row < N; row++) {
-      for (u8 col = 0; col < N; col++) {
+      for (u8 col = 0; col < N; col++) { // we can make this much faster using bitcounts of 3 bitsets
         u8 diag = row + col;
         u8 adia = N - col + row - 1;
-        switch (bd.space[row*N + col]) {
+        switch (bd.state[row*N + col]) {
           case PLACED:
           rk.rows[row].placed++;
           rk.cols[col].placed++;
@@ -136,7 +136,7 @@ void transat() {
       printf("b[%d], ql = %d, sl = (%d, %d), loops = %"LU".\n", board, bd.queens_left, sl.row, sl.col, loops);
       for (u16 i = 0; i < N; i++) {
         for (u16 j = 0; j < N; j++)
-          printf("%d ", bd.space[i*N + j]);
+          printf("%d ", bd.state[i*N + j]);
         println();
       }
       println();
@@ -162,18 +162,18 @@ void transat() {
       bd.visits = 0;
 
       /* place a queen */
-      bd.space[sl.row*N + sl.col] = PLACED;
+      bd.state[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
 
       /* propagate over row/column AMO */
       for (u16 i = 0; i < sl.row; i++)
-        bd.space[i*N + sl.col] = FORBIDDEN;
+        bd.state[i*N + sl.col] = FORBIDDEN;
       for (u16 i = 0; i < sl.col; i++)
-        bd.space[sl.row*N + i] = FORBIDDEN;
+        bd.state[sl.row*N + i] = FORBIDDEN;
       for (u16 i = sl.row + 1; i < N; i++)
-        bd.space[i*N + sl.col] = FORBIDDEN;
+        bd.state[i*N + sl.col] = FORBIDDEN;
       for (u16 i = sl.col + 1; i < N; i++)
-        bd.space[sl.row*N + i] = FORBIDDEN;
+        bd.state[sl.row*N + i] = FORBIDDEN;
 
       // TODO: FIX PROPOGATION
       /* propagate over diagonal/antidiagonal AMO */ // TODO: This is probably wrong
@@ -182,28 +182,28 @@ void transat() {
         u16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
         u16 d3 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1);
         u16 d4 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1);
-        bd.space[d1] = (bd.space[d1] == PLACED) ? PLACED : FORBIDDEN;
-        bd.space[d2] = (bd.space[d2] == PLACED) ? PLACED : FORBIDDEN;
-        bd.space[d3] = (bd.space[d3] == PLACED) ? PLACED : FORBIDDEN;
-        bd.space[d4] = (bd.space[d4] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d1] = (bd.state[d1] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d2] = (bd.state[d2] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d3] = (bd.state[d3] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d4] = (bd.state[d4] == PLACED) ? PLACED : FORBIDDEN;
       }
     } else {
       /* forbid a space */
-      bd.space[sl.row*N + sl.col] = FORBIDDEN;
+      bd.state[sl.row*N + sl.col] = FORBIDDEN;
 
       /* ALO propagation (forced move) */
       if (rk.rows[sl.row].open - 1 == 1){
         for (u8 i = 0; i < N; i++) {
-          if (bd.space[sl.row*N + i] == OPEN) {
+          if (bd.state[sl.row*N + i] == OPEN) {
             forced = true;
             queued = (Slot){sl.row, i}; // queue the
             break;
           }
         }
       }
-      if (rk.cols[sl.col].open - 1 == 1) {
+      if (not forced and rk.cols[sl.col].open - 1 == 1) {
         for (u8 i = 0; i < N; i++) {
-          if (bd.space[i*N + sl.col] == OPEN) {
+          if (bd.state[i*N + sl.col] == OPEN) {
             forced = true;
             queued = (Slot){i, sl.col};
             break;
