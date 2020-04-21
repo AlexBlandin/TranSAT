@@ -79,7 +79,7 @@ typedef float f32;
 
 #ifndef copy
 // copy n bytes from src to dst
-#define copy(bytes, src, dst) memcpy(&dst, &src, bytes)
+#define copy(n_bytes, src, dst) memcpy(&dst, &src, n_bytes)
 #endif
 
 #ifndef swap

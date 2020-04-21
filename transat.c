@@ -89,6 +89,7 @@ void transat() {
     bd.visits++;
 
     /* compute the ranks */
+    memset(&rk, 0, sizeof(rk)); /* zero */
     for (s8 i = 0; i < N; i++) {
       for (s8 j = 0; j < N; j++) {
         u8 state = bd.state[i*N + j];
@@ -121,7 +122,7 @@ void transat() {
     }
 
     // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
-    if (falsified() or satisfied()) {
+    if (satisfied() or falsified()) {
       board--;
       continue;
     }

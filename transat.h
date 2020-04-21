@@ -10,7 +10,8 @@
 #define queen(n) if (n < N) queens.q##n
 #define bd boards[board]
 #define sl boards[board].slot
-#define rk boards[board].ranks
+#define rk ranks
+//#define rk boards[board].ranks
 #define sl_dia (sl.row + sl.col)
 #define sl_adg (N - sl.col + sl.row - 1)
 
@@ -49,7 +50,7 @@ typedef struct _Board {
   u16 visits; /* how many times this has been (re)entered, odd is placed, even is forbid */
   Slot slot; /* where we changed (either forbid or placed) */
   u8 state[N*N]; /* state, 0 = open, 1 = forbidden, 2 = placed queen */
-  Ranks ranks;
+  // Ranks ranks;
 } Board;
 
 
@@ -59,6 +60,7 @@ static u64 loops = 0; /* how many times around have we gone? */
 static s16 board = 0; /* current board */
 static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
 static Board boards[N*N+1]; /* ALCS boards w/ ranks */
+static Ranks ranks; // just maintain the one set for now, since we're always recalculating
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
