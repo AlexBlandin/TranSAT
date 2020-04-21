@@ -85,14 +85,49 @@ Slot heuristic() {
 
 void transat() {
   do {
-    bd.visits++;
     assert(board <= N*N);
+    bd.visits++;
+
+    /* compute the ranks */
+    for (s8 i = 0; i < N; i++) {
+      for (s8 j = 0; j < N; j++) {
+        u8 state = bd.state[i*N + j];
+        u8 row = i;
+        u8 col = j;
+        u8 diag = i+j;
+        u8 adia = N - j + i - 1;
+        // TODO: redo completely so just count up like this?
+        switch (state) {
+          case PLACED:
+          rk.rows[row].placed++;
+          rk.cols[col].placed++;
+          rk.dias[diag].placed++;
+          rk.adia[adia].placed++;
+          break;
+          case FORBIDDEN:
+          rk.rows[row].forbidden++;
+          rk.cols[col].forbidden++;
+          rk.dias[diag].forbidden++;
+          rk.adia[adia].forbidden++;
+          break;
+          case OPEN:
+          rk.rows[row].open++;
+          rk.cols[col].open++;
+          rk.dias[diag].open++;
+          rk.adia[adia].open++;
+          break;
+        }
+      }
+    }
+
     // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
-    if (loops and (falsified() or satisfied())) {
+    if (falsified() or satisfied()) {
       board--;
       continue;
     }
-    if (bd.visits & 1) { /* odd is placed, even is forbid */
+
+    /* odd is placed, even is forbid */
+    if (bd.visits & 1) {
     // if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(); // the branching variable as chosen by our heuristics
@@ -177,38 +212,6 @@ void transat() {
       // copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices
       // // bs_set(progress, board); // when we come back, "branch"
       // board++;
-    }
-
-    /* compute the ranks */
-    for (s8 i = 0; i < N; i++) {
-      for (s8 j = 0; j < N; j++) {
-        u8 state = bd.state[i*N + j];
-        u8 row = i;
-        u8 col = j;
-        u8 diag = i+j;
-        u8 adia = N - j + i - 1;
-        // TODO: redo completely so just count up like this?
-        switch (state) {
-          case PLACED:
-          rk.rows[row].placed++;
-          rk.cols[col].placed++;
-          rk.dias[diag].placed++;
-          rk.adia[adia].placed++;
-          break;
-          case FORBIDDEN:
-          rk.rows[row].forbidden++;
-          rk.cols[col].forbidden++;
-          rk.dias[diag].forbidden++;
-          rk.adia[adia].forbidden++;
-          break;
-          case OPEN:
-          rk.rows[row].open++;
-          rk.cols[col].open++;
-          rk.dias[diag].open++;
-          rk.adia[adia].open++;
-          break;
-        }
-      }
     }
 
     loops++;
