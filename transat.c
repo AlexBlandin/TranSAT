@@ -90,7 +90,8 @@ void transat() {
     assert(board <= N*N);
     // if (board == 0 and nq < solutions[N]) bs_clear(progress, board);
     if (falsified() or satisfied()) { board--; continue; }
-    if (bd.visits & 1 /*bs_in(progress, board) == 0*/) {
+    if (bd.visits & 1) { /* odd is placed, even is forbid */
+    // if (bs_in(progress, board) == 0) {
       /* HEURISTICS */
       sl = heuristic(); // the branching variable as chosen by our heuristics
 
@@ -119,25 +120,35 @@ void transat() {
       rk.adia[sl_adg].open = 0;
 
       /* propagate over row/column */
-      for (i16 i = 0; i < N; i++) {
+      for (i16 i = 0; i < sl.col; i++)
         bd.state[sl.row*N + i] = FORBIDDEN;
+      for (i16 i = 0; i < sl.row; i++)
         bd.state[i*N + sl.col] = FORBIDDEN;
-        // bs_set(bd.forbid, sl.row*N + i);
-        // bs_set(bd.forbid, i*N + sl.col);
-        // bs_clear(bd.open, sl.row*N + i);
-        // bs_clear(bd.open, i*N + sl.col);
-      }
+      for (i16 i = sl.col + 1; i < N; i++)
+        bd.state[sl.row*N + i] = FORBIDDEN;
+      for (i16 i = sl.row + 1; i < N; i++)
+        bd.state[i*N + sl.col] = FORBIDDEN;
+      // for (i16 = 0; i < N; i++) {
+      //   bs_set(bd.forbid, sl.row*N + i);
+      //   bs_set(bd.forbid, i*N + sl.col);
+      //   bs_clear(bd.open, sl.row*N + i);
+      //   bs_clear(bd.open, i*N + sl.col);
+      // }
 
       /* propagate over diagonal/antidiagonal */
       for (i16 i = 0; i < N; i++) {
-        bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] = (bd.state[clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1)] = (bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1)] = (bd.state[clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1)] == PLACED) ? PLACED : FORBIDDEN;
-        // bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1));
-        // bs_set(bd.forbid, clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1));
-        // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1));
-        // bs_set(bd.forbid, clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1));
+        i16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
+        i16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
+        i16 d3 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1);
+        i16 d4 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1);
+        bd.state[d1] = (bd.state[d1] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d2] = (bd.state[d2] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d3] = (bd.state[d3] == PLACED) ? PLACED : FORBIDDEN;
+        bd.state[d4] = (bd.state[d4] == PLACED) ? PLACED : FORBIDDEN;
+        // bs_set(bd.forbid, d1);
+        // bs_set(bd.forbid, d2);
+        // bs_set(bd.forbid, d3);
+        // bs_set(bd.forbid, d4);
       }
     } else {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
@@ -148,10 +159,10 @@ void transat() {
       rk.cols[sl.col].forbidden++;
       rk.dias[sl_dia].forbidden++;
       rk.adia[sl_adg].forbidden++;
-      rk.rows[sl.row].open--;
-      rk.cols[sl.col].open--;
-      rk.dias[sl_dia].open--;
-      rk.adia[sl_adg].open--;
+      rk.rows[sl.row].open -= rk.rows[sl.row].open ? 1 : 0;
+      rk.cols[sl.col].open -= rk.cols[sl.col].open ? 1 : 0;
+      rk.dias[sl_dia].open -= rk.dias[sl_dia].open ? 1 : 0;
+      rk.adia[sl_adg].open -= rk.adia[sl_adg].open ? 1 : 0;
 
       // /* propagate */ // is this even neccessary?
       // copy(sizeof(Board), boards[board], boards[board+1]); // should still be faster on these small matrices

@@ -18,7 +18,7 @@ typedef union _Rank {
   struct {
   u8 placed: 5; /* AMO means only one so this can be a bit */
   u8 forbidden: 5; /* how many are locked out */
-  u8 open: 5;
+  u8 open: 5; /* how many are open */
   };
   u16 rank; /* I always have a union over bitfields in case I need to address the entire thing */
 } Rank;
