@@ -52,9 +52,10 @@ typedef double f64;
 typedef float f32;
 
 #ifdef _WIN32
+/* use in a "... %"LU" ..." pattern, allows formatting */
 #define LU "llu"
-#endif
-#ifndef _WIN32
+#else
+/* use in a "... %"LU" ..." pattern, allows formatting */
 #define LU "lu"
 #endif
 
@@ -77,10 +78,10 @@ typedef float f32;
 #define false 0
 #endif
 
-// copy n bytes from src to dst
+/* copy n bytes from src to dst */
 #define copy(n_bytes, src, dst) memcpy(&dst, &src, n_bytes)
 
-// zero all bytes of source according to sizeof(src)
+/* zero all bytes of source according to sizeof(src) */
 #define zero(src) memset(&src, 0, sizeof(src))
 
 #ifndef swap
@@ -104,7 +105,7 @@ typedef float f32;
 #endif
 
 #ifndef clamp
-// clamp the value of x to the range l..r
+/* clamp the value of x to the range l..r */
 #define clamp(x, l, r) ((x) < (l) ? (l) : (x) > (r) ? (r) : (x))
 #endif
 
@@ -120,26 +121,26 @@ typedef float f32;
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
 
-// n bits to ceil(n/8) bytes
+/* n bits to ceil(n/8) bytes */
 #define bits(n) ((n + 7) / 8)
 
-// x's value in the n'th bit
+/* x's value in the n'th bit */
 #define bs_in(x, n) ((x)[(n)/8] & (1 << ((n) % 8)))
 
-// set x's n'th bit to 1
+/* set x's n'th bit to 1 */
 #define bs_set(x, n) ((x)[(n)/8] |= (1 << ((n) % 8)))
 
-// set x's n'th bit to 0
+/* set x's n'th bit to 0 */
 #define bs_clear(x, n) ((x)[(n)/8] &= ~(1 << ((n) % 8)))
 
-// set x's bits from n on to 0
+/* set x's bits from n on to 0 */
 #define bs_clearall(x, n) ((x)[(n)/8] &= ~((1 << (((n) % 8) + 1))-1))
 
-// toggle x's n'th bit
+/* toggle x's n'th bit */
 #define bs_toggle(x, n) ((x)[(n)/8] ^= (1 << ((n) % 8)))
 
 #if !defined(bitcount)
-i32 bitcount64(uint64_t v) { // clang-10 favoured bc. 64 bit magic???
+i32 bitcount64(uint64_t v) { /* clang-10 favoured bc. 64 bit magic??? */
   i32 r = 0;
   while(v != 0) {
     v &= v - 1;
@@ -151,7 +152,7 @@ i32 bitcount64(uint64_t v) { // clang-10 favoured bc. 64 bit magic???
 
 /* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
 #if !defined(bitcount32)
-i32 bitcount32(u32 v) { // gcc favoured (clang converts to popcount, popcount is slower???)
+i32 bitcount32(u32 v) { /* gcc favoured (clang converts to popcount, popcount is slower???) */
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
   return (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
@@ -172,7 +173,7 @@ bool prime(u32 n) {
 }
 #endif
 
-// Just prints a newline
+/* just prints a newline */
 void println(){
 #ifdef _WIN32
   printf("\r\n");
@@ -181,12 +182,12 @@ void println(){
 #endif
 }
 
-// 2 u32s into a u64, `a` goes into "left" (higher) bits
+/* 2 u32s into a u64, `a` goes into "left" (higher) bits */
 #define packu64(a, b) (((u64)(a)) << 32 | (b))
 
-static u64 rng_state[4]; // xoshiro256** state
+static u64 rng_state[4]; /* xoshiro256** state */
 #define xs_rotl(x, k) ((x << k) | (x >> (64 - k)))
-u64 randint(void) { // xoshiro256** PRNG
+u64 randint(void) { /* xoshiro256** PRNG */
   const u64 result = xs_rotl(rng_state[1] * 5, 7) * 9, t = rng_state[1] << 17;
 
   rng_state[2] ^= rng_state[0];
@@ -209,4 +210,4 @@ void seed_rng() {
   _unseeded = false;
 }
 
-#endif // SHORTHAND_H_INCLUDED
+#endif /* SHORTHAND_H_INCLUDED */
