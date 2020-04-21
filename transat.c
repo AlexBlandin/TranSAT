@@ -9,62 +9,89 @@
 // TODO: is this correct?
 /* Is this board trivial to solve now? */
 bool satisfied() {
-  u64 _nq = nq;
-  if (bd.queens_left == 1) {
+  u64 _nq = nq; /* previous queens count */
+  u8 queens = 0;
+  switch (bd.queens_left) {
+    case 0:
+    /* for all valid n-queens configs */
+    for (u8 i = 0; i < N; i++) {
+      if (rk.rows[i].placed == 1) {
+        for (u8 j = 0; j < N; j++) {
+          if (bd.state[i*N + j] == PLACED) {
+              //(bs_in(bd.open, i))) {
+              queens++;
+          }
+        }
+      }
+    }
+    if (queens == N)
+      nq++;
+    break;
+    case 1:
     /* for all forced assignments, nq++ */
     for (u8 i = 0; i < N; i++) {
-      if ((rk.rows[i].open) == 1) {
+      if (rk.rows[i].open == 1) {
         for (u8 j = 0; j < N; j++) {
           if ((rk.cols[j].open == 1) and
               (rk.dias[i+j].open == 1) and
               (rk.adia[N-j+i-1].open == 1) and
-              (bd.state[i*N + j] == OPEN) /* and doesn't violate AMO */) {
+              (bd.state[i*N + j] == OPEN) and
+              (rk.cols[j].placed <= 1) and
+              (rk.dias[i+j].placed <= 1) and
+              (rk.adia[N-j+i-1].placed <= 1)) {
               //(bs_in(bd.open, i))) {
               nq++;
           }
         }
       }
     }
+    break;
+    default:
+    break;
   }
   return nq != _nq;
 }
 
-// TODO: is this correct?
 /* Is this board valid / usable for further queen placement? */
 bool falsified() {
-
   /* ALO unsatisfiable */
   u32 open = 0;
   for (u8 i = 0; i < N; i++) {
     open += rk.rows[i].open;
     open += rk.cols[i].open;
   }
-  if (open == 0) return true;
+  if (open == 0)
+    return true;
 
   /* AMO unsatisfied */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
   for (u8 i = 0; i < N; i++)
-    if (rk.rows[i].placed > 1) return true;
+    if (rk.rows[i].placed > 1)
+      return true;
   for (u8 i = 0; i < N; i++)
-    if (rk.cols[i].placed > 1) return true;
+    if (rk.cols[i].placed > 1)
+      return true;
   for (u8 i = 0; i < (2*N-1); i++)
-    if (rk.dias[i].placed > 1) return true;
+    if (rk.dias[i].placed > 1)
+      return true;
   for (u8 i = 0; i < (2*N-1); i++)
-    if (rk.adia[i].placed > 1) return true;
+    if (rk.adia[i].placed > 1)
+      return true;
   #endif
 
   return false;
 }
 
-// TODO: is this correct?
-/* Pick a space any space but NEVER AN ALREADY OCCUPIED SPACE OR ROW OR COLUMN OR DIAGONAL */
+/* Pick a space any open space but NEVER AN ALREADY OCCUPIED SPACE OR ROW OR COLUMN OR DIAGONAL */
 Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
   for (u16 i = sl.row * sl.col; i < N*N; i++) {
-    if (bd.state[i] == OPEN) return as_slot(i);
-    // if (bs_in(bd.open, i)) return as_slot(i);
+    if (bd.state[i] == OPEN)
+      return as_slot(i);
+    // if (bs_in(bd.open, i))
+    //   return as_slot(i);
   }
   #endif
   #ifdef FIRSTROW
@@ -97,7 +124,6 @@ void transat() {
         u8 col = j;
         u8 diag = i+j;
         u8 adia = N - j + i - 1;
-        // TODO: redo completely so just count up like this?
         switch (state) {
           case PLACED:
           rk.rows[row].placed++;
@@ -144,23 +170,23 @@ void transat() {
       bd.state[sl.row*N + sl.col] = PLACED;
       // bs_set(bd.placed, sl.row*N + sl.col);
 
-      /* AMO Propagation */
-      i8 dia = sl.row + sl.col;
-      i8 adg = sl.row - sl.col;
-      rk.rows[sl.row].placed++;
-      rk.cols[sl.col].placed++;
-      rk.dias[sl_dia].placed++;
-      rk.adia[sl_adg].placed++;
+      // /* AMO Propagation */
+      // i8 dia = sl.row + sl.col;
+      // i8 adg = sl.row - sl.col;
+      // rk.rows[sl.row].placed++;
+      // rk.cols[sl.col].placed++;
+      // rk.dias[sl_dia].placed++;
+      // rk.adia[sl_adg].placed++;
 
-      rk.rows[sl.row].open = 0;
-      rk.cols[sl.col].open = 0;
-      rk.dias[sl_dia].open = 0;
-      rk.adia[sl_adg].open = 0;
+      // rk.rows[sl.row].open = 0;
+      // rk.cols[sl.col].open = 0;
+      // rk.dias[sl_dia].open = 0;
+      // rk.adia[sl_adg].open = 0;
 
-      /* TODO: WE FORGOT THE RANKS ON THE PROPAGATED ROWS/COLS/DIAGS
-               IT DOESN'T DECREASE OPEN ON THE OTHER ROWS?COLS/DIAGS */
+      // /* TODO: WE FORGOT THE RANKS ON THE PROPAGATED ROWS/COLS/DIAGS
+      //          IT DOESN'T DECREASE OPEN ON THE OTHER ROWS?COLS/DIAGS */
 
-      /* Is it just easier to recount the ranks each time? Guaranteed to be correct... */
+      /* Easier to just recount the ranks each time? Guaranteed to be correct... */
 
       /* propagate over row/column */
       for (i16 i = 0; i < sl.col; i++)
@@ -196,6 +222,17 @@ void transat() {
       }
     } else {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
+
+      /* ALO propagation (forced move) */
+      if (rk.rows[sl.row].open - 1 == 1) /* if there'd be only one open spot next loop */
+        for (u8 i = 0; i < N; i++)
+          if (bd.state[sl.row*N + i] == OPEN)
+            bd.state[sl.row*N + i] = PLACED;
+      if (rk.cols[sl.col].open - 1 == 1)
+        for (u8 i = 0; i < N; i++)
+          if (bd.state[i*N + sl.col] == OPEN)
+            bd.state[i*N + sl.col] = PLACED;
+
       // bs_set(bd.forbid, sl.row*N + sl.col);
       // bs_clear(bd.open,sl.row*N + sl.col);
 
