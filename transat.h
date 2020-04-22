@@ -43,7 +43,7 @@ typedef struct _Slot {
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
-  u16 visits; /* how many times this has been (re)entered, odd is placed, even is forbid */
+  u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
   u8 state[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
   // Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
@@ -52,7 +52,6 @@ typedef struct _Board {
 
 /* DATA */
 static u64 nq = 0; /* solutions */
-static u64 loops = 0; /* how many times around have we gone? */
 static s16 board = 0; /* current board */
 static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
 static Board boards[N*N+1]; /* ALCS boards w/ ranks */

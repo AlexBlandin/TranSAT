@@ -6,8 +6,8 @@
 
 #define FIRSTOPEN
 
-/* Is this board trivial to solve now? */
-bool satisfied() {
+/* is this board trivial to solve now? */
+static bool satisfied() {
   u64 prev_nq = nq; /* previous queens count */
   u8 queens = 0;
   switch (bd.queens_left) {
@@ -44,14 +44,14 @@ bool satisfied() {
   return nq != prev_nq;
 }
 
-/* Is this board valid / usable for further queen placement? */
-bool falsified() {
+/* is this board valid / usable for further queen placement? */
+static bool falsified() {
   /* ALO unsatisfiable */
   if (rk.open_rows == 0 and rk.open_cols == 0)
     return true;
 
   /* AMO unsatisfied */
-  /* Only do if using a heuristic that can give AMO unsatisfiable output */
+  /* only do if using a heuristic that can give AMO unsatisfiable output */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
   for (u16 i = 0; i < N; i++) // TODO: speedup
     for (u16 j = 0; j < N; j++)
@@ -62,8 +62,8 @@ bool falsified() {
   return false;
 }
 
-/* Pick a space any (open) space */
-Slot heuristic() {
+/* pick a space any (open) space */
+static inline Slot heuristic() {
   i8 row, col; row = col = 0;
   #ifdef FIRSTOPEN
   for (u16 i = sl.row * sl.col; i < N*N; i++) {
@@ -91,7 +91,8 @@ Slot heuristic() {
   TODO: speedup!
 */
 
-void transat() {
+/* the TranSAT N-Queens solver */
+static inline void transat() {
   bool forced = false;
   Slot queued = (Slot){0,0};
   do {
@@ -131,7 +132,7 @@ void transat() {
 
     #ifdef PRINTOUT
     if (bd.queens_left == 0) {
-      printf("b[%d], ql = %d, sl = (%d, %d), loops = %"LU", nq = %"LU"\n", board, bd.queens_left, sl.row, sl.col, loops, nq);
+      printf("b[%d], ql = %d, sl = (%d, %d), nq = %"LU"\n", board, bd.queens_left, sl.row, sl.col, nq);
       for (u16 i = 0; i < N; i++) {
         for (u16 j = 0; j < N; j++)
           printf("%d ", bd.state[i*N + j]);
@@ -158,7 +159,7 @@ void transat() {
 
       copy(sizeof(Board), boards[board], boards[board+1]);
       board++;
-      bd.visits = 0;
+      bd.visits = 0; // all new board have 0 visits
 
       /* place a queen */
       bd.state[sl.row*N + sl.col] = PLACED;
@@ -185,7 +186,7 @@ void transat() {
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
 
       /* ALO propagation (forced move) */
-      if (rk.rows[sl.row].open - 1 == 1){
+      if (rk.rows[sl.row].open - 1 == 1){ // if, after closing a slot, there is only 1 open, it's a forced move
         for (u8 i = 0; i < N; i++) {
           if (bd.state[sl.row*N + i] == OPEN) {
             forced = true;
@@ -205,13 +206,7 @@ void transat() {
       }
 
     }
-
-    loops++;
   } while(board > -1);
-
-  #ifdef PRINTOUT
-  printf("loops = %"LU", nq = %"LU" of %"LU"\n", loops, nq, solutions[N]);
-  #endif
 }
 
 int main() {
