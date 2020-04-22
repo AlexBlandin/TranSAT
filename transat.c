@@ -6,7 +6,6 @@
 
 #define FIRSTOPEN
 
-// TODO: is this correct?
 /* Is this board trivial to solve now? */
 bool satisfied() {
   u64 prev_nq = nq; /* previous queens count */
@@ -14,7 +13,7 @@ bool satisfied() {
   switch (bd.queens_left) {
     case 0:
     /* for all valid n-queens configs */
-    for (u16 i = 0; i < N; i++)
+    for (u16 i = 0; i < N; i++) // TODO: speedup
       for (u16 j = 0; j < N; j++)
         if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
           return false;
@@ -54,7 +53,7 @@ bool falsified() {
   /* AMO unsatisfied */
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
-  for (u16 i = 0; i < N; i++)
+  for (u16 i = 0; i < N; i++) // TODO: speedup
     for (u16 j = 0; j < N; j++)
       if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
         return true;
@@ -89,7 +88,7 @@ Slot heuristic() {
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 
 /*
-  TODO: We seem to be propagating too much
+  TODO: speedup!
 */
 
 void transat() {
@@ -99,7 +98,7 @@ void transat() {
     assert(board <= N*N);
     bd.visits++;
 
-    /* recompute the ranks */
+    /* recompute the ranks */ // TODO: speedup
     zero(rk);
     for (u8 row = 0; row < N; row++) {
       for (u8 col = 0; col < N; col++) { // we can make this much faster using bitcounts of 3 bitsets
@@ -224,5 +223,5 @@ int main() {
     printf("Q(%d) = %"LU"\n", N, nq);
   else
     printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
-  return 0;
+  return nq != solutions[N];
 }

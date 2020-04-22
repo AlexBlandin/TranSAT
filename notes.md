@@ -24,6 +24,11 @@ Rosetta
 20 | 39029188884  | 147m46.599s
 21 | 314666222712 | 1235m0.767s
 
+
+
+
+
+
       If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
       I would need to take the queens out again to drop from 124kB to 99kB...
 
