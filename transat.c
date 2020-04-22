@@ -189,7 +189,7 @@ void transat() {
         for (u8 i = 0; i < N; i++) {
           if (bd.state[sl.row*N + i] == OPEN) {
             forced = true;
-            queued = (Slot){sl.row, i}; // queue the
+            queued = (Slot){sl.row, i}; // queue the forced move for the next loop
             break;
           }
         }
