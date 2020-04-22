@@ -14,31 +14,31 @@ bool satisfied() {
   switch (bd.queens_left) {
     case 0:
     /* for all valid n-queens configs */
-    for (u16 i = 0; i < N*N; i++)
-      if (bd.state[i] == PLACED)
-        queens++;
-    if (queens == N)
-      nq++;
+    for (u16 i = 0; i < N; i++)
+      for (u16 j = 0; j < N; j++)
+        if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
+          return false;
+    nq++;
     break;
-    case 1:
-    /* for all forced assignments, nq++ */
-    for (u8 i = 0; i < N; i++) {
-      if (rk.rows[i].open == 1) {
-        for (u8 j = 0; j < N; j++) {
-          if (rk.cols[j].open == 1 and
-              rk.dias[i+j].open == 1 and
-              rk.adia[N-j+i-1].open == 1 and
-              bd.state[i*N + j] == OPEN and
-              rk.cols[j].placed <= 1 and
-              rk.dias[i+j].placed <= 1 and
-              rk.adia[N-j+i-1].placed <= 1) {
-              //(bs_in(bd.open, i))) {
-              nq++;
-          }
-        }
-      }
-    }
-    break;
+    // case 1: // this seems to be wrong
+    // /* for all forced assignments, nq++ */
+    // for (u8 i = 0; i < N; i++) {
+    //   if (rk.rows[i].open == 1) {
+    //     for (u8 j = 0; j < N; j++) {
+    //       if (rk.cols[j].open == 1 and
+    //           rk.dias[i+j].open == 1 and
+    //           rk.adia[N-j+i-1].open == 1 and
+    //           bd.state[i*N + j] == OPEN and
+    //           rk.cols[j].placed <= 1 and
+    //           rk.dias[i+j].placed <= 1 and
+    //           rk.adia[N-j+i-1].placed <= 1) {
+    //           //(bs_in(bd.open, i))) {
+    //           nq++;
+    //       }
+    //     }
+    //   }
+    // }
+    // break;
     default:
     break;
   }
@@ -54,12 +54,10 @@ bool falsified() {
   /* AMO unsatisfied */
   /* Only do if using a heuristic that can give AMO unsatisfiable output */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
-  for (u8 i = 0; i < N; i++)
-    if (rk.rows[i].placed > 1 or rk.cols[i].placed > 1)
-      return true;
-  for (u8 i = 0; i < (2*N-1); i++)
-    if (rk.dias[i].placed > 1 or rk.adia[i].placed > 1)
-      return true;
+  for (u16 i = 0; i < N; i++)
+    for (u16 j = 0; j < N; j++)
+      if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
+        return true;
   #endif
 
   return false;
@@ -132,15 +130,17 @@ void transat() {
       }
     }
 
-    // if (bd.queens_left < 2) {
-      printf("b[%d], ql = %d, sl = (%d, %d), loops = %"LU".\n", board, bd.queens_left, sl.row, sl.col, loops);
+    #ifdef PRINTOUT
+    if (bd.queens_left == 0) {
+      printf("b[%d], ql = %d, sl = (%d, %d), loops = %"LU", nq = %"LU"\n", board, bd.queens_left, sl.row, sl.col, loops, nq);
       for (u16 i = 0; i < N; i++) {
         for (u16 j = 0; j < N; j++)
           printf("%d ", bd.state[i*N + j]);
         println();
       }
       println();
-    // }
+    }
+    #endif
 
     if (satisfied() or falsified()) {
       board--;
@@ -175,18 +175,12 @@ void transat() {
       for (u16 i = sl.col + 1; i < N; i++)
         bd.state[sl.row*N + i] = FORBIDDEN;
 
-      // TODO: FIX PROPOGATION
-      /* propagate over diagonal/antidiagonal AMO */ // TODO: This is probably wrong
-      for (u16 i = 0; i < N; i++) {
-        u16 d1 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col-i,0,N-1);
-        u16 d2 = clamp(sl.row-i,0,N-1)*N + clamp(sl.col+i,0,N-1);
-        u16 d3 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col+i,0,N-1);
-        u16 d4 = clamp(sl.row+i,0,N-1)*N + clamp(sl.col-i,0,N-1);
-        bd.state[d1] = (bd.state[d1] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[d2] = (bd.state[d2] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[d3] = (bd.state[d3] == PLACED) ? PLACED : FORBIDDEN;
-        bd.state[d4] = (bd.state[d4] == PLACED) ? PLACED : FORBIDDEN;
-      }
+      /* propagate over diagonal/antidiagonal AMO */ // TODO: speedup
+      for (s8 i = 0; i < N; i++)
+        for (s8 j = 0; j < N; j++)
+          if (i + j == sl.row + sl.col and i - j == sl.row - sl.col and i != sl.row and j != sl.col)
+            bd.state[i*N + j] = FORBIDDEN;
+
     } else {
       /* forbid a space */
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
@@ -215,6 +209,10 @@ void transat() {
 
     loops++;
   } while(board > -1);
+
+  #ifdef PRINTOUT
+  printf("loops = %"LU", nq = %"LU" of %"LU"\n", loops, nq, solutions[N]);
+  #endif
 }
 
 int main() {
