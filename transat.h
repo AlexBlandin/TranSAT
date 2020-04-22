@@ -3,7 +3,7 @@
 
 /* 22 is the max */
 #ifndef N
-#define N 4
+#define N 11
 #endif
 
 /* n MUST BE A CONSTANT */
@@ -52,7 +52,7 @@ typedef struct _Board {
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
-static Board boards[N*N+1]; /* ALCS boards w/ ranks */
+static Board boards[N+1]; /* ALCS boards w/ ranks */
 // static Ranks ranks;
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
@@ -92,7 +92,7 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 
 void init() {
   seed_rng();
-  for (board = N*N; board--;) {
+  for (board = N; board--;) {
     for (u16 i = 0; i < N*N; i++)
       bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;
@@ -111,7 +111,8 @@ void init() {
   assert(N <= 21);
   assert(sizeof(Rank));
   assert(sizeof(Ranks));
-  assert(sizeof(Board) * N*N);
+  assert(sizeof(Board));
+  assert(sizeof(boards));
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */

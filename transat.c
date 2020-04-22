@@ -90,7 +90,7 @@ static inline void transat() {
   bool forced = false;
   Slot queued = (Slot){0,0};
   do {
-    assert(board <= N*N);
+    assert(board <= N);
     bd.visits++;
 
     #ifdef PRINTOUT
@@ -112,6 +112,9 @@ static inline void transat() {
 
     /* odd is placed, even is forbid */
     if (bd.visits & 1) {
+
+      // TODO: I know the old ranks and slot at this point
+
       /* select branching variable (the slot/space we're focusing on) */
       if (forced) {
         sl = queued;
@@ -120,6 +123,8 @@ static inline void transat() {
         sl = heuristic();
       }
 
+      // TODO: I now know the new slot
+
       copy(sizeof(Board), boards[board], boards[board+1]);
       board++;
       bd.visits = 0; // all new board have 0 visits
@@ -127,6 +132,8 @@ static inline void transat() {
       /* place a queen */
       bd.state[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
+
+      // TODO: I have placed the queen and can start to update the ranks
 
       /* propagate over row/column AMO */
       for (u16 i = 0; i < sl.row; i++)
@@ -138,11 +145,15 @@ static inline void transat() {
       for (u16 i = sl.col + 1; i < N; i++)
         bd.state[sl.row*N + i] = FORBIDDEN;
 
+      // TODO: I have done rooks propogatation
+
       /* propagate over diagonal/antidiagonal AMO */
       for (s8 i = 0; i < N; i++)
         for (s8 j = 0; j < N; j++)
           if ((i + j == sl.row + sl.col or i - j == sl.row - sl.col) and i != sl.row and j != sl.col)
             bd.state[i*N + j] = FORBIDDEN;
+
+      // TODO: I have done bishops propogation
 
       /* recompute the ranks */ // TODO: speedup <- the ranks are the slowest thing here
       zero(rk);
@@ -151,6 +162,8 @@ static inline void transat() {
           rerank(i, j);
         }
       }
+
+      // TODO: I am looping, next visit at this level is already incremental
 
     } else {
       /* forbid a space */
@@ -197,7 +210,7 @@ int main() {
   transat();
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
-    printf("Q(%d) = %"LU"\n", N, nq);
+    printf("Q(%d) = %"LU" (using %"LU" bytes)\n", N, nq, sizeof(boards));
   else
     printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return nq != solutions[N];

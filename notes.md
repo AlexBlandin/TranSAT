@@ -34,6 +34,8 @@ Dumb Model
 11 | 3m28.703s
 12 | 42m53.125s
 
+Less Dumb
+
 
       If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
       I would need to take the queens out again to drop from 124kB to 99kB...
