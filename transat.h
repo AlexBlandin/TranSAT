@@ -63,6 +63,33 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           227514171973736, 2207893435808352,
                           22317699616364044, 234907967154122528};
 
+/* update ranks according to a given space */
+#define rerank(row, col) \
+  u8 diag = row + col;\
+  u8 adia = N - col + row - 1;\
+  switch (bd.state[row*N + col]) { \
+    case PLACED: \
+    rk.rows[row].placed++; \
+    rk.cols[col].placed++; \
+    rk.dias[diag].placed++; \
+    rk.adia[adia].placed++; \
+    break; \
+    case FORBIDDEN: \
+    rk.rows[row].forbidden++; \
+    rk.cols[col].forbidden++; \
+    rk.dias[diag].forbidden++; \
+    rk.adia[adia].forbidden++; \
+    break; \
+    case OPEN: \
+    rk.rows[row].open++; \
+    rk.cols[col].open++; \
+    rk.dias[diag].open++; \
+    rk.adia[adia].open++; \
+    rk.open_rows |= 1 << row; \
+    rk.open_cols |= 1 << col; \
+    break; \
+  }
+
 void init() {
   seed_rng();
   for (board = N*N; board--;) {
@@ -74,32 +101,9 @@ void init() {
 
   /* compute the ranks */
   zero(rk);
-  for (u8 row = 0; row < N; row++) {
-    for (u8 col = 0; col < N; col++) {
-      u8 diag = row + col;
-      u8 adia = N - col + row - 1;
-      switch (bd.state[row*N + col]) {
-        case PLACED:
-        rk.rows[row].placed++;
-        rk.cols[col].placed++;
-        rk.dias[diag].placed++;
-        rk.adia[adia].placed++;
-        break;
-        case FORBIDDEN:
-        rk.rows[row].forbidden++;
-        rk.cols[col].forbidden++;
-        rk.dias[diag].forbidden++;
-        rk.adia[adia].forbidden++;
-        break;
-        case OPEN:
-        rk.rows[row].open++;
-        rk.cols[col].open++;
-        rk.dias[diag].open++;
-        rk.adia[adia].open++;
-        rk.open_rows |= 1 << row;
-        rk.open_cols |= 1 << col;
-        break;
-      }
+  for (u8 i = 0; i < N; i++) {
+    for (u8 j = 0; j < N; j++) {
+      rerank(i, j);
     }
   }
 
