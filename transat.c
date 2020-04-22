@@ -4,7 +4,25 @@
 #include "s.h" /* short.hand */
 #include "transat.h" /* transat header (types, common funcs, etc) */
 
-#define FIRSTOPEN
+
+/* pick a space any (open) space */
+static inline Slot heuristic() {
+  /* pick a heuristic */
+  #define FIRSTOPEN
+
+  #if defined(FIRSTOPEN)
+  for (u16 i = sl.row * sl.col; i < N*N; i++)
+    if (bd.state[i] == OPEN)
+      return (Slot) { (i/N), (i%N) };
+  #elif defined(FIRSTROW)
+  #elif defined(SQUAREENUM)
+  #elif defined(TAW)
+  #elif defined(ANTITAW)
+  #else
+  #error "You need to choose a heuristic"
+  #endif
+  return (Slot){0, 0};
+}
 
 /* is this board trivial to solve now? */
 static bool satisfied() {
@@ -62,28 +80,6 @@ static bool falsified() {
   return false;
 }
 
-/* pick a space any (open) space */
-static inline Slot heuristic() {
-  i8 row, col; row = col = 0;
-  #ifdef FIRSTOPEN
-  for (u16 i = sl.row * sl.col; i < N*N; i++) {
-    if (bd.state[i] == OPEN)
-      return as_slot(i);
-  }
-  #endif
-  #ifdef FIRSTROW
-  #endif
-  #ifdef SQUAREENUM
-  #endif
-  #ifdef TAW
-  #endif
-  #ifdef ANTITAW
-  #endif
-  #if not (defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW))
-  #error "You need to choose a heuristic"
-  #endif
-  return (Slot){row, col};
-}
 
 // clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 

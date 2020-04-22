@@ -35,8 +35,6 @@ typedef struct _Slot {
   i8 col;
 } Slot;
 
-#define as_slot(i) ((Slot) { (i/N), (i%N) })
-
 #define OPEN 0
 #define FORBIDDEN 1
 #define PLACED 2
