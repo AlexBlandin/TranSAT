@@ -81,8 +81,6 @@ static bool falsified() {
 }
 
 
-// clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
-
 /*
   TODO: speedup!
 */

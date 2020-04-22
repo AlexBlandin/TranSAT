@@ -12,11 +12,26 @@ Can use [clang 10.0.0](https://clang.llvm.org/) for a more portable Unix/Windows
 Reference GenericSAT from commit [`abc4193`](https://github.com/OKullmann/oklibrary/commit/abc419334da4e73f44dd1c13cc4d3ae78a534b63).
 
 #### Simple build
-```
-musl-gcc -fplan9-extensions -static transat.c -o transat
+```bash
+$ musl-gcc -fplan9-extensions -static transat.c -o transat
 ```
 
 #### Build Script
+```bash
+$ ./build.sh transat <N>
 ```
-./build transat
+
+#### Simple Timings
+```bash
+$ ./timeit.sh
+```
+
+#### Profile
+```bash
+$ gcc --coverage -DN=10 -o transat transat.c && ./transat && gcov transat.c -m
+```
+
+#### RemedyBG
+```cmd
+> clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 ```
