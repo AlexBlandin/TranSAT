@@ -25,8 +25,14 @@ Rosetta
 21 | 314666222712 | 1235m0.767s
 
 
-
-
+Dumb Model
+ N | Time
+------------
+ 8 | 0m0.203s
+ 9 | 0m1.875s
+10 | 0m19.188s
+11 | 3m28.703s
+12 | 42m53.125s
 
 
       If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
