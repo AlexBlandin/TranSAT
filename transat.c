@@ -8,13 +8,18 @@
 /* pick a space any (open) space */
 static inline Slot heuristic() {
   /* pick a heuristic */
-  #define FIRSTOPEN
+  #define FIRSTOPEN_BK
 
   #if defined(FIRSTOPEN)
-  for (u16 i = sl.row * sl.col; i < N*N; i++)
+  for (u16 i = 0; i < N*N; i++)
+    if (bd.state[i] == OPEN)
+      return (Slot) { (i/N), (i%N) };
+  #elif defined(FIRSTOPEN_BK)
+  for (u16 i = N*N-1; i < N*N; i--)
     if (bd.state[i] == OPEN)
       return (Slot) { (i/N), (i%N) };
   #elif defined(FIRSTROW)
+
   #elif defined(SQUAREENUM)
   #elif defined(TAW)
   #elif defined(ANTITAW)
@@ -24,7 +29,7 @@ static inline Slot heuristic() {
   return (Slot){0, 0};
 }
 
-/* is this board trivial to solve now? */
+/* is this board solved / trivial to solve now? */
 static bool satisfied() {
   u64 prev_nq = nq; /* previous queens count */
   u8 queens = 0;
