@@ -14,11 +14,11 @@ static inline Slot heuristic() {
   /* from 0,0 indices */
   for (u16 i = 0; i < N*N; i++)
     if (bd.state[i] == OPEN)
-      return (Slot) { i/N, i%N, i - i%N};
+      return (Slot) { i/N, i%N };
   #elif defined(FIRSTROW_BK)
   for (u16 i = N*N-1; i < N*N; i--)
     if (bd.state[i] == OPEN)
-      return (Slot) { i/N, i%N, i - i%N};
+      return (Slot) { i/N, i%N };
   #elif defined(SQUAREENUM)
 
   #elif defined(TAW)
@@ -26,7 +26,7 @@ static inline Slot heuristic() {
   #else
   #error "You need to choose a heuristic"
   #endif
-  return (Slot) {0, 0, 0};
+  return (Slot) {0, 0};
 }
 
 /* is this board solved / trivial to solve now? */
@@ -45,7 +45,7 @@ static bool satisfied() {
     default:
     break;
   }
-  return nq != prev_nq;
+  return nq > prev_nq;
 }
 
 /* is this board valid / usable for further queen placement? */
@@ -74,7 +74,7 @@ static bool falsified() {
 /* the TranSAT N-Queens solver */
 static inline void transat() {
   bool forced = false;
-  Slot queued = (Slot){0,0,0};
+  Slot queued = (Slot) {0, 0};
   do {
     assert(board <= N);
     bd.visits++;
@@ -116,7 +116,7 @@ static inline void transat() {
       bd.visits = 0; // all new board have 0 visits
 
       /* place a queen */
-      bd.state[sl.rin + sl.col] = PLACED;
+      bd.state[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
 
       // TODO: I have placed the queen and can start to update the ranks
@@ -125,11 +125,11 @@ static inline void transat() {
       for (u16 i = 0; i < sl.row; i++)
         bd.state[i*N + sl.col] = FORBIDDEN;
       for (u16 i = 0; i < sl.col; i++)
-        bd.state[sl.rin + i] = FORBIDDEN;
+        bd.state[sl.row*N + i] = FORBIDDEN;
       for (u16 i = sl.row + 1; i < N; i++)
         bd.state[i*N + sl.col] = FORBIDDEN;
       for (u16 i = sl.col + 1; i < N; i++)
-        bd.state[sl.rin + i] = FORBIDDEN;
+        bd.state[sl.row*N + i] = FORBIDDEN;
 
       // TODO: I have done rooks propogatation
 
@@ -153,7 +153,7 @@ static inline void transat() {
 
     } else {
       /* forbid a space */
-      bd.state[sl.rin + sl.col] = FORBIDDEN;
+      bd.state[sl.row*N + sl.col] = FORBIDDEN;
       rk.rows[sl.row].forbidden++;
       rk.cols[sl.col].forbidden++;
       rk.dias[sl_dia].forbidden++;
@@ -170,9 +170,9 @@ static inline void transat() {
       /* ALO propagation (forced move) */
       if (rk.rows[sl.row].open - 1 == 1){ // if, after closing a slot, there is only 1 open, it's a forced move
         for (u8 i = 0; i < N; i++) {
-          if (bd.state[sl.rin + i] == OPEN) {
+          if (bd.state[sl.row*N + i] == OPEN) {
             forced = true;
-            queued = (Slot) {sl.row, i, sl.rin}; // queue a forced move from the same row for the next loop
+            queued = (Slot) {sl.row, i}; // queue a forced move from the same row for the next loop
             break;
           }
         }
@@ -181,7 +181,7 @@ static inline void transat() {
         for (u8 i = 0; i < N; i++) {
           if (bd.state[i*N + sl.col] == OPEN) {
             forced = true;
-            queued = (Slot) {i, sl.col, i*N}; // queue a forced move from the same col for the next loop
+            queued = (Slot) {i, sl.col}; // queue a forced move from the same col for the next loop
             break;
           }
         }

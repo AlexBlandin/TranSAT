@@ -33,7 +33,6 @@ typedef struct _Ranks {
 typedef struct _Slot {
   i8 row; /* better to have separated row/col than having to always divide */
   i8 col;
-  i16 rin; /* row index */
 } Slot;
 
 #define OPEN 0
