@@ -10,8 +10,8 @@
 #define queen(n) if (n < N) queens.q##n
 #define bd boards[board]
 #define sl boards[board].slot
-#define rk ranks
-//#define rk boards[board].ranks
+// #define rk ranks
+#define rk boards[board].ranks
 #define sl_dia (sl.row + sl.col)
 #define sl_adg (N - sl.col + sl.row - 1)
 
@@ -44,7 +44,7 @@ typedef struct _Board {
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
   u8 state[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
-  // Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
+  Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
 
 
@@ -53,7 +53,7 @@ static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
 static Board boards[N*N+1]; /* ALCS boards w/ ranks */
-static Ranks ranks; // just maintain the one set for now, since we're always recalculating
+// static Ranks ranks;
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
@@ -66,15 +66,42 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
 void init() {
   seed_rng();
   for (board = N*N; board--;) {
-    for (u16 i = 0; i < N; i++)
-      rk.rows[i].open = rk.cols[i].open = N;
-    for (u16 i = 0; i < (2*N-1); i++)
-      rk.dias[i].open = rk.adia[i].open = N;
     for (u16 i = 0; i < N*N; i++)
       bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;
   }
   board = 0;
+
+  /* compute the ranks */
+  zero(rk);
+  for (u8 row = 0; row < N; row++) {
+    for (u8 col = 0; col < N; col++) {
+      u8 diag = row + col;
+      u8 adia = N - col + row - 1;
+      switch (bd.state[row*N + col]) {
+        case PLACED:
+        rk.rows[row].placed++;
+        rk.cols[col].placed++;
+        rk.dias[diag].placed++;
+        rk.adia[adia].placed++;
+        break;
+        case FORBIDDEN:
+        rk.rows[row].forbidden++;
+        rk.cols[col].forbidden++;
+        rk.dias[diag].forbidden++;
+        rk.adia[adia].forbidden++;
+        break;
+        case OPEN:
+        rk.rows[row].open++;
+        rk.cols[col].open++;
+        rk.dias[diag].open++;
+        rk.adia[adia].open++;
+        rk.open_rows |= 1 << row;
+        rk.open_cols |= 1 << col;
+        break;
+      }
+    }
+  }
 
   assert(N);
   assert(N <= 21);

@@ -31,7 +31,7 @@ static bool satisfied() {
   switch (bd.queens_left) {
     case 0:
     /* for all valid n-queens configs */
-    for (u16 i = 0; i < N; i++) // TODO: speedup
+    for (u16 i = 0; i < N; i++) // can speedup later, less pressing than the others
       for (u16 j = 0; j < N; j++)
         if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
           return false;
@@ -71,7 +71,7 @@ static bool falsified() {
   /* AMO unsatisfied */
   /* only do if using a heuristic that can give AMO unsatisfiable output */
   #if defined(FIRSTOPEN) or defined(FIRSTROW) or defined(SQUAREENUM) or defined(TAW) or defined(ANTITAW)
-  for (u16 i = 0; i < N; i++) // TODO: speedup
+  for (u16 i = 0; i < N; i++) // TODO: speedup, do 3rd
     for (u16 j = 0; j < N; j++)
       if (rk.rows[i].placed > 1 or rk.cols[j].placed > 1 or rk.dias[i+j].placed > 1 or rk.adia[N-j+i-1].placed > 1)
         return true;
@@ -92,37 +92,6 @@ static inline void transat() {
   do {
     assert(board <= N*N);
     bd.visits++;
-
-    /* recompute the ranks */ // TODO: speedup
-    zero(rk);
-    for (u8 row = 0; row < N; row++) {
-      for (u8 col = 0; col < N; col++) { // we can make this much faster using bitcounts of 3 bitsets
-        u8 diag = row + col;
-        u8 adia = N - col + row - 1;
-        switch (bd.state[row*N + col]) {
-          case PLACED:
-          rk.rows[row].placed++;
-          rk.cols[col].placed++;
-          rk.dias[diag].placed++;
-          rk.adia[adia].placed++;
-          break;
-          case FORBIDDEN:
-          rk.rows[row].forbidden++;
-          rk.cols[col].forbidden++;
-          rk.dias[diag].forbidden++;
-          rk.adia[adia].forbidden++;
-          break;
-          case OPEN:
-          rk.rows[row].open++;
-          rk.cols[col].open++;
-          rk.dias[diag].open++;
-          rk.adia[adia].open++;
-          rk.open_rows |= 1 << row;
-          rk.open_cols |= 1 << col;
-          break;
-        }
-      }
-    }
 
     #ifdef PRINTOUT
     if (bd.queens_left == 0) {
@@ -169,15 +138,58 @@ static inline void transat() {
       for (u16 i = sl.col + 1; i < N; i++)
         bd.state[sl.row*N + i] = FORBIDDEN;
 
-      /* propagate over diagonal/antidiagonal AMO */ // TODO: speedup
+      /* propagate over diagonal/antidiagonal AMO */ // TODO: speedup, do 2nd
       for (s8 i = 0; i < N; i++)
         for (s8 j = 0; j < N; j++)
           if (i + j == sl.row + sl.col and i - j == sl.row - sl.col and i != sl.row and j != sl.col)
             bd.state[i*N + j] = FORBIDDEN;
 
+      /* recompute the ranks */ // TODO: speedup, do 1st
+      zero(rk);
+      for (u8 row = 0; row < N; row++) {
+        for (u8 col = 0; col < N; col++) { // we can make this faster using bitcounts of 3 bitsets
+          u8 diag = row + col;
+          u8 adia = N - col + row - 1;
+          switch (bd.state[row*N + col]) {
+            case PLACED:
+            rk.rows[row].placed++;
+            rk.cols[col].placed++;
+            rk.dias[diag].placed++;
+            rk.adia[adia].placed++;
+            break;
+            case FORBIDDEN:
+            rk.rows[row].forbidden++;
+            rk.cols[col].forbidden++;
+            rk.dias[diag].forbidden++;
+            rk.adia[adia].forbidden++;
+            break;
+            case OPEN:
+            rk.rows[row].open++;
+            rk.cols[col].open++;
+            rk.dias[diag].open++;
+            rk.adia[adia].open++;
+            rk.open_rows |= 1 << row;
+            rk.open_cols |= 1 << col;
+            break;
+          }
+        }
+      }
+
     } else {
       /* forbid a space */
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
+      rk.rows[sl.row].forbidden++;
+      rk.cols[sl.col].forbidden++;
+      rk.dias[sl_dia].forbidden++;
+      rk.adia[sl_adg].forbidden++;
+      rk.rows[sl.row].open--;
+      rk.cols[sl.col].open--;
+      rk.dias[sl_dia].open--;
+      rk.adia[sl_adg].open--;
+      if (rk.rows[sl.row].open == 0)
+        rk.open_rows &= ~(1 << (u32) sl.row);
+      if (rk.cols[sl.col].open == 0)
+        rk.open_cols &= ~(1 << (u32) sl.col);
 
       /* ALO propagation (forced move) */
       if (rk.rows[sl.row].open - 1 == 1){ // if, after closing a slot, there is only 1 open, it's a forced move
@@ -198,7 +210,6 @@ static inline void transat() {
           }
         }
       }
-
     }
   } while(board > -1);
 }
