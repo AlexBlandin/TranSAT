@@ -210,7 +210,7 @@ int main() {
   transat();
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
-    printf("Q(%d) = %"LU" (using %"LU" bytes)\n", N, nq, sizeof(boards));
+    printf("Q(%d) = %"LU"\n", N, nq);
   else
     printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return nq != solutions[N];
