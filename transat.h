@@ -31,8 +31,9 @@ typedef struct _Ranks {
 } Ranks;
 
 typedef struct _Slot {
-  i8 row; /* better to have separated row/col & multiply/add it (bc. FMA ops) than divide */
+  i8 row; /* better to have separated row/col than having to always divide */
   i8 col;
+  i16 rin; /* row index */
 } Slot;
 
 #define OPEN 0
@@ -51,7 +52,6 @@ typedef struct _Board {
 /* DATA */
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
-static u8 progress[bits(N*N)]; /* 0 = go left, 1 = go right */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
 // static Ranks ranks;
 
