@@ -61,7 +61,7 @@ static inline void transat() {
   bool forced = false;
   Slot queued = (Slot) {0, 0, 0, N-1};
   do {
-    assert(board <= N);
+    assert(board < N);
     bd.visits++;
 
     #ifdef PRINTOUT
@@ -106,7 +106,7 @@ static inline void transat() {
 
       /* propagate over row and update ranks */
       for (u8 col = 0; col < sl.col; col++) {
-        if (open(sl.row, col)) {
+        if (open(sl.row, col)) { // is it faster to loop over the full thing and check col != sl.col?
           at(sl.row, col) = FORBIDDEN;
           derank(sl.row, col);
           cf_col(col);
@@ -135,11 +135,12 @@ static inline void transat() {
       clear_full(sl.row, sl.col);
 
       /* propagate (AMO) over diagonals and update ranks */
-      for (u8 d = 1; d < N; d++) {
-        u8 row1 = sl.row+d; u8 col1 = sl.col+d;
-        u8 row2 = sl.row+d; u8 col2 = sl.col-d;
-        u8 row3 = sl.row-d; u8 col3 = sl.col-d;
-        u8 row4 = sl.row-d; u8 col4 = sl.col+d;
+      for (u8 i = 1; i < N; i++) {
+        u8 row1 = sl.row+i; u8 col1 = sl.col+i;
+        u8 row2 = sl.row+i; u8 col2 = sl.col-i;
+        u8 row3 = sl.row-i; u8 col3 = sl.col-i;
+        u8 row4 = sl.row-i; u8 col4 = sl.col+i;
+
         if (row1 < N and col1 < N) {
           if open(row1, col1) {
             at(row1, col1) = FORBIDDEN;

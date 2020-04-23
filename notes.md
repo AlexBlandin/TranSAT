@@ -42,7 +42,8 @@ Less Dumb
 10 | 0m0.750s
 11 | 0m7.313s
 12 | 1m16.812s
-13 |
+13 | 14m35.922s
+14 | 195m55.250s
 
 
       If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
