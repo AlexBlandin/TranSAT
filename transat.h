@@ -7,7 +7,6 @@
 #endif
 
 /* n MUST BE A CONSTANT */
-#define queen(n) if (n < N) queens.q##n
 #define bd boards[board]
 #define sl boards[board].slot
 #define rk boards[board].ranks
@@ -34,10 +33,6 @@ typedef struct _Ranks { /* for the number */
   // u64 placed_adga; /* which adgs are placed in */
 } Ranks;
 
-typedef struct _bitstate {
-  u8 open[bits(N*N)]; /* whether it is open or not */
-} BitState;
-
 typedef struct _Slot {
   u8 row; /* better to have separated row/col than having to always divide */
   u8 col;
@@ -49,13 +44,15 @@ typedef struct _Slot {
 #define FORBIDDEN 1
 #define PLACED 2
 
-#define open(row, col) (bd.state[row*N + col] == OPEN)
+#define at(row, col) (bd.state[((u16)(row))*N + ((u16)(col))])
+#define open(row, col) (at(row, col) == OPEN)
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
   u8 state[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
+  u8 bs[bits(N*N)];
   Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
 
@@ -97,6 +94,21 @@ static inline void placed_sl(){
   rk.cols[sl.col].placed++;
   rk.dias[sl.dia].placed++;
   rk.adia[sl.adg].placed++;
+}
+
+/* clear a full row */
+static inline void cf_row(u8 row) {
+  rk.open_rows &= ~((rk.rows[row].open == 0) << row);
+}
+
+/* clear a full col */
+static inline void cf_col(u8 col) {
+  rk.open_cols &= ~((rk.cols[col].open == 0) << col);
+}
+
+/* clear a full row and col */
+static inline void clear_full(u8 row, u8 col) {
+  cf_row(row); cf_col(col);
 }
 
 /* recompute ranks from scratch according to a given space */
