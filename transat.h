@@ -26,13 +26,13 @@ typedef struct _Ranks { /* for the number */
 
   /* a 1 means that row/col/diagonal is open/forbid/placed */
   u32 open_rows;   /* which rows are open */
-  u32 placed_rows; /* which rows are placed in */
   u32 open_cols;   /* which cols are open */
-  u32 placed_cols; /* which cols are placed in */
-  u64 open_dias;   /* which dias are open */
-  u64 placed_dias; /* which dias are placed in */
-  u64 open_adga;   /* which adgs are open */
-  u64 placed_adga; /* which adgs are placed in */
+  // u32 placed_rows; /* which rows are placed in */
+  // u32 placed_cols; /* which cols are placed in */
+  // u64 open_dias;   /* which dias are open */
+  // u64 open_adga;   /* which adgs are open */
+  // u64 placed_dias; /* which dias are placed in */
+  // u64 placed_adga; /* which adgs are placed in */
 } Ranks;
 
 typedef struct _bitstate {
@@ -77,28 +77,54 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           227514171973736, 2207893435808352,
                           22317699616364044, 234907967154122528};
 
-/* update ranks according to a given space */
-#define rerank(row, col) \
-  u8 diag = row + col;\
-  u8 adia = N - col + row - 1;\
-  switch (bd.state[row*N + col]) { \
-    case PLACED: \
-    rk.rows[row].placed++; \
-    rk.cols[col].placed++; \
-    rk.dias[diag].placed++; \
-    rk.adia[adia].placed++; \
-    break; \
-    case OPEN: \
-    rk.rows[row].open++; \
-    rk.cols[col].open++; \
-    rk.dias[diag].open++; \
-    rk.adia[adia].open++; \
-    rk.open_rows |= 1 << row; \
-    rk.open_cols |= 1 << col; \
-    break; \
-    default: \
-    break; \
+/* recompute ranks from scratch according to a given space */
+static inline void rerank(u8 row, u8 col) {
+  u8 diag = row + col;
+  u8 adia = N - col + row - 1;
+  switch (bd.state[row*N + col]) {
+    case PLACED:
+    rk.rows[row].placed++;
+    rk.cols[col].placed++;
+    rk.dias[diag].placed++;
+    rk.adia[adia].placed++;
+    break;
+    case OPEN:
+    rk.rows[row].open++;
+    rk.cols[col].open++;
+    rk.dias[diag].open++;
+    rk.adia[adia].open++;
+    rk.open_rows |= 1 << row;
+    rk.open_cols |= 1 << col;
+    break;
+    default:
+    break;
   }
+}
+
+/* reduce open ranks for a given space */
+static inline void derank(u8 row, u8 col) {
+  u8 diag = row + col;
+  u8 adia = N - col + row - 1;
+  rk.rows[row].open--;
+  rk.cols[col].open--;
+  rk.dias[diag].open--;
+  rk.adia[adia].open--;
+}
+
+/* reduce open ranks for a given slot */
+static inline void derank_sl() {
+  rk.rows[sl.row].open--;
+  rk.cols[sl.col].open--;
+  rk.dias[sl.dia].open--;
+  rk.adia[sl.adg].open--;
+}
+
+static inline void placed_sl(){
+  rk.rows[sl.row].placed++;
+  rk.cols[sl.col].placed++;
+  rk.dias[sl.dia].placed++;
+  rk.adia[sl.adg].placed++;
+}
 
 void init() {
   seed_rng();

@@ -91,7 +91,7 @@ static inline void transat() {
       } else {
         sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
         if (rk.rows[sl.row].placed or rk.cols[sl.col].placed or rk.dias[sl.dia].placed or rk.adia[sl.adg].placed) {
-          pb = true; /* AMO unsatisfieable, so we're going to loop around and immediately forbid it */
+          pb = true; /* AMO unsatisfied, so we're going to loop around and immediately forbid it */
           continue;
         }
       }
@@ -102,29 +102,19 @@ static inline void transat() {
       /* place a queen */
       bd.state[sl.row*N + sl.col] = PLACED;
       bd.queens_left--;
-      rk.rows[sl.row].placed++;
-      rk.cols[sl.col].placed++;
-      rk.dias[sl.dia].placed++;
-      rk.adia[sl.adg].placed++;
-      rk.rows[sl.row].open = 0;
-      rk.cols[sl.col].open = 0;
-      rk.dias[sl.dia].open = 0;
-      rk.adia[sl.adg].open = 0;
+      placed_sl();
+      derank_sl();
 
-      /* propagate over row/column AMO (don't need to check if placed, since that's covered at heuristic generation) */
+      /* propagate over row/column AMO and update ranks */
       for (u16 i = 0; i < sl.row; i++) {
         if (open(i, sl.col)) {
-          rk.rows[sl.row].open--;
-          rk.dias[sl.row + i].open--;
-          rk.adia[N - i + sl.row - 1].open--;
+          derank(i, sl.col);
           rk.open_rows &= ~((rk.rows[i].open == 0) << i);
           bd.state[i*N + sl.col] = FORBIDDEN;
         }
       } for (u16 i = sl.row + 1; i < N; i++) {
         if (open(i, sl.col)) {
-          rk.rows[sl.row].open--;
-          rk.dias[sl.row + i].open--;
-          rk.adia[N - i + sl.row - 1].open--;
+          derank(i, sl.col);
           rk.open_rows &= ~((rk.rows[i].open == 0) << i);
           bd.state[i*N + sl.col] = FORBIDDEN;
         }
@@ -133,24 +123,20 @@ static inline void transat() {
 
       for (u16 j = 0; j < sl.col; j++) {
         if (open(sl.row, j)) {
-          rk.cols[sl.col].open--;
-          rk.dias[j + sl.col].open--;
-          rk.adia[N - sl.col + j - 1].open--;
+          derank(sl.row, j);
           rk.open_cols &= ~((rk.cols[j].open == 0) << j);
           bd.state[sl.row*N + j] = FORBIDDEN;
         }
       } for (u16 j = sl.col + 1; j < N; j++) {
         if (open(sl.row, j)) {
-          rk.cols[sl.col].open--;
-          rk.dias[j + sl.col].open--;
-          rk.adia[N - sl.col + j - 1].open--;
+          derank(sl.row, j);
           rk.open_cols &= ~((rk.cols[j].open == 0) << j);
           bd.state[sl.row*N + j] = FORBIDDEN;
         }
       }
       rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
 
-      /* propagate (AMO) over diagonals */
+      /* propagate (AMO) over diagonals and update ranks */
       for (u8 d = 1; d < N; d++) {
         u8 r1 = sl.row+d; u8 c1 = sl.col+d;
         u8 r2 = sl.row+d; u8 c2 = sl.col-d;
@@ -158,8 +144,7 @@ static inline void transat() {
         u8 r4 = sl.row-d; u8 c4 = sl.col+d;
         if (r1 < N and c1 < N) {
           if open(r1, c1) {
-            rk.rows[sl.row].open--;
-            rk.cols[sl.col].open--;
+            derank(r1, c1);
             rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
             rk.open_cols &= ~((rk.cols[sl.col].open == 0) << sl.col);
             bd.state[r1*N + c1] = FORBIDDEN;
@@ -168,8 +153,7 @@ static inline void transat() {
 
         if (r2 < N and c2 < N) {
           if open(r2, c2) {
-            rk.rows[sl.row].open--;
-            rk.cols[sl.col].open--;
+            derank(r2, c2);
             rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
             rk.open_cols &= ~((rk.cols[sl.col].open == 0) << sl.col);
             bd.state[r2*N + c2] = FORBIDDEN;
@@ -178,8 +162,7 @@ static inline void transat() {
 
         if (r3 < N and c3 < N) {
           if open(r3, c3) {
-            rk.rows[sl.row].open--;
-            rk.cols[sl.col].open--;
+            derank(r3, c3);
             rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
             rk.open_cols &= ~((rk.cols[sl.col].open == 0) << sl.col);
             bd.state[r3*N + c3] = FORBIDDEN;
@@ -188,30 +171,17 @@ static inline void transat() {
 
         if (r4 < N and c4 < N) {
           if open(r4, c4) {
-            rk.rows[sl.row].open--;
-            rk.cols[sl.col].open--;
+            derank(r4, c4);
             rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
             rk.open_cols &= ~((rk.cols[sl.col].open == 0) << sl.col);
             bd.state[r4*N + c4] = FORBIDDEN;
           }
         }
       }
-
-      /* recompute the ranks */ // TODO: speedup <- the ranks are the slowest thing here
-      // zero(rk);
-      // for (u8 i = 0; i < N; i++) {
-      //   for (u8 j = 0; j < N; j++) { // we can make this faster using bitcounts of 3 bitsets
-      //     rerank(i, j);
-      //   }
-      // }
-
     } else {
       /* forbid a space */
       bd.state[sl.row*N + sl.col] = FORBIDDEN;
-      rk.rows[sl.row].open--;
-      rk.cols[sl.col].open--;
-      rk.dias[sl.dia].open--;
-      rk.adia[sl.adg].open--;
+      derank_sl();
       rk.open_rows &= ~((rk.rows[sl.row].open == 0) << sl.row);
       rk.open_cols &= ~((rk.cols[sl.col].open == 0) << sl.col);
 
