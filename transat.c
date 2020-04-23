@@ -115,16 +115,16 @@ static inline void transat() {
       for (u16 i = 0; i < sl.row; i++) {
         if (open(i, sl.col)) {
           rk.rows[sl.row].open--;
-          rk.dias[sl.dia].open--;
-          rk.adia[sl.adg].open--;
+          rk.dias[sl.row + i].open--;
+          rk.adia[N - i + sl.row - 1].open--;
           rk.open_rows &= ~((rk.rows[i].open == 0) << i);
           bd.state[i*N + sl.col] = FORBIDDEN;
         }
       } for (u16 i = sl.row + 1; i < N; i++) {
         if (open(i, sl.col)) {
           rk.rows[sl.row].open--;
-          rk.dias[sl.dia].open--;
-          rk.adia[sl.adg].open--;
+          rk.dias[sl.row + i].open--;
+          rk.adia[N - i + sl.row - 1].open--;
           rk.open_rows &= ~((rk.rows[i].open == 0) << i);
           bd.state[i*N + sl.col] = FORBIDDEN;
         }
@@ -134,16 +134,16 @@ static inline void transat() {
       for (u16 j = 0; j < sl.col; j++) {
         if (open(sl.row, j)) {
           rk.cols[sl.col].open--;
-          rk.dias[sl.dia].open--;
-          rk.adia[sl.adg].open--;
+          rk.dias[j + sl.col].open--;
+          rk.adia[N - sl.col + j - 1].open--;
           rk.open_cols &= ~((rk.cols[j].open == 0) << j);
           bd.state[sl.row*N + j] = FORBIDDEN;
         }
       } for (u16 j = sl.col + 1; j < N; j++) {
         if (open(sl.row, j)) {
           rk.cols[sl.col].open--;
-          rk.dias[sl.dia].open--;
-          rk.adia[sl.adg].open--;
+          rk.dias[j + sl.col].open--;
+          rk.adia[N - sl.col + j - 1].open--;
           rk.open_cols &= ~((rk.cols[j].open == 0) << j);
           bd.state[sl.row*N + j] = FORBIDDEN;
         }
