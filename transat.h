@@ -10,12 +10,11 @@
 #define queen(n) if (n < N) queens.q##n
 #define bd boards[board]
 #define sl boards[board].slot
-// #define rk ranks
 #define rk boards[board].ranks
 
 typedef struct _Rank {
-  u8 open: 5; /* how many spaces are open */
-  u8 placed: 3; /* how many queens are there */
+  u8 open: 6; /* how many spaces are open */
+  u8 placed: 2; /* how many queens are there */
 } Rank;
 
 typedef struct _Ranks { /* for the number */
@@ -36,8 +35,7 @@ typedef struct _Ranks { /* for the number */
 } Ranks;
 
 typedef struct _bitstate {
-  u8 open[N*N]; /* whether it is open or not */
-  u8 pcfb[N*N]; /* if not open, then it's either placed in or forbidden */
+  u8 open[bits(N*N)]; /* whether it is open or not */
 } BitState;
 
 typedef struct _Slot {
@@ -52,8 +50,6 @@ typedef struct _Slot {
 #define PLACED 2
 
 #define open(row, col) (bd.state[row*N + col] == OPEN)
-#define forbid(row, col) (bd.state[row*N + col] == FORBIDDEN)
-#define placed(row, col) (bd.state[row*N + col] == PLACED)
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
@@ -77,29 +73,6 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           227514171973736, 2207893435808352,
                           22317699616364044, 234907967154122528};
 
-/* recompute ranks from scratch according to a given space */
-static inline void rerank(u8 row, u8 col) {
-  u8 diag = row + col;
-  u8 adia = N - col + row - 1;
-  switch (bd.state[row*N + col]) {
-    case PLACED:
-    rk.rows[row].placed++;
-    rk.cols[col].placed++;
-    rk.dias[diag].placed++;
-    rk.adia[adia].placed++;
-    break;
-    case OPEN:
-    rk.rows[row].open++;
-    rk.cols[col].open++;
-    rk.dias[diag].open++;
-    rk.adia[adia].open++;
-    rk.open_rows |= 1 << row;
-    rk.open_cols |= 1 << col;
-    break;
-    default:
-    break;
-  }
-}
 
 /* reduce open ranks for a given space */
 static inline void derank(u8 row, u8 col) {
@@ -124,6 +97,30 @@ static inline void placed_sl(){
   rk.cols[sl.col].placed++;
   rk.dias[sl.dia].placed++;
   rk.adia[sl.adg].placed++;
+}
+
+/* recompute ranks from scratch according to a given space */
+static inline void rerank(u8 row, u8 col) {
+  u8 diag = row + col;
+  u8 adia = N - col + row - 1;
+  switch (bd.state[row*N + col]) {
+    case PLACED:
+    rk.rows[row].placed++;
+    rk.cols[col].placed++;
+    rk.dias[diag].placed++;
+    rk.adia[adia].placed++;
+    break;
+    case OPEN:
+    rk.rows[row].open++;
+    rk.cols[col].open++;
+    rk.dias[diag].open++;
+    rk.adia[adia].open++;
+    rk.open_rows |= 1 << row;
+    rk.open_cols |= 1 << col;
+    break;
+    default:
+    break;
+  }
 }
 
 void init() {

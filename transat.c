@@ -51,9 +51,8 @@ static bool satisfied() {
 }
 
 /* is this board valid / usable for further queen placement? */
-static bool falsified() {
-  /* ALO unsatisfiable, as AMO sat is guaranteed by heuristic generation */
-  return rk.open_rows == 0 and rk.open_cols == 0;
+static inline bool falsified() {
+  return rk.open_rows == 0 and rk.open_cols == 0; /* ALO unsatisfiable, as AMO sat is guaranteed by heuristic generation */
 }
 
 /* the TranSAT N-Queens solver */

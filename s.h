@@ -122,7 +122,7 @@ typedef float f32;
 #endif
 
 /* n bits to ceil(n/8) bytes */
-#define bits(n) ((n + 7) / 8)
+#define bits(n) (((n) + 7) / 8)
 
 /* x's value in the n'th bit */
 #define bs_in(x, n) ((x)[(n)/8] & (1 << ((n) % 8)))
