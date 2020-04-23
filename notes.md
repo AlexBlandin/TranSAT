@@ -35,6 +35,14 @@ Dumb Model
 12 | 42m53.125s
 
 Less Dumb
+ N | Time
+------------
+ 8 | 0m0.016s
+ 9 | 0m0.094s
+10 | 0m0.750s
+11 | 0m7.313s
+12 | 1m16.812s
+13 |
 
 
       If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive

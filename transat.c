@@ -105,70 +105,70 @@ static inline void transat() {
       derank_sl();
 
       /* propagate over row and update ranks */
-      for (u8 j = 0; j < sl.col; j++) {
-        if (open(sl.row, j)) {
-          at(sl.row, j) = FORBIDDEN;
-          derank(sl.row, j);
-          cf_col(j);
+      for (u8 col = 0; col < sl.col; col++) {
+        if (open(sl.row, col)) {
+          at(sl.row, col) = FORBIDDEN;
+          derank(sl.row, col);
+          cf_col(col);
         }
-      } for (u8 j = sl.col + 1; j < N; j++) {
-        if (open(sl.row, j)) {
-          at(sl.row, j) = FORBIDDEN;
-          derank(sl.row, j);
-          cf_col(j);
+      } for (u8 col = sl.col + 1; col < N; col++) {
+        if (open(sl.row, col)) {
+          at(sl.row, col) = FORBIDDEN;
+          derank(sl.row, col);
+          cf_col(col);
         }
       }
       /* propagate over column and update ranks */
-      for (u8 i = 0; i < sl.row; i++) {
-        if (open(i, sl.col)) {
-          at(i, sl.col) = FORBIDDEN;
-          derank(i, sl.col);
-          cf_row(i);
+      for (u8 row = 0; row < sl.row; row++) {
+        if (open(row, sl.col)) {
+          at(row, sl.col) = FORBIDDEN;
+          derank(row, sl.col);
+          cf_row(row);
         }
-      } for (u8 i = sl.row + 1; i < N; i++) {
-        if (open(i, sl.col)) {
-          at(i, sl.col) = FORBIDDEN;
-          derank(i, sl.col);
-          cf_row(i);
+      } for (u8 row = sl.row + 1; row < N; row++) {
+        if (open(row, sl.col)) {
+          at(row, sl.col) = FORBIDDEN;
+          derank(row, sl.col);
+          cf_row(row);
         }
       }
       clear_full(sl.row, sl.col);
 
       /* propagate (AMO) over diagonals and update ranks */
       for (u8 d = 1; d < N; d++) {
-        u8 r1 = sl.row+d; u8 c1 = sl.col+d;
-        u8 r2 = sl.row+d; u8 c2 = sl.col-d;
-        u8 r3 = sl.row-d; u8 c3 = sl.col-d;
-        u8 r4 = sl.row-d; u8 c4 = sl.col+d;
-        if (r1 < N and c1 < N) {
-          if open(r1, c1) {
-            at(r1, c1) = FORBIDDEN;
-            derank(r1, c1);
-            clear_full(r1, c1);
+        u8 row1 = sl.row+d; u8 col1 = sl.col+d;
+        u8 row2 = sl.row+d; u8 col2 = sl.col-d;
+        u8 row3 = sl.row-d; u8 col3 = sl.col-d;
+        u8 row4 = sl.row-d; u8 col4 = sl.col+d;
+        if (row1 < N and col1 < N) {
+          if open(row1, col1) {
+            at(row1, col1) = FORBIDDEN;
+            derank(row1, col1);
+            clear_full(row1, col1);
           }
         }
 
-        if (r2 < N and c2 < N) {
-          if open(r2, c2) {
-            at(r2, c2) = FORBIDDEN;
-            derank(r2, c2);
-            clear_full(r2, c2);
+        if (row2 < N and col2 < N) {
+          if open(row2, col2) {
+            at(row2, col2) = FORBIDDEN;
+            derank(row2, col2);
+            clear_full(row2, col2);
           }
         }
 
-        if (r3 < N and c3 < N) {
-          if open(r3, c3) {
-            at(r3, c3) = FORBIDDEN;
-            derank(r3, c3);
-            clear_full(r3, c3);
+        if (row3 < N and col3 < N) {
+          if open(row3, col3) {
+            at(row3, col3) = FORBIDDEN;
+            derank(row3, col3);
+            clear_full(row3, col3);
           }
         }
 
-        if (r4 < N and c4 < N) {
-          if open(r4, c4) {
-            at(r4, c4) = FORBIDDEN;
-            derank(r4, c4);
-            clear_full(r4, c4);
+        if (row4 < N and col4 < N) {
+          if open(row4, col4) {
+            at(row4, col4) = FORBIDDEN;
+            derank(row4, col4);
+            clear_full(row4, col4);
           }
         }
       }
@@ -180,19 +180,19 @@ static inline void transat() {
 
       /* ALO propagation (forced move) */
       if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
-        for (u8 i = 0; i < N; i++) {
-          if open(sl.row, i) {
+        for (u8 col = 0; col < N; col++) {
+          if open(sl.row, col) {
             forced = true;
-            queued = (Slot) {sl.row, i, sl.row + i, N - sl.col + sl.row - 1}; // queue a forced move from the same row for the next loop
+            queued = (Slot) {sl.row, col, sl.row + col, N - col + sl.row - 1}; // queue a forced move from the same row for the next loop
             break;
           }
         }
       }
       if (not forced and rk.cols[sl.col].open - 1 == 1) {
-        for (u8 i = 0; i < N; i++) {
-          if open(i, sl.col) {
+        for (u8 row = 0; row < N; row++) {
+          if open(row, sl.col) {
             forced = true;
-            queued = (Slot) {i, sl.col, i + sl.col, N - sl.col + i - 1}; // queue a forced move from the same col for the next loop
+            queued = (Slot) {row, sl.col, row + sl.col, N - sl.col + row - 1}; // queue a forced move from the same col for the next loop
             break;
           }
         }
