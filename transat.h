@@ -12,32 +12,48 @@
 #define sl boards[board].slot
 // #define rk ranks
 #define rk boards[board].ranks
-#define sl_dia (sl.row + sl.col)
-#define sl_adg (N - sl.col + sl.row - 1)
 
 typedef struct _Rank {
   u8 open: 5; /* how many spaces are open */
-  u8 forbidden: 5; /* how many are locked out */
-  u8 placed: 5; /* how many queens are there */
+  u8 placed: 3; /* how many queens are there */
 } Rank;
 
-typedef struct _Ranks {
+typedef struct _Ranks { /* for the number */
   Rank rows[N];
   Rank cols[N];
   Rank dias[2*N-1]; /* row + sl */
   Rank adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
-  u32 open_rows; // bitset of open rows (0 = all full)
-  u32 open_cols; // bitset of open columns
+
+  /* a 1 means that row/col/diagonal is open/forbid/placed */
+  u32 open_rows;   /* which rows are open */
+  u32 placed_rows; /* which rows are placed in */
+  u32 open_cols;   /* which cols are open */
+  u32 placed_cols; /* which cols are placed in */
+  u64 open_dias;   /* which dias are open */
+  u64 placed_dias; /* which dias are placed in */
+  u64 open_adga;   /* which adgs are open */
+  u64 placed_adga; /* which adgs are placed in */
 } Ranks;
 
+typedef struct _bitstate {
+  u8 open[N*N]; /* whether it is open or not */
+  u8 pcfb[N*N]; /* if not open, then it's either placed in or forbidden */
+} BitState;
+
 typedef struct _Slot {
-  i8 row; /* better to have separated row/col than having to always divide */
-  i8 col;
+  u8 row; /* better to have separated row/col than having to always divide */
+  u8 col;
+  u8 dia; /* row + col */
+  u8 adg; /* N - col + row - 1 */
 } Slot;
 
 #define OPEN 0
 #define FORBIDDEN 1
 #define PLACED 2
+
+#define open(row, col) (bd.state[row*N + col] == OPEN)
+#define forbid(row, col) (bd.state[row*N + col] == FORBIDDEN)
+#define placed(row, col) (bd.state[row*N + col] == PLACED)
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
@@ -52,7 +68,6 @@ typedef struct _Board {
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
-// static Ranks ranks;
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
@@ -73,12 +88,6 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
     rk.dias[diag].placed++; \
     rk.adia[adia].placed++; \
     break; \
-    case FORBIDDEN: \
-    rk.rows[row].forbidden++; \
-    rk.cols[col].forbidden++; \
-    rk.dias[diag].forbidden++; \
-    rk.adia[adia].forbidden++; \
-    break; \
     case OPEN: \
     rk.rows[row].open++; \
     rk.cols[col].open++; \
@@ -86,6 +95,8 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
     rk.adia[adia].open++; \
     rk.open_rows |= 1 << row; \
     rk.open_cols |= 1 << col; \
+    break; \
+    default: \
     break; \
   }
 
