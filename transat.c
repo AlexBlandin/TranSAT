@@ -100,13 +100,13 @@ static inline void transat() {
         /* TODO: speedup AMO propogation ESPECIALLY THE RANKS */
         
         /* propagate over row and update ranks */
-        for (u8 col = 0; col < sl.col; col++) {
+        for (u8 col = 0; rk.rows[sl.row].open and col < sl.col; col++) {
           if is_open(sl.row, col) { // is it faster to loop over the full thing and check col != sl.col?
             set(sl.row, col);
             derank(sl.row, col);
             cf_col(col);
           }
-        } for (u8 col = sl.col + 1; col < N; col++) {
+        } for (u8 col = sl.col + 1; rk.rows[sl.row].open and col < N; col++) {
           if is_open(sl.row, col) {
             set(sl.row, col);
             derank(sl.row, col);
@@ -114,13 +114,13 @@ static inline void transat() {
           }
         }
         /* propagate over column and update ranks */
-        for (u8 row = 0; row < sl.row; row++) {
+        for (u8 row = 0; rk.cols[sl.col].open and row < sl.row; row++) {
           if is_open(row, sl.col) {
             set(row, sl.col);
             derank(row, sl.col);
             cf_row(row);
           }
-        } for (u8 row = sl.row + 1; row < N; row++) {
+        } for (u8 row = sl.row + 1; rk.cols[sl.col].open and row < N; row++) {
           if is_open(row, sl.col) {
             set(row, sl.col);
             derank(row, sl.col);

@@ -71,7 +71,7 @@ Transat v0.3
 12 | 1m16.203s
 13 | 13m39.484s
 
-Transat v0.4 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
+Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
  N | Time
 -----------------
  8 | 0m0.016s
@@ -81,7 +81,7 @@ Transat v0.4 (v0.3 but using bitsets and taking out the old state, shrinking mem
 12 | 1m2.828s
 13 | 10m55.922s
 
-Transat v0.4 Square Enumeration
+Transat v0.3.5 (Square Enumeration)
  N | Time
 -----------------
  8 | 0m0.016s
@@ -90,6 +90,16 @@ Transat v0.4 Square Enumeration
 11 | 0m5.484s
 12 | 0m54.453s
 13 | 9m19.594s
+
+Transat v0.4
+ N | Time
+-----------------
+ 8 | 0m0.016s
+ 9 | 0m0.078s
+10 | 0m0.594s
+11 | 0m5.344s
+12 | 0m50.516s
+13 | 8m44.406s
 
 TranSAT v0.5
  N | Time
