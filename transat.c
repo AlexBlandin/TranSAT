@@ -4,14 +4,13 @@
 #include "s.h" /* short.hand */
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
+/* pick a heuristic */
+#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
+#define SQUAREENUM
+#endif
 
 /* pick a space any (open) space */
 static inline Slot heuristic() {
-  /* pick a heuristic */
-  #if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
-  #define SQUAREENUM
-  #endif
-
   #if defined(FIRSTROW)
   /* from 0,0 indices */
   for (u8 row = sl.row; row < N; row++)
@@ -23,12 +22,15 @@ static inline Slot heuristic() {
       if is_open(row, col)
         return slot(row, col);
   #elif defined(SQUAREENUM)
-  /* TODO: heuristics */
-  for (u16 i = bd.slot_index; i < N*N; i++)
-    if is_open(square_enum[i].row, square_enum[i].col)
-      return square_enum[i];
+  for (; bd.slot_index < N*N; bd.slot_index++)
+    if is_open(square_enum[bd.slot_index].row, square_enum[bd.slot_index].col)
+      return square_enum[bd.slot_index];
   #elif defined(TAW)
+  /* TODO: */
+  
   #elif defined(ANTITAW)
+  /* TODO: */
+  
   #else
   #error "You need to choose a heuristic"
   #endif
@@ -45,7 +47,7 @@ static bool satisfied() {
 
     break;
     case 1:
-    /* propagation */
+    /* TODO: propagation */
 
     break;
     default:
