@@ -1,1 +1,6 @@
-echo " N | Time" && echo "-----------------" && ./run.sh 8 $1 && ./run.sh 9  $1 && ./run.sh 10 $1 && ./run.sh 11 $1 && ./run.sh 12  $1 && ./run.sh 13 $1 && ./run.sh 14 $1 && ./run.sh 15 $1 && ./run.sh 16  $1 && ./run.sh 17 $1 && ./run.sh 18 $1 && ./run.sh 19 $1 && ./run.sh 20  $1 && ./run.sh 21 $1
+echo " N | Time" && echo "-----------------"
+
+for i in {1..21}
+do
+  ./run.sh $i $1
+done

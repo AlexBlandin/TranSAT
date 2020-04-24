@@ -39,17 +39,16 @@ typedef struct _Slot {
   u8 adg; /* N - col + row - 1 */
 } Slot;
 
-#define _at(row, col) (bd.state[((u16)(row))*N + ((u16)(col))])
-#define at(row, col) (bd.bs[(row)] & (1 << (col)))
-#define set(row, col) (bd.bs[(row)] |= (1 << (col)))
-#define open(row, col) (bd.bs[(row)] &= ~(1 << (col)))
+#define at(row, col) (bd.b[(row)] & (1 << (col)))
+#define set(row, col) (bd.b[(row)] |= (1 << (col)))
+#define open(row, col) (bd.b[(row)] &= ~(1 << (col)))
 #define is_open(row, col) (!at(row, col))
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
-  u32 bs[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
+  u32 b[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
 
