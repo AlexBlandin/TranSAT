@@ -2,7 +2,7 @@
 // #include "stretchy_buffer.h" /* requires -Wno-unused-value */
 
 #include "s.h" /* short.hand */
-#include "transat.h" /* transat header (types, common funcs, etc) */
+#include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 
 /* pick a space any (open) space */
@@ -56,6 +56,8 @@ static inline bool falsified() {
   return rk.open_rows == 0 and rk.open_cols == 0; /* ALO unsatisfiable, as AMO sat is guaranteed by heuristic generation */
 }
 
+/* TODO: speed up Ranks */
+
 /* the TranSAT N-Queens solver */
 static inline void transat() {
   bool pb = false; /* preempted backtrack */
@@ -90,7 +92,7 @@ static inline void transat() {
       placed_sl();
       derank_sl();
 
-      /* TODO: speedup AMO propogation */
+      /* TODO: speedup AMO propogation ESPECIALLY THE RANKS */
       
       /* propagate over row and update ranks */
       for (u8 col = 0; col < sl.col; col++) {
