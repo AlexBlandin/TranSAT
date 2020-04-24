@@ -14,16 +14,16 @@ static inline Slot heuristic() {
   /* from 0,0 indices */
   for (u8 row = 0; row < N; row++)
     for (u8 col = 0; col < N; col++)
-      if open(row, col)
+      if is_open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
   #elif defined(FIRSTROW_BK)
   /* from N-1,N-1 indices */
   for (u8 row = N-1; row < N; row--)
     for (u8 col = N-1; col < N; col--)
-      if open(row, col)
+      if is_open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
   #elif defined(SQUAREENUM)
-  
+  /* TODO: heuristics */
   #elif defined(TAW)
   #elif defined(ANTITAW)
   #else
@@ -85,35 +85,37 @@ static inline void transat() {
       new_board();
 
       /* place a queen */
-      at(sl.row, sl.col) = PLACED;
+      set(sl.row, sl.col);
       bd.queens_left--;
       placed_sl();
       derank_sl();
 
+      /* TODO: speedup AMO propogation */
+      
       /* propagate over row and update ranks */
       for (u8 col = 0; col < sl.col; col++) {
-        if (open(sl.row, col)) { // is it faster to loop over the full thing and check col != sl.col?
-          at(sl.row, col) = FORBIDDEN;
+        if is_open(sl.row, col) { // is it faster to loop over the full thing and check col != sl.col?
+          set(sl.row, col);
           derank(sl.row, col);
           cf_col(col);
         }
       } for (u8 col = sl.col + 1; col < N; col++) {
-        if (open(sl.row, col)) {
-          at(sl.row, col) = FORBIDDEN;
+        if is_open(sl.row, col) {
+          set(sl.row, col);
           derank(sl.row, col);
           cf_col(col);
         }
       }
       /* propagate over column and update ranks */
       for (u8 row = 0; row < sl.row; row++) {
-        if (open(row, sl.col)) {
-          at(row, sl.col) = FORBIDDEN;
+        if is_open(row, sl.col) {
+          set(row, sl.col);
           derank(row, sl.col);
           cf_row(row);
         }
       } for (u8 row = sl.row + 1; row < N; row++) {
-        if (open(row, sl.col)) {
-          at(row, sl.col) = FORBIDDEN;
+        if is_open(row, sl.col) {
+          set(row, sl.col);
           derank(row, sl.col);
           cf_row(row);
         }
@@ -128,32 +130,32 @@ static inline void transat() {
         u8 row4 = sl.row-i; u8 col4 = sl.col+i;
 
         if (row1 < N and col1 < N) {
-          if open(row1, col1) {
-            at(row1, col1) = FORBIDDEN;
+          if is_open(row1, col1) {
+            set(row1, col1);
             derank(row1, col1);
             clear_full(row1, col1);
           }
         }
 
         if (row2 < N and col2 < N) {
-          if open(row2, col2) {
-            at(row2, col2) = FORBIDDEN;
+          if is_open(row2, col2) {
+            set(row2, col2);
             derank(row2, col2);
             clear_full(row2, col2);
           }
         }
 
         if (row3 < N and col3 < N) {
-          if open(row3, col3) {
-            at(row3, col3) = FORBIDDEN;
+          if is_open(row3, col3) {
+            set(row3, col3);
             derank(row3, col3);
             clear_full(row3, col3);
           }
         }
 
         if (row4 < N and col4 < N) {
-          if open(row4, col4) {
-            at(row4, col4) = FORBIDDEN;
+          if is_open(row4, col4) {
+            set(row4, col4);
             derank(row4, col4);
             clear_full(row4, col4);
           }
@@ -161,14 +163,14 @@ static inline void transat() {
       }
     } else {
       /* forbid a space */
-      at(sl.row, sl.col) = FORBIDDEN;
+      set(sl.row, sl.col);
       derank_sl();
       clear_full(sl.row, sl.col);
 
       /* ALO propagation (forced move) */
       if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
         for (u8 col = 0; col < N; col++) {
-          if open(sl.row, col) {
+          if is_open(sl.row, col) {
             forced = true;
             queued = (Slot) {sl.row, col, sl.row + col, N - col + sl.row - 1}; // queue a forced move from the same row for the next loop
             break;
@@ -177,7 +179,7 @@ static inline void transat() {
       }
       if (not forced and rk.cols[sl.col].open - 1 == 1) {
         for (u8 row = 0; row < N; row++) {
-          if open(row, sl.col) {
+          if is_open(row, sl.col) {
             forced = true;
             queued = (Slot) {row, sl.col, row + sl.col, N - sl.col + row - 1}; // queue a forced move from the same col for the next loop
             break;
@@ -194,7 +196,7 @@ int main() {
   transat();
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
-    printf(" N | Time\n-----------------\n%d |", N);
+    printf(N > 9 ? "%d |" : " %d |", N);
   else
     printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return nq != solutions[N];

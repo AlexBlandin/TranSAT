@@ -6,7 +6,6 @@
 #define N 21
 #endif
 
-/* n MUST BE A CONSTANT */
 #define bd boards[board]
 #define sl boards[board].slot
 #define rk boards[board].ranks
@@ -40,22 +39,19 @@ typedef struct _Slot {
   u8 adg; /* N - col + row - 1 */
 } Slot;
 
-#define OPEN 0
-#define FORBIDDEN 1
-#define PLACED 2
-
-#define at(row, col) (bd.state[((u16)(row))*N + ((u16)(col))])
-#define open(row, col) (at(row, col) == OPEN)
+#define _at(row, col) (bd.state[((u16)(row))*N + ((u16)(col))])
+#define at(row, col) (bd.bs[(row)] & (1 << (col)))
+#define set(row, col) (bd.bs[(row)] |= (1 << (col)))
+#define open(row, col) (bd.bs[(row)] &= ~(1 << (col)))
+#define is_open(row, col) (!at(row, col))
 
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
-  u8 state[N*N]; /* each space on the board, 0 = open, 1 = forbidden, 2 = placed queen */
-  u8 bs[bits(N*N)];
+  u32 bs[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
-
 
 /* DATA */
 static u64 nq = 0; /* solutions */
@@ -122,23 +118,18 @@ static inline void clear_full(u8 row, u8 col) {
 static inline void rerank(u16 row, u16 col) {
   u16 diag = row + col;
   u16 adia = N - col + row - 1;
-  switch (at(row, col)) {
-    case PLACED:
+  if (at(row, col)) {
     rk.rows[row].placed++;
     rk.cols[col].placed++;
     rk.dias[diag].placed++;
     rk.adia[adia].placed++;
-    break;
-    case OPEN:
+  } else {
     rk.rows[row].open++;
     rk.cols[col].open++;
     rk.dias[diag].open++;
     rk.adia[adia].open++;
     rk.open_rows |= 1 << row;
     rk.open_cols |= 1 << col;
-    break;
-    default:
-    break;
   }
 }
 

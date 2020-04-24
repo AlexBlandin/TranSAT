@@ -71,6 +71,15 @@ Transat v0.3
 12 | 1m16.203s
 13 | 13m39.484s
 
+Transat v0.4 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint)
+ N | Time
+-----------------
+ 8 | 0m0.016s
+ 9 | 0m0.078s
+10 | 0m0.703s
+11 | 0m6.688s
+12 | 1m6.641s
+
 TranSAT v0.5
  N | Time
 -----------------
