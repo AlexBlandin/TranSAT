@@ -78,8 +78,16 @@ Transat v0.4 (v0.3 but using bitsets and taking out the old state, shrinking mem
  9 | 0m0.078s
 10 | 0m0.688s
 11 | 0m6.234s
-12 | 1m4.594s
-13 | 11m35.891s
+12 | 1m2.828s
+13 | 10m55.922s
+
+Transat v0.4 Square Enum
+ N | Time
+-----------------
+ 8 | 0m0.016s
+ 9 | 0m0.109s
+10 | 0m0.953s
+11 | 0m9.328s
 
 TranSAT v0.5
  N | Time

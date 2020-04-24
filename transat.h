@@ -41,6 +41,10 @@ typedef struct _Slot {
   u8 adg; /* N - col + row - 1 */
 } Slot;
 
+static inline Slot slot(u8 row, u8 col) {
+  return (Slot) {row, col, row + col, N - col + row - 1};
+} 
+
 #define at(row, col) (bd.state[(row)] & (1 << (col)))
 #define set(row, col) (bd.state[(row)] |= (1 << (col)))
 #define open(row, col) (bd.state[(row)] &= ~(1 << (col)))
@@ -50,6 +54,7 @@ typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
+  u16 slot_index; /* to be used if it is needed */
   u32 state[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
 } Board;
@@ -58,10 +63,7 @@ typedef struct _Board {
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
-
-#ifdef SQUAREENUM
-static Slot square_enums[N*N];
-#endif
+static Slot square_enum[N*N];
 
 /* move along the stack */
 static inline void new_board() {
@@ -154,13 +156,6 @@ void init() {
       rerank(i, j);
     }
   }
-  
-  #ifdef SQUAREENUM
-  u16 r = ceil(sqrt(N));
-  u16 d = r*r - N; 
-  for (u16 i = 0; i < N*N; i++)
-    square_enums[i] = (d < r) ? (Slot) {d,r - 1} : {r-1, 2*r - d - 2}
-  #endif
 
   assert(N);
   assert(N <= 21);

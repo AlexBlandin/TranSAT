@@ -8,26 +8,31 @@
 /* pick a space any (open) space */
 static inline Slot heuristic() {
   /* pick a heuristic */
-  #define FIRSTROW
+  #if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
+  #define SQUAREENUM
+  #endif
 
   #if defined(FIRSTROW)
   /* from 0,0 indices */
   for (u8 row = sl.row; row < N; row++)
     for (u8 col = 0; col < N; col++)
       if is_open(row, col)
-        return (Slot) { row, col, row + col, N-col+row-1 };
+        return slot(row, col);
   for (u8 row = 0; row < N; row++)
     for (u8 col = 0; col < N; col++)
       if is_open(row, col)
-        return (Slot) { row, col, row + col, N-col+row-1 };
+        return slot(row, col);
   #elif defined(SQUAREENUM)
   /* TODO: heuristics */
+  for (u16 i = bd.slot_index; i < N*N; i++)
+    if is_open(square_enum[i].row, square_enum[i].col)
+      return square_enum[i];
   #elif defined(TAW)
   #elif defined(ANTITAW)
   #else
   #error "You need to choose a heuristic"
   #endif
-  return (Slot) {0, 0, 0, N-1};
+  return slot(0, 0);
 }
 
 /* is this board solved / trivial to solve now? */
@@ -60,7 +65,7 @@ static inline bool falsified() {
 static inline void transat() {
   bool pb = false; /* preempted backtrack */
   bool forced = false;
-  Slot queued = (Slot) {0, 0, 0, N-1};
+  Slot queued = slot(0, 0);
   do {
     bd.visits++;
 
@@ -172,7 +177,7 @@ static inline void transat() {
         for (u8 col = 0; col < N; col++) {
           if is_open(sl.row, col) {
             forced = true;
-            queued = (Slot) {sl.row, col, sl.row + col, N - col + sl.row - 1}; // queue a forced move from the same row for the next loop
+            queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
             break;
           }
         }
@@ -181,7 +186,7 @@ static inline void transat() {
         for (u8 row = 0; row < N; row++) {
           if is_open(row, sl.col) {
             forced = true;
-            queued = (Slot) {row, sl.col, row + sl.col, N - sl.col + row - 1}; // queue a forced move from the same col for the next loop
+            queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
             break;
           }
         }
@@ -192,6 +197,14 @@ static inline void transat() {
 
 int main() {
   init();
+  
+  #ifdef SQUAREENUM
+    for (u16 i = 0; i < N*N; i++) {
+    u16 r = (u16)ceil(sqrt(i+1));
+    u16 d = r*r - i - 1;
+    square_enum[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
+  }
+  #endif
 
   transat();
 
