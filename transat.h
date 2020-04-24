@@ -30,7 +30,7 @@ typedef struct _Ranks { /* for the number */
   // u64 open_adga;   /* which adgs are open */
   // u64 placed_dias; /* which dias are placed in */
   // u64 placed_adga; /* which adgs are placed in */
-} Ranks;
+} Ranks; /* TODO: SPEEDUP SERIOUSLY THIS IS THE SLOWEST THING */
 
 typedef struct _Slot {
   u8 row; /* better to have separated row/col than having to always divide */
