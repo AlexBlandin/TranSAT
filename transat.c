@@ -17,12 +17,13 @@ static inline Slot heuristic() {
       if open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
   #elif defined(FIRSTROW_BK)
+  /* from N-1,N-1 indices */
   for (u8 row = N-1; row < N; row--)
     for (u8 col = N-1; col < N; col--)
       if open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
   #elif defined(SQUAREENUM)
-
+  
   #elif defined(TAW)
   #elif defined(ANTITAW)
   #else
@@ -61,23 +62,10 @@ static inline void transat() {
   bool forced = false;
   Slot queued = (Slot) {0, 0, 0, N-1};
   do {
-    assert(board < N);
     bd.visits++;
 
-    #ifdef PRINTOUT
-    if (bd.queens_left == 0) {
-      printf("b[%d], ql = %d, sl = (%d, %d), nq = %"LU"\n", board, bd.queens_left, sl.row, sl.col, nq);
-      for (u16 i = 0; i < N; i++) {
-        for (u16 j = 0; j < N; j++)
-          printf("%d ", at(i*N + j]);
-        println();
-      }
-      println();
-    }
-    #endif
-
     if (not pb and (satisfied() or falsified())) {
-      board--; // TODO: try running backwards
+      board--;
       continue;
     }
 
@@ -94,9 +82,7 @@ static inline void transat() {
           continue;
         }
       }
-      copy(sizeof(Board), boards[board], boards[board+1]); // TODO: try running backwards
-      board++; // TODO: try running backwards
-      bd.visits = 0; // all new board have 0 visits
+      new_board();
 
       /* place a queen */
       at(sl.row, sl.col) = PLACED;
@@ -199,7 +185,7 @@ static inline void transat() {
         }
       }
     }
-  } while(board > -1); // TODO: try running backwards to help the prefetcher
+  } while(board > -1);
 }
 
 int main() {

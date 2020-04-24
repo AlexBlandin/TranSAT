@@ -62,6 +62,13 @@ static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
 
+/* move along the stack */
+static inline void new_board() {
+  copy(sizeof(Board), boards[board], boards[board+1]);
+  board++;
+  bd.visits = 0; // all new board have 0 visits
+}
+
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
                           2279184, 14772512, 95815104, 666090624,
@@ -112,10 +119,10 @@ static inline void clear_full(u8 row, u8 col) {
 }
 
 /* recompute ranks from scratch according to a given space */
-static inline void rerank(u8 row, u8 col) {
-  u8 diag = row + col;
-  u8 adia = N - col + row - 1;
-  switch (bd.state[row*N + col]) {
+static inline void rerank(u16 row, u16 col) {
+  u16 diag = row + col;
+  u16 adia = N - col + row - 1;
+  switch (at(row, col)) {
     case PLACED:
     rk.rows[row].placed++;
     rk.cols[col].placed++;
@@ -138,8 +145,6 @@ static inline void rerank(u8 row, u8 col) {
 void init() {
   seed_rng();
   for (board = N; board--;) {
-    for (u16 i = 0; i < N*N; i++)
-      bd.state[i] = OPEN; /* in case we change it (unlikely) */
     bd.queens_left = N;
   }
   board = 0;
