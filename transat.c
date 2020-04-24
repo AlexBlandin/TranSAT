@@ -68,133 +68,134 @@ static inline void transat() {
   bool pb = false; /* preempted backtrack */
   bool forced = false;
   Slot queued = slot(0, 0);
-  do {
+  while(board > -1) { /* starts at 0 */
     bd.visits++;
 
     if (not pb and (satisfied() or falsified())) {
       board--;
-      continue;
-    }
-
-    /* odd is placed, even is forbid */
-    if (bd.visits & 1) {
-      /* select branching variable (the slot/space we're focusing on) */
-      if (forced) {
-        sl = queued;
-        forced = false;
-      } else {
-        sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
-        if (rk.rows[sl.row].placed or rk.cols[sl.col].placed or rk.dias[sl.dia].placed or rk.adia[sl.adg].placed) {
-          pb = true; /* AMO unsatisfied, so we're going to loop around and immediately forbid it */
-          continue;
-        }
-      }
-      new_board();
-
-      /* place a queen */
-      set(sl.row, sl.col);
-      bd.queens_left--;
-      placed_sl();
-      derank_sl();
-
-      /* TODO: speedup AMO propogation ESPECIALLY THE RANKS */
-      
-      /* propagate over row and update ranks */
-      for (u8 col = 0; col < sl.col; col++) {
-        if is_open(sl.row, col) { // is it faster to loop over the full thing and check col != sl.col?
-          set(sl.row, col);
-          derank(sl.row, col);
-          cf_col(col);
-        }
-      } for (u8 col = sl.col + 1; col < N; col++) {
-        if is_open(sl.row, col) {
-          set(sl.row, col);
-          derank(sl.row, col);
-          cf_col(col);
-        }
-      }
-      /* propagate over column and update ranks */
-      for (u8 row = 0; row < sl.row; row++) {
-        if is_open(row, sl.col) {
-          set(row, sl.col);
-          derank(row, sl.col);
-          cf_row(row);
-        }
-      } for (u8 row = sl.row + 1; row < N; row++) {
-        if is_open(row, sl.col) {
-          set(row, sl.col);
-          derank(row, sl.col);
-          cf_row(row);
-        }
-      }
-      clear_full(sl.row, sl.col);
-
-      /* propagate (AMO) over diagonals and update ranks */
-      for (u8 i = 1; i < N; i++) {
-        u8 row1 = sl.row+i; u8 col1 = sl.col+i;
-        u8 row2 = sl.row+i; u8 col2 = sl.col-i;
-        u8 row3 = sl.row-i; u8 col3 = sl.col-i;
-        u8 row4 = sl.row-i; u8 col4 = sl.col+i;
-
-        if (row1 < N and col1 < N) {
-          if is_open(row1, col1) {
-            set(row1, col1);
-            derank(row1, col1);
-            clear_full(row1, col1);
-          }
-        }
-
-        if (row2 < N and col2 < N) {
-          if is_open(row2, col2) {
-            set(row2, col2);
-            derank(row2, col2);
-            clear_full(row2, col2);
-          }
-        }
-
-        if (row3 < N and col3 < N) {
-          if is_open(row3, col3) {
-            set(row3, col3);
-            derank(row3, col3);
-            clear_full(row3, col3);
-          }
-        }
-
-        if (row4 < N and col4 < N) {
-          if is_open(row4, col4) {
-            set(row4, col4);
-            derank(row4, col4);
-            clear_full(row4, col4);
-          }
-        }
-      }
     } else {
-      /* forbid a space */
-      set(sl.row, sl.col);
-      derank_sl();
-      clear_full(sl.row, sl.col);
+      pb = false;
 
-      /* ALO propagation (forced move) */
-      if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
-        for (u8 col = 0; col < N; col++) {
-          if is_open(sl.row, col) {
-            forced = true;
-            queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
-            break;
+      /* odd is placed, even is forbid */
+      if (bd.visits & 1) {
+        /* select branching variable (the slot/space we're focusing on) */
+        if (forced) {
+          sl = queued;
+          forced = false;
+        } else {
+          sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
+          if (rk.rows[sl.row].placed or rk.cols[sl.col].placed or rk.dias[sl.dia].placed or rk.adia[sl.adg].placed) {
+            pb = true; /* AMO unsatisfied, so we're going to loop around and immediately forbid it */
+            continue;
           }
         }
-      }
-      if (not forced and rk.cols[sl.col].open - 1 == 1) {
-        for (u8 row = 0; row < N; row++) {
+        new_board();
+
+        /* place a queen */
+        set(sl.row, sl.col);
+        bd.queens_left--;
+        placed_sl();
+        derank_sl();
+
+        /* TODO: speedup AMO propogation ESPECIALLY THE RANKS */
+        
+        /* propagate over row and update ranks */
+        for (u8 col = 0; col < sl.col; col++) {
+          if is_open(sl.row, col) { // is it faster to loop over the full thing and check col != sl.col?
+            set(sl.row, col);
+            derank(sl.row, col);
+            cf_col(col);
+          }
+        } for (u8 col = sl.col + 1; col < N; col++) {
+          if is_open(sl.row, col) {
+            set(sl.row, col);
+            derank(sl.row, col);
+            cf_col(col);
+          }
+        }
+        /* propagate over column and update ranks */
+        for (u8 row = 0; row < sl.row; row++) {
           if is_open(row, sl.col) {
-            forced = true;
-            queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
-            break;
+            set(row, sl.col);
+            derank(row, sl.col);
+            cf_row(row);
+          }
+        } for (u8 row = sl.row + 1; row < N; row++) {
+          if is_open(row, sl.col) {
+            set(row, sl.col);
+            derank(row, sl.col);
+            cf_row(row);
+          }
+        }
+        clear_full(sl.row, sl.col);
+
+        /* propagate (AMO) over diagonals and update ranks */
+        for (u8 i = 1; i < N; i++) {
+          u8 row1 = sl.row+i; u8 col1 = sl.col+i;
+          u8 row2 = sl.row+i; u8 col2 = sl.col-i;
+          u8 row3 = sl.row-i; u8 col3 = sl.col-i;
+          u8 row4 = sl.row-i; u8 col4 = sl.col+i;
+
+          if (row1 < N and col1 < N) {
+            if is_open(row1, col1) {
+              set(row1, col1);
+              derank(row1, col1);
+              clear_full(row1, col1);
+            }
+          }
+
+          if (row2 < N and col2 < N) {
+            if is_open(row2, col2) {
+              set(row2, col2);
+              derank(row2, col2);
+              clear_full(row2, col2);
+            }
+          }
+
+          if (row3 < N and col3 < N) {
+            if is_open(row3, col3) {
+              set(row3, col3);
+              derank(row3, col3);
+              clear_full(row3, col3);
+            }
+          }
+
+          if (row4 < N and col4 < N) {
+            if is_open(row4, col4) {
+              set(row4, col4);
+              derank(row4, col4);
+              clear_full(row4, col4);
+            }
+          }
+        }
+      } else {
+        /* forbid a space */
+        set(sl.row, sl.col);
+        derank_sl();
+        clear_full(sl.row, sl.col);
+
+        /* ALO propagation (forced move) */
+        if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
+          for (u8 col = 0; col < N; col++) {
+            if is_open(sl.row, col) {
+              forced = true;
+              queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
+              break;
+            }
+          }
+        }
+        if (not forced and rk.cols[sl.col].open - 1 == 1) {
+          for (u8 row = 0; row < N; row++) {
+            if is_open(row, sl.col) {
+              forced = true;
+              queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
+              break;
+            }
           }
         }
       }
     }
-  } while(board > -1);
+  };
 }
 
 int main() {

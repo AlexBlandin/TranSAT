@@ -52,7 +52,7 @@ qcount d
 17 | 0m59.125s
 18 | 7m1.172s
 
-TranSAT v0.1
+TranSAT v0.1 FirstRow
  N | Time
 -----------------
  8 | 0m0.188s
@@ -85,19 +85,11 @@ Transat v0.4 Square Enumeration
  N | Time
 -----------------
  8 | 0m0.016s
- 9 | 0m0.109s
-10 | 0m0.953s
-11 | 0m9.328s
-12 | 1m38.047s
-13 | 18m4.688s
-
-Transat v0.4 Square Enumeration v2 (aka not forgetting that we just reset to 0 each time why did we do that)
- N | Time
------------------
- 8 | 0m0.031s
- 9 | 0m0.078s
+ 9 | 0m0.063s
 10 | 0m0.594s
 11 | 0m5.484s
+12 | 0m54.453s
+13 | 9m19.594s
 
 TranSAT v0.5
  N | Time

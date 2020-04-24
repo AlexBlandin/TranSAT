@@ -12,7 +12,7 @@
 
 typedef struct _Rank {
   u8 open: 6; /* how many spaces are open */
-  u8 placed: 2; /* how many queens are there */
+  u8 placed: 2; /* already placed in */
 } Rank; // bitwise ranks thing & propagation?
 
 typedef struct _Ranks { /* for the number */
