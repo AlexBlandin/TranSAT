@@ -68,13 +68,6 @@ bool pb = false; /* preempted backtrack */
 bool forced = false;
 Slot queued;
 
-/* move along the stack */
-static inline void new_board() {
-  copy(sizeof(Board), boards[board], boards[board+1]);
-  board++;
-  bd.visits = 0; // all new board have 0 visits
-}
-
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
                           2279184, 14772512, 95815104, 666090624,
@@ -82,16 +75,22 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           2691008701644, 24233937684440,
                           227514171973736, 2207893435808352,
                           22317699616364044, 234907967154122528};
-
+                          
+/* move along the stack */
+static inline void copy_board() {
+  copy(sizeof(Board), boards[board], boards[board+1]);
+  board++;
+  bd.visits = 0; // all new board have 0 visits
+}
 
 /* reduce open ranks for a given space */
 static inline void derank(u8 row, u8 col) {
-  u8 diag = row + col;
-  u8 adia = N - col + row - 1;
+  u8 dia = row + col;
+  u8 adg = N - col + row - 1;
   rk.rows[row].open--;
   rk.cols[col].open--;
-  rk.dias[diag].open--;
-  rk.adia[adia].open--;
+  rk.dias[dia].open--;
+  rk.adia[adg].open--;
   rk.n_open--;
 }
 
@@ -104,6 +103,7 @@ static inline void derank_sl() {
   rk.n_open--;
 }
 
+/* increase placed ranks for the current slot */
 static inline void placed_sl() {
   rk.rows[sl.row].placed++;
   rk.cols[sl.col].placed++;

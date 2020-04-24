@@ -86,9 +86,9 @@ static inline void transat() {
             continue;
           }
         }
-        new_board();
 
         /* place a queen */
+        copy_board();
         set(sl.row, sl.col);
         bd.queens_left--;
         placed_sl();
