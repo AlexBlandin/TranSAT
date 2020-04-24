@@ -64,7 +64,7 @@ static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
 static Slot square_enum[N*N];
-bool pb = false; /* preempted backtrack */
+bool pb = false; /* preemptive backtrack to forbid the current slot */
 bool forced = false;
 Slot queued;
 

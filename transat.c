@@ -126,43 +126,30 @@ static inline void transat() {
         }
         clear_full(sl.row, sl.col);
 
-        /* propagate (AMO) over diagonals and update ranks */
+        /* propagate (AMO) over diagonals and update ranks (top-leftest is 0,0) */
         for (u8 i = 1; i < N; i++) {
-          u8 row1 = sl.row+i; u8 col1 = sl.col+i;
-          u8 row2 = sl.row+i; u8 col2 = sl.col-i;
-          u8 row3 = sl.row-i; u8 col3 = sl.col-i;
-          u8 row4 = sl.row-i; u8 col4 = sl.col+i;
+          u8 up = sl.col-i; u8 down = sl.col+i;
+          u8 left = sl.row-i; u8 right = sl.row+i;
 
-          if (row1 < N and col1 < N) {
-            if is_open(row1, col1) {
-              set(row1, col1);
-              derank(row1, col1);
-              clear_full(row1, col1);
-            }
+          if (left < N and up < N and is_open(left, up)) {
+            set(left, up);
+            derank(left, up);
+            clear_full(left, up);
           }
-
-          if (row2 < N and col2 < N) {
-            if is_open(row2, col2) {
-              set(row2, col2);
-              derank(row2, col2);
-              clear_full(row2, col2);
-            }
+          if (left < N and down < N and is_open(left, down)) {
+            set(left, down);
+            derank(left, down);
+            clear_full(left, down);
           }
-
-          if (row3 < N and col3 < N) {
-            if is_open(row3, col3) {
-              set(row3, col3);
-              derank(row3, col3);
-              clear_full(row3, col3);
-            }
+          if (right < N and up < N and is_open(right, up)) {
+            set(right, up);
+            derank(right, up);
+            clear_full(right, up);
           }
-
-          if (row4 < N and col4 < N) {
-            if is_open(row4, col4) {
-              set(row4, col4);
-              derank(row4, col4);
-              clear_full(row4, col4);
-            }
+          if (right < N and down < N and is_open(right, down)) {
+            set(right, down);
+            derank(right, down);
+            clear_full(right, down);
           }
         }
       } else {
