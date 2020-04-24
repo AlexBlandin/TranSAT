@@ -77,7 +77,7 @@ static inline void transat() {
     #endif
 
     if (not pb and (satisfied() or falsified())) {
-      board--;
+      board--; // TODO: try running backwards
       continue;
     }
 
@@ -94,8 +94,8 @@ static inline void transat() {
           continue;
         }
       }
-      copy(sizeof(Board), boards[board], boards[board+1]);
-      board++;
+      copy(sizeof(Board), boards[board], boards[board+1]); // TODO: try running backwards
+      board++; // TODO: try running backwards
       bd.visits = 0; // all new board have 0 visits
 
       /* place a queen */
@@ -199,7 +199,7 @@ static inline void transat() {
         }
       }
     }
-  } while(board > -1);
+  } while(board > -1); // TODO: try running backwards to help the prefetcher
 }
 
 int main() {
@@ -208,7 +208,7 @@ int main() {
   transat();
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
-    printf("Q(%d) = %"LU"\n", N, nq);
+    printf(" N | Time\n-----------------\n%d |", N);
   else
     printf("Q(%d) gave %"LU", should be %"LU"\n", N, nq, solutions[N]);
   return nq != solutions[N];

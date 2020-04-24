@@ -3,7 +3,7 @@
 
 /* 22 is the max */
 #ifndef N
-#define N 11
+#define N 21
 #endif
 
 /* n MUST BE A CONSTANT */
@@ -14,7 +14,7 @@
 typedef struct _Rank {
   u8 open: 6; /* how many spaces are open */
   u8 placed: 2; /* how many queens are there */
-} Rank;
+} Rank; // bitwise ranks thing & propagation?
 
 typedef struct _Ranks { /* for the number */
   Rank rows[N];
@@ -98,12 +98,12 @@ static inline void placed_sl(){
 
 /* clear a full row */
 static inline void cf_row(u8 row) {
-  rk.open_rows &= ~((rk.rows[row].open == 0) << row);
+  rk.open_rows &= ~((rk.rows[row].open == 0) << row); // is if() rk... faster?
 }
 
 /* clear a full col */
 static inline void cf_col(u8 col) {
-  rk.open_cols &= ~((rk.cols[col].open == 0) << col);
+  rk.open_cols &= ~((rk.cols[col].open == 0) << col); // is if() rk... faster?
 }
 
 /* clear a full row and col */
