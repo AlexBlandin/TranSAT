@@ -12,14 +12,12 @@ static inline Slot heuristic() {
 
   #if defined(FIRSTROW)
   /* from 0,0 indices */
-  for (u8 row = 0; row < N; row++)
+  for (u8 row = sl.row; row < N; row++)
     for (u8 col = 0; col < N; col++)
       if is_open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
-  #elif defined(FIRSTROW_BK)
-  /* from N-1,N-1 indices */
-  for (u8 row = N-1; row < N; row--)
-    for (u8 col = N-1; col < N; col--)
+  for (u8 row = 0; row < N; row++)
+    for (u8 col = 0; col < N; col++)
       if is_open(row, col)
         return (Slot) { row, col, row + col, N-col+row-1 };
   #elif defined(SQUAREENUM)
