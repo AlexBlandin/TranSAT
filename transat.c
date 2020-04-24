@@ -65,9 +65,6 @@ static inline bool falsified() {
 
 /* the TranSAT N-Queens solver */
 static inline void transat() {
-  bool pb = false; /* preempted backtrack */
-  bool forced = false;
-  Slot queued = slot(0, 0);
   while(board > -1) { /* starts at 0 */
     bd.visits++;
 
@@ -77,7 +74,7 @@ static inline void transat() {
       pb = false;
 
       /* odd is placed, even is forbid */
-      if (bd.visits & 1) {
+      if (forced or bd.visits & 1) {
         /* select branching variable (the slot/space we're focusing on) */
         if (forced) {
           sl = queued;
@@ -176,7 +173,7 @@ static inline void transat() {
 
         /* ALO propagation (forced move) */
         if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
-          for (u8 col = 0; col < N; col++) {
+          for (u8 col = 0; rk.rows[sl.row].open and col < N; col++) {
             if is_open(sl.row, col) {
               forced = true;
               queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
@@ -185,7 +182,7 @@ static inline void transat() {
           }
         }
         if (not forced and rk.cols[sl.col].open - 1 == 1) {
-          for (u8 row = 0; row < N; row++) {
+          for (u8 row = 0; rk.cols[sl.col].open and row < N; row++) {
             if is_open(row, sl.col) {
               forced = true;
               queued = slot(row, sl.col); // queue a forced move from the same col for the next loop

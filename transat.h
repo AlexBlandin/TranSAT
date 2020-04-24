@@ -64,6 +64,9 @@ static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
 static Slot square_enum[N*N];
+bool pb = false; /* preempted backtrack */
+bool forced = false;
+Slot queued;
 
 /* move along the stack */
 static inline void new_board() {
@@ -92,15 +95,16 @@ static inline void derank(u8 row, u8 col) {
   rk.n_open--;
 }
 
-/* reduce open ranks for a given slot */
+/* reduce open ranks for the current slot */
 static inline void derank_sl() {
   rk.rows[sl.row].open--;
   rk.cols[sl.col].open--;
   rk.dias[sl.dia].open--;
   rk.adia[sl.adg].open--;
+  rk.n_open--;
 }
 
-static inline void placed_sl(){
+static inline void placed_sl() {
   rk.rows[sl.row].placed++;
   rk.cols[sl.col].placed++;
   rk.dias[sl.dia].placed++;
