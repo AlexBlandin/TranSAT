@@ -13,18 +13,13 @@
 static inline Slot heuristic() {
   #if defined(FIRSTROW)
   /* from 0,0 indices */
-  for (u8 row = sl.row; row < N; row++)
-    for (u8 col = 0; col < N; col++)
-      if is_open(row, col)
-        return slot(row, col);
-  for (u8 row = 0; row < N; row++)
-    for (u8 col = 0; col < N; col++)
-      if is_open(row, col)
-        return slot(row, col);
+  for (; bd.i < N*N; bd.i++)
+    if lut_open(bd.i)
+      return lut[bd.i];
   #elif defined(SQUAREENUM)
-  for (; bd.slot_index < N*N; bd.slot_index++)
-    if is_open(square_enum[bd.slot_index].row, square_enum[bd.slot_index].col)
-      return square_enum[bd.slot_index];
+  for (; bd.i < N*N; bd.i++)
+    if lut_open(bd.i)
+      return lut[bd.i];
   #elif defined(TAW)
   /* TODO: */
   
@@ -184,14 +179,15 @@ static inline void transat() {
 
 int main() {
   init();
-  
-  #ifdef SQUAREENUM
-    for (u16 i = 0; i < N*N; i++) {
+  for (u16 i = 0; i < N*N; i++) {
+  #if defined(FIRSTROW)
+    lut[i] = slot(i/N, i%N);
+  #elif defined(SQUAREENUM)
     u16 r = (u16)ceil(sqrt(i+1));
     u16 d = r*r - i - 1;
-    square_enum[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
-  }
+    lut[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
   #endif
+  }
 
   transat();
 

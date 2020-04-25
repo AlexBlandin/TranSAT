@@ -1,10 +1,19 @@
 #ifndef TRANSAT_H_IMPLEMENTED
 #define TRANSAT_H_IMPLEMENTED
 
-/* 22 is the max */
+/* N <= 21 */
 #ifndef N
 #define N 21
 #endif
+
+/* simple bitset for N-Queens rows */
+typedef u32 row_t;
+/* extended bitset for up to 3*N (assuming N <= 21) */
+typedef u64 exrow_t;
+
+static inline exrow_t embed(row_t row) { return ((exrow_t) row) << N; }
+static inline row_t truncate(exrow_t exrow) { return (row_t) (exrow >> N); }
+static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t) row) << N);}
 
 #define bd boards[board]
 #define sl boards[board].slot
@@ -49,21 +58,23 @@ static inline Slot slot(u8 row, u8 col) {
 #define set(row, col) (bd.state[(row)] |= (1 << (col)))
 #define open(row, col) (bd.state[(row)] &= ~(1 << (col)))
 #define is_open(row, col) (!at(row, col))
+#define lut_open(i) (is_open(lut[i].row, lut[i].col))
 
+/* ACLS Chessboard */
 typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
+  u16 i; /* heuristic iteration index */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
   Slot slot; /* where we changed (either forbid or placed) */
-  u16 slot_index; /* to be used if it is needed */
-  u32 state[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
-  Ranks ranks; // taken out since we recompute each time so don't need storage, can speed up later
+  row_t state[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
+  Ranks ranks;
 } Board;
 
 /* DATA */
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
 static Board boards[N+1]; /* ALCS boards w/ ranks */
-static Slot square_enum[N*N];
+static Slot lut[N*N]; /* 0..N*N-1 to slot LUT */
 bool pb = false; /* preemptive backtrack to forbid the current slot */
 bool forced = false;
 Slot queued;
@@ -146,6 +157,7 @@ static inline void rerank(u16 row, u16 col) {
   }
 }
 
+/* initialise boards and ranks */
 void init() {
   seed_rng();
   for (board = N; board--;) {
@@ -162,7 +174,7 @@ void init() {
   }
 
   assert(N);
-  assert(N <= 21);
+  assert(N <= 21); // going over requires threading & other work
   assert(sizeof(Rank));
   assert(sizeof(Ranks));
   assert(sizeof(Board));
