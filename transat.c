@@ -11,20 +11,11 @@
 
 /* pick a space any (open) space */
 static inline Slot heuristic() {
-  #if defined(FIRSTROW)
+  #if defined(FIRSTROW) or defined(SQUAREENUM)
   /* from 0,0 indices */
-  for (u8 row = sl.row; row < N; row++)
-    for (u8 col = 0; col < N; col++)
-      if is_open(row, col)
-        return slot(row, col);
-  for (u8 row = 0; row < N; row++)
-    for (u8 col = 0; col < N; col++)
-      if is_open(row, col)
-        return slot(row, col);
-  #elif defined(SQUAREENUM)
-  for (; bd.slot_index < N*N; bd.slot_index++)
-    if is_open(square_enum[bd.slot_index].row, square_enum[bd.slot_index].col)
-      return square_enum[bd.slot_index];
+  for (; bd.i < N*N; bd.i++)
+    if lut_open(bd.i)
+      return lut[bd.i];
   #elif defined(TAW)
   /* TODO: */
   
@@ -34,7 +25,7 @@ static inline Slot heuristic() {
   #else
   #error "You need to choose a heuristic"
   #endif
-  return slot(0, 0);
+  return (Slot) {};
 }
 
 /* is this board solved / trivial to solve now? */
@@ -61,8 +52,6 @@ static inline bool falsified() {
   return rk.open_rows == 0 and rk.open_cols == 0; /* ALO unsatisfiable, as AMO sat is guaranteed by heuristic generation */
 }
 
-/* TODO: speed up Ranks */
-
 /* the TranSAT N-Queens solver */
 static inline void transat() {
   while(board > -1) { /* starts at 0 */
@@ -74,11 +63,11 @@ static inline void transat() {
       pb = false;
 
       /* odd is placed, even is forbid */
-      if (forced or bd.visits & 1) {
+      if (is_queued or bd.visits & 1) {
         /* select branching variable (the slot/space we're focusing on) */
-        if (forced) {
+        if (is_queued) {
           sl = queued;
-          forced = false;
+          is_queued = false;
         } else {
           sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
           if (rk.rows[sl.row].placed or rk.cols[sl.col].placed or rk.dias[sl.dia].placed or rk.adia[sl.adg].placed) {
@@ -93,8 +82,6 @@ static inline void transat() {
         bd.queens_left--;
         placed_sl();
         derank_sl();
-
-        /* TODO: speedup AMO propogation ESPECIALLY THE RANKS */
         
         /* propagate over row and update ranks */
         for (u8 col = 0; rk.rows[sl.row].open and col < sl.col; col++) {
@@ -126,43 +113,30 @@ static inline void transat() {
         }
         clear_full(sl.row, sl.col);
 
-        /* propagate (AMO) over diagonals and update ranks */
-        for (u8 i = 1; i < N; i++) {
-          u8 row1 = sl.row+i; u8 col1 = sl.col+i;
-          u8 row2 = sl.row+i; u8 col2 = sl.col-i;
-          u8 row3 = sl.row-i; u8 col3 = sl.col-i;
-          u8 row4 = sl.row-i; u8 col4 = sl.col+i;
+        /* propagate (AMO) over diagonals and update ranks (top-leftest is 0,0) */
+        for (u8 i = 1; (rk.dias[sl.dia].open or rk.adia[sl.adg].open) and i < N; i++) {
+          u8 up = sl.col-i; u8 down = sl.col+i;
+          u8 left = sl.row-i; u8 right = sl.row+i;
 
-          if (row1 < N and col1 < N) {
-            if is_open(row1, col1) {
-              set(row1, col1);
-              derank(row1, col1);
-              clear_full(row1, col1);
-            }
+          if (left < N and up < N /* and rk.dias[diagonal(left, up)].open */ and is_open(left, up)) {
+            set(left, up);
+            derank(left, up);
+            clear_full(left, up);
           }
-
-          if (row2 < N and col2 < N) {
-            if is_open(row2, col2) {
-              set(row2, col2);
-              derank(row2, col2);
-              clear_full(row2, col2);
-            }
+          if (left < N and down < N /* and rk.adia[antidiagonal(left, down)].open */ and is_open(left, down)) {
+            set(left, down);
+            derank(left, down);
+            clear_full(left, down);
           }
-
-          if (row3 < N and col3 < N) {
-            if is_open(row3, col3) {
-              set(row3, col3);
-              derank(row3, col3);
-              clear_full(row3, col3);
-            }
+          if (right < N and up < N /* and rk.adia[antidiagonal(right, up)].open */ and is_open(right, up)) {
+            set(right, up);
+            derank(right, up);
+            clear_full(right, up);
           }
-
-          if (row4 < N and col4 < N) {
-            if is_open(row4, col4) {
-              set(row4, col4);
-              derank(row4, col4);
-              clear_full(row4, col4);
-            }
+          if (right < N and down < N /* and rk.dias[diagonal(right, down)].open */ and is_open(right, down)) {
+            set(right, down);
+            derank(right, down);
+            clear_full(right, down);
           }
         }
       } else {
@@ -175,17 +149,17 @@ static inline void transat() {
         if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
           for (u8 col = 0; rk.rows[sl.row].open and col < N; col++) {
             if is_open(sl.row, col) {
-              forced = true;
               queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
+              is_queued = true;
               break;
             }
           }
         }
-        if (not forced and rk.cols[sl.col].open - 1 == 1) {
+        if (not is_queued and rk.cols[sl.col].open - 1 == 1) {
           for (u8 row = 0; rk.cols[sl.col].open and row < N; row++) {
             if is_open(row, sl.col) {
-              forced = true;
               queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
+              is_queued = true;
               break;
             }
           }
@@ -197,14 +171,15 @@ static inline void transat() {
 
 int main() {
   init();
-  
-  #ifdef SQUAREENUM
-    for (u16 i = 0; i < N*N; i++) {
+  for (u16 i = 0; i < N*N; i++) {
+  #if defined(FIRSTROW)
+    lut[i] = slot(i/N, i%N);
+  #elif defined(SQUAREENUM)
     u16 r = (u16)ceil(sqrt(i+1));
     u16 d = r*r - i - 1;
-    square_enum[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
-  }
+    lut[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
   #endif
+  }
 
   transat();
 
