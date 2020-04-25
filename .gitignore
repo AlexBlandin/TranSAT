@@ -57,6 +57,7 @@ dkms.conf
 # Sessions & Timing Data
 *.rdbg
 *.code-workspace
+.vscode/*
 *.gcov
 *.gcda
 *.gcno

@@ -91,7 +91,17 @@ Transat v0.3.5 (Square Enumeration)
 12 | 0m54.453s
 13 | 9m19.594s
 
-Transat v0.4
+Transat v0.4 (FirstRow)
+ N | Time
+-----------------
+ 8 | 0m0.016s
+ 9 | 0m0.063s
+10 | 0m0.641s
+11 | 0m5.922s
+12 | 0m57.219s
+13 | 9m33.203s
+
+Transat v0.4 (Square Enumeration)
  N | Time
 -----------------
  8 | 0m0.016s
