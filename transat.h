@@ -28,6 +28,8 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define set(row, col) ((bd.rows[(row)] |= (1 << (col))), (bd.cols[(col)] |= (1 << (row))))
 #define open(row, col) (not at(row, col))
 #define lut_open(i) (open(lut[i].row, lut[i].col))
+/* given bd.rows[row] or bd.cols[col] */
+#define n_open(rowcol) (N - bitcount32(rowcol))
 
 typedef struct _Slot {
   u8 row; /* better to have separated row/col than having to always divide */
@@ -78,8 +80,14 @@ static inline void copy_board() {
   bd.visits = 0; // all new board have 0 visits
 }
 
-static inline u32 odegree(u8 row, u8 col) {
-  return 2*N - bitcount32(bd.rows[row]) - bitcount32(bd.cols[col]) + rk.dias[diagonal(row, col)] + rk.adia[antidiagonal(row, col)]; 
+static inline u32 odegree(Slot s) {
+  return 2*N - bitcount32(bd.rows[s.row]) - bitcount32(bd.cols[s.col]) + rk.dias[s.dia] + rk.adia[s.adg]; 
+}
+
+typedef struct _WeightPair { float first, second; } WeightPair;
+static const float weights[] = { 0, 0, 4.85, 1, 0.354, 0.11, 0.0694, 0.9740, 0.9488, 0.9242, 0.9002, 0.8769, 0.8542, 0.8320, 0.8104, 0.7894, 0.7690, 0.7490, 0.7296, 0.7107, 0.6923, 0.6743, 0.6569 }; /* precomputed weights based on GenericSAT's version of tawSolver's heuristics */
+static inline WeightPair heuristics(Slot s) {
+  return (WeightPair) { odegree(s)*weights[2], weights[n_open(bd.rows[s.row])] + weights[N - bitcount32(bd.cols[s.col])] };
 }
 
 /* reduce open ranks for a given space */

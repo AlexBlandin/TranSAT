@@ -5,12 +5,13 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
+#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW)
 #define SQUAREENUM
 #endif
 
 /* pick a space any (open) space */
 static inline Slot heuristic() {
+  Slot s = {0, 0, 0, 0};
   #if defined(FIRSTROW) or defined(SQUAREENUM)
   /* from 0,0 indices */
   for (; bd.i < N*N; bd.i++)
@@ -18,14 +19,28 @@ static inline Slot heuristic() {
       return lut[bd.i];
   #elif defined(TAW)
   /* TODO: */
+  float top_prod = 0, top_sum = 0;
   
-  #elif defined(ANTITAW)
-  /* TODO: */
+  for (u8 row = 0; row < N; row++) {
+    if (bd.rows[row] != full_row) {
+      for (u8 row = 0; row < N; row++) {
+        Slot v = slot(row, col);
+        WeightPair h = heuristics(v);
+        float prod = h.first * h.second;
+        if (prod < top_prod) continue;
+        float sum = h.first + h.second;
+        if (sum <= top_sum) continue;
+        max_prod = prod;
+        max_sum = sum;
+        s = v;
+      }
+    }
+  }
   
   #else
   #error "You need to choose a heuristic"
   #endif
-  return (Slot) {};
+  return s;
 }
 
 /* is this board solved / trivial to solve now? */
