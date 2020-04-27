@@ -52,8 +52,8 @@ qcount d
 17 | 0m59.125s
 18 | 7m1.172s
 
-TranSAT v0.1 FirstRow
- N | Time
+TranSAT v0.1
+ N | FIRSTROW
 -----------------
  8 | 0m0.188s
  9 | 0m1.875s
@@ -62,7 +62,7 @@ TranSAT v0.1 FirstRow
 12 | 42m53.125s
 
 Transat v0.3
- N | Time
+ N | FIRSTROW
 -----------------
  8 | 0m0.016s
  9 | 0m0.094s
@@ -72,7 +72,7 @@ Transat v0.3
 13 | 13m39.484s
 
 Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
- N | Time
+ N | FIRSTROW
 -----------------
  8 | 0m0.016s
  9 | 0m0.078s
@@ -82,7 +82,7 @@ Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking m
 13 | 10m55.922s
 
 Transat v0.3.5 (Square Enumeration)
- N | Time
+ N | SQUAREENUM
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -91,8 +91,8 @@ Transat v0.3.5 (Square Enumeration)
 12 | 0m54.453s
 13 | 9m19.594s
 
-Transat v0.4 (FirstRow)
- N | Time
+Transat v0.4
+ N | FIRSTROW
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -101,8 +101,7 @@ Transat v0.4 (FirstRow)
 12 | 0m57.219s
 13 | 9m33.203s
 
-Transat v0.4 (Square Enumeration)
- N | Time
+ N | SQUAREENUM
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -111,19 +110,16 @@ Transat v0.4 (Square Enumeration)
 12 | 0m49.469s
 13 | 8m24.438s
 
-Transat v0.4.5 (FirstRow)
- N | Time
+Transat v0.4.5
+ N | FIRSTROW
 -----------------
- 8 | 0m0.016s
  9 | 0m0.047s
-10 | 0m0.422s
-11 | 0m3.797s
-12 | 0m34.844s
+10 | 0m0.375s
+11 | 0m3.469s
+12 | 0m32.094s
 
-Transat v0.4.5 (Square Enumeration)
- N | Time
+ N | SQUAREENUM
 -----------------
- 8 | 0m0.016s
  9 | 0m0.031s
 10 | 0m0.313s
 11 | 0m2.922s
@@ -131,20 +127,16 @@ Transat v0.4.5 (Square Enumeration)
 13 | 4m39.500s
 14 | 49m41.328s
 
-Transat v0.4.5 (TAW)
- N | Time
+ N | TAW
 -----------------
- 8 | 0m0.000s
  9 | 0m0.047s
 10 | 0m0.359s
 11 | 0m3.406s
 12 | 0m30.516s
 13 | 5m18.266s
 
-Transat v0.4.5 (ANTITAW)
- N | Time
+ N | ANTITAW
 -----------------
- 8 | 0m0.016s
  9 | 0m0.047s
 10 | 0m0.375s
 11 | 0m3.469s
