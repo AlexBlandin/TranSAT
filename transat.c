@@ -5,7 +5,7 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW)
+#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
 #define SQUAREENUM
 #endif
 
@@ -18,25 +18,43 @@ static inline Slot heuristic() {
     if lut_open(bd.i)
       return lut[bd.i];
   #elif defined(TAW)
-  /* TODO: */
   float top_prod = 0, top_sum = 0;
-  
   for (u8 row = 0; row < N; row++) {
     if (bd.rows[row] != full_row) {
       for (u8 row = 0; row < N; row++) {
         Slot v = slot(row, col);
         WeightPair h = heuristics(v);
         float prod = h.first * h.second;
-        if (prod < top_prod) continue;
-        float sum = h.first + h.second;
-        if (sum <= top_sum) continue;
-        max_prod = prod;
-        max_sum = sum;
-        s = v;
+        if (prod >= top_prod) {
+          float sum = h.first + h.second;
+          if (sum > top_sum) {
+            top_prod = prod;
+            top_sum = sum;
+            s = v;
+          }
+        }
       }
     }
   }
-  
+  #elif defined(ANTITAW)
+  float low_prod = 0, low_sum = 0;
+  for (u8 row = 0; row < N; row++) {
+    if (bd.rows[row] != full_row) {
+      for (u8 row = 0; row < N; row++) {
+        Slot v = slot(row, col);
+        WeightPair h = heuristics(v);
+        float prod = h.first * h.second;
+        if (prod <= low_prod) {
+          float sum = h.first + h.second;
+          if (sum < low_sum) {
+            low_prod = prod;
+            low_sum = sum;
+            s = v;
+          }
+        }
+      }
+    }
+  }
   #else
   #error "You need to choose a heuristic"
   #endif
