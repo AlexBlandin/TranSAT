@@ -70,7 +70,6 @@ static inline void transat() {
             set(sl.row, col);
             bd.open--;
             derank(sl.row, col);
-            // cf_col(col);
           }
         }
         /* propagate over column and update ranks */
@@ -79,10 +78,8 @@ static inline void transat() {
             set(row, sl.col);
             bd.open--;
             derank(row, sl.col);
-            // cf_row(row);
           }
         }
-        // clear_full(sl.row, sl.col);
 
         /* propagate outwards over diagonals and update ranks */
         for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
@@ -94,25 +91,21 @@ static inline void transat() {
             set(left, up); /* rk.dias[diagonal(left, up)].open */
             bd.open--;
             derank(left, up);
-            // clear_full(left, up);
           }
           if (left < N and down < N and open(left, down)) {
             set(left, down); /* rk.adia[antidiagonal(left, down)].open */
             bd.open--;
             derank(left, down);
-            // clear_full(left, down);
           }
           if (right < N and up < N and open(right, up)) {
             set(right, up); /* rk.adia[antidiagonal(right, up)].open */
             bd.open--;
             derank(right, up);
-            // clear_full(right, up);
           }
           if (right < N and down < N and open(right, down)) {
             set(right, down); /* rk.dias[diagonal(right, down)].open */
             bd.open--;
             derank(right, down);
-            // clear_full(right, down);
           }
         }
       } else {
@@ -120,7 +113,6 @@ static inline void transat() {
         set(sl.row, sl.col);
         bd.open--;
         derank_sl();
-        // clear_full(sl.row, sl.col);
       }
     }
   }

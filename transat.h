@@ -39,10 +39,6 @@ typedef struct _Slot {
 typedef struct _Ranks { /* how many spaces are open */
   u8 dias[2*N-1]; /* row + sl */
   u8 adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
-
-  /* a 1 means that row/col/diagonal is open/forbid/placed */
-  row_t open_rows; /* which rows are open */
-  row_t open_cols; /* which cols are open */
 } Ranks;
 
 static inline Slot slot(u8 row, u8 col) {
@@ -83,48 +79,19 @@ static inline void copy_board() {
 }
 
 static inline u32 odegree(u8 row, u8 col) {
-  u8 dia = diagonal(row, col);
-  u8 adg = antidiagonal(row, col);
-  return 2*N - bitcount32(bd.rows[row]) - bitcount32(bd.cols[col]) + rk.dias[dia] + rk.adia[adg]; 
+  return 2*N - bitcount32(bd.rows[row]) - bitcount32(bd.cols[col]) + rk.dias[diagonal(row, col)] + rk.adia[antidiagonal(row, col)]; 
 }
 
 /* reduce open ranks for a given space */
 static inline void derank(u8 row, u8 col) {
-  u8 dia = diagonal(row, col);
-  u8 adg = antidiagonal(row, col);
-  rk.dias[dia]--;
-  rk.adia[adg]--;
+  rk.dias[diagonal(row, col)]--;
+  rk.adia[antidiagonal(row, col)]--;
 }
 
 /* reduce open ranks for the current slot */
 static inline void derank_sl() {
   rk.dias[sl.dia]--;
   rk.adia[sl.adg]--;
-}
-
-/* clear a full row */
-static inline void cf_row(u8 row) {
-  rk.open_rows &= ~((bd.rows[row] == full_row) << row);
-}
-
-/* clear a full col */
-static inline void cf_col(u8 col) {
-  rk.open_cols &= ~((bd.cols[col] == full_row) << col);
-}
-
-/* clear a full row and col */
-static inline void clear_full(u8 row, u8 col) {
-  cf_row(row); cf_col(col);
-}
-
-/* recompute ranks from scratch according to a given space */
-static inline void rerank(Slot s) {
-  if open(s.row, s.col) {
-    rk.dias[s.dia]++;
-    rk.adia[s.adg]++;
-    rk.open_rows |= 1 << s.row;
-    rk.open_cols |= 1 << s.col;
-  }
 }
 
 /* initialise boards and ranks */
@@ -140,7 +107,11 @@ void init() {
   zero(rk);
   for (u8 i = 0; i < N; i++) {
     for (u8 j = 0; j < N; j++) {
-      rerank(slot(i, j));
+      Slot s = slot(i, j);
+      if open(s.row, s.col) {
+        rk.dias[s.dia]++;
+        rk.adia[s.adg]++;
+      }
     }
   }
 
