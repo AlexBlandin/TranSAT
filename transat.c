@@ -53,7 +53,7 @@ static inline void transat() {
     } else {
 
       /* odd is placed, even is forbid */
-      if (is_queued or bd.visits & 1) {
+      if (bd.visits & 1) {
         /* select branching variable (the slot/space we're focusing on) */
         if (is_queued) {
           sl = queued;
