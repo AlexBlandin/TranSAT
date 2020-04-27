@@ -5,7 +5,7 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-#if not defined(FIRSTROW) or not defined(SQUAREENUM) or not defined(TAW) or not defined(ANTITAW)
+#if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
 #define SQUAREENUM
 #endif
 
@@ -40,7 +40,7 @@ static inline Slot heuristic() {
   float low_prod = 0, low_sum = 0;
   for (u8 row = 0; row < N; row++) {
     if (bd.rows[row] != full_row) {
-      for (u8 row = 0; row < N; row++) {
+      for (u8 col = 0; col < N; col++) {
         Slot v = slot(row, col);
         WeightPair h = heuristics(v);
         float prod = h.first * h.second;
