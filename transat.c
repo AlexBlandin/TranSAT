@@ -29,11 +29,11 @@ static inline Slot heuristic() {
 }
 
 /* is this board solved / trivial to solve now? */
-static bool satisfied() {
+static inline bool satisfied() {
   if (bd.queens_left == 1) {
     /* if there's any open they are all legal */
     nq += bd.open;
-    return bd.open;
+    return true;
   }
   return false;
 }
@@ -48,10 +48,9 @@ static inline void transat() {
   while(board > -1) { /* starts at 0 */
     bd.visits++;
 
-    if (not pb and (satisfied() or falsified())) {
+    if (falsified() or satisfied()) {
       board--;
     } else {
-      pb = false;
 
       /* odd is placed, even is forbid */
       if (is_queued or bd.visits & 1) {
@@ -61,12 +60,8 @@ static inline void transat() {
           is_queued = false;
         } else {
           sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
-          if (rk.rows[sl.row].placed or rk.cols[sl.col].placed or rk.dias[sl.dia].placed or rk.adia[sl.adg].placed) {
-            pb = true; /* AMO unsatisfied, so we're going to loop around and immediately forbid it */
-            continue;
-          }
         }
-
+        
         /* place a queen */
         copy_board();
         set(sl.row, sl.col);
@@ -76,14 +71,7 @@ static inline void transat() {
         derank_sl();
         
         /* propagate over row and update ranks */
-        for (u8 col = 0; rk.rows[sl.row].open and col < sl.col; col++) {
-          if is_open(sl.row, col) { // is it faster to loop over the full thing and check col != sl.col?
-            set(sl.row, col);
-            bd.open--;
-            derank(sl.row, col);
-            // cf_col(col);
-          }
-        } for (u8 col = sl.col + 1; rk.rows[sl.row].open and col < N; col++) {
+        for (u8 col = 0; rk.rows[sl.row].open and col < N; col++) {
           if is_open(sl.row, col) {
             set(sl.row, col);
             bd.open--;
@@ -92,14 +80,7 @@ static inline void transat() {
           }
         }
         /* propagate over column and update ranks */
-        for (u8 row = 0; rk.cols[sl.col].open and row < sl.row; row++) {
-          if is_open(row, sl.col) {
-            set(row, sl.col);
-            bd.open--;
-            derank(row, sl.col);
-            // cf_row(row);
-          }
-        } for (u8 row = sl.row + 1; rk.cols[sl.col].open and row < N; row++) {
+        for (u8 row = 0; rk.cols[sl.col].open and row < N; row++) {
           if is_open(row, sl.col) {
             set(row, sl.col);
             bd.open--;
@@ -167,7 +148,7 @@ static inline void transat() {
         }
       }
     }
-  };
+  }
 }
 
 int main() {

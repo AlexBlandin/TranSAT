@@ -71,11 +71,10 @@ typedef struct _Board {
 /* DATA */
 static u64 nq = 0; /* solutions */
 static s16 board = 0; /* current board */
-static Board boards[N+1]; /* ALCS boards w/ ranks */
+static Board boards[N]; /* ALCS boards w/ ranks */
 static Slot lut[N*N]; /* 0..N*N-1 to slot LUT */
 static Slot queued; /* queued index */
-bool pb = false; /* preemptive backtrack to forbid the current slot */
-bool is_queued = false;
+bool is_queued = false; /* if a slot has been queued up */
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
