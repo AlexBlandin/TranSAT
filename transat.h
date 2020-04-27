@@ -24,9 +24,9 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define diagonal(row, col) ((row) + (col))
 #define antidiagonal(row, col) (N - (col) + (row) - 1)
 
-#define at(row, col) (bd.state[(row)] & (1 << (col)))
-#define set(row, col) (bd.state[(row)] |= (1 << (col)))
-#define open(row, col) (bd.state[(row)] &= ~(1 << (col)))
+#define at(row, col) (bd.rows[(row)] & (1 << (col)))
+#define set(row, col) (bd.rows[(row)] |= (1 << (col)))
+#define open(row, col) (bd.rows[(row)] &= ~(1 << (col)))
 #define is_open(row, col) (not at(row, col))
 #define lut_open(i) (is_open(lut[i].row, lut[i].col))
 
@@ -62,8 +62,9 @@ typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 i; /* where we placed (tyically row*N+col, for lookup in LUT) */
   Slot slot;
+  u32 open; /* how many spaces are open */
   u16 visits; /* how many times this has been the current board on entry to the main loop */
-  row_t state[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
+  row_t rows[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   Ranks ranks;
 } Board;
 
@@ -154,6 +155,7 @@ void init() {
   seed_rng();
   for (board = N; board--;) {
     bd.queens_left = N;
+    bd.open = N*N;
   }
   board = 0;
 
