@@ -118,8 +118,8 @@ Transat v0.4.5 (Square Enumeration)
  9 | 0m0.047s
 10 | 0m0.375s
 11 | 0m3.438s
-12 | 0m32.531s
-13 | 5m49.828s
+12 | 0m32.406s
+13 | 5m27.094s
 
 TranSAT v0.5
  N | Time
