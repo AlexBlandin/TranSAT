@@ -36,9 +36,7 @@ typedef struct _Slot {
   u8 adg; /* antidiagonal(row, col) */
 } Slot;
 
-typedef struct _Ranks {
-  // u8 rows[N]; /* how many spaces are open */
-  // u8 cols[N];
+typedef struct _Ranks { /* how many spaces are open */
   u8 dias[2*N-1]; /* row + sl */
   u8 adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
 
@@ -68,8 +66,6 @@ static u64 nq = 0; /* solutions */
 static s8 board = 0; /* current board */
 static Board boards[N]; /* ALCS boards w/ ranks */
 static Slot lut[N*N]; /* 0..N*N-1 to slot LUT */
-static Slot queued; /* queued index */
-bool is_queued = false; /* if a slot has been queued up */
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           724, 2680, 14200, 73712, 365596,
@@ -86,20 +82,22 @@ static inline void copy_board() {
   bd.visits = 0; // all new board have 0 visits
 }
 
+static inline u32 odegree(u8 row, u8 col) {
+  u8 dia = diagonal(row, col);
+  u8 adg = antidiagonal(row, col);
+  return 2*N - bitcount32(bd.rows[row]) - bitcount32(bd.cols[col]) + rk.dias[dia] + rk.adia[adg]; 
+}
+
 /* reduce open ranks for a given space */
 static inline void derank(u8 row, u8 col) {
-  u8 dia = row + col;
+  u8 dia = diagonal(row, col);
   u8 adg = antidiagonal(row, col);
-  // rk.rows[row]--;
-  // rk.cols[col]--;
   rk.dias[dia]--;
   rk.adia[adg]--;
 }
 
 /* reduce open ranks for the current slot */
 static inline void derank_sl() {
-  // rk.rows[sl.row]--;
-  // rk.cols[sl.col]--;
   rk.dias[sl.dia]--;
   rk.adia[sl.adg]--;
 }
@@ -122,8 +120,6 @@ static inline void clear_full(u8 row, u8 col) {
 /* recompute ranks from scratch according to a given space */
 static inline void rerank(Slot s) {
   if open(s.row, s.col) {
-    // rk.rows[s.row]++;
-    // rk.cols[s.col]++;
     rk.dias[s.dia]++;
     rk.adia[s.adg]++;
     rk.open_rows |= 1 << s.row;

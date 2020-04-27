@@ -55,12 +55,7 @@ static inline void transat() {
       /* odd is placed, even is forbid */
       if (bd.visits & 1) {
         /* select branching variable (the slot/space we're focusing on) */
-        if (is_queued) {
-          sl = queued;
-          is_queued = false;
-        } else {
-          sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
-        }
+        sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
         
         /* place a queen */
         copy_board();
@@ -126,26 +121,6 @@ static inline void transat() {
         bd.open--;
         derank_sl();
         // clear_full(sl.row, sl.col);
-
-        /* ALO propagation (forced move) */
-        if (bitcount32(bd.rows[sl.row]) == N-1) { // if, after closing a slot, there is only 1 open, it's a forced move
-          for (u8 col = 0; bd.rows[sl.row] != full_row and col < N; col++) {
-            if open(sl.row, col) {
-              queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
-              is_queued = true;
-              break;
-            }
-          }
-        }
-        if (not is_queued and bitcount32(bd.cols[sl.col]) == N-1) {
-          for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
-            if open(row, sl.col) {
-              queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
-              is_queued = true;
-              break;
-            }
-          }
-        }
       }
     }
   }
