@@ -37,16 +37,11 @@ typedef struct _Slot {
   u8 adg; /* antidiagonal(row, col) */
 } Slot;
 
-typedef struct _Rank {
-  u8 open: 6; /* how many spaces are open */
-  u8 placed: 2; /* already placed in */
-} Rank; // bitwise ranks thing & propagation?
-
-typedef struct _Ranks { /* for the number */
-  Rank rows[N];
-  Rank cols[N];
-  Rank dias[2*N-1]; /* row + sl */
-  Rank adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
+typedef struct _Ranks {
+  u8 rows[N]; /* how many spaces are open */
+  u8 cols[N];
+  u8 dias[2*N-1]; /* row + sl */
+  u8 adia[2*N-1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
 
   /* a 1 means that row/col/diagonal is open/forbid/placed */
   row_t open_rows; /* which rows are open */
@@ -70,7 +65,7 @@ typedef struct _Board {
 
 /* DATA */
 static u64 nq = 0; /* solutions */
-static s16 board = 0; /* current board */
+static s8 board = 0; /* current board */
 static Board boards[N]; /* ALCS boards w/ ranks */
 static Slot lut[N*N]; /* 0..N*N-1 to slot LUT */
 static Slot queued; /* queued index */
@@ -95,36 +90,28 @@ static inline void copy_board() {
 static inline void derank(u8 row, u8 col) {
   u8 dia = row + col;
   u8 adg = antidiagonal(row, col);
-  rk.rows[row].open--;
-  rk.cols[col].open--;
-  rk.dias[dia].open--;
-  rk.adia[adg].open--;
+  rk.rows[row]--;
+  rk.cols[col]--;
+  rk.dias[dia]--;
+  rk.adia[adg]--;
 }
 
 /* reduce open ranks for the current slot */
 static inline void derank_sl() {
-  rk.rows[sl.row].open--;
-  rk.cols[sl.col].open--;
-  rk.dias[sl.dia].open--;
-  rk.adia[sl.adg].open--;
-}
-
-/* increase placed ranks for the current slot */
-static inline void placed_sl() {
-  rk.rows[sl.row].placed++;
-  rk.cols[sl.col].placed++;
-  rk.dias[sl.dia].placed++;
-  rk.adia[sl.adg].placed++;
+  rk.rows[sl.row]--;
+  rk.cols[sl.col]--;
+  rk.dias[sl.dia]--;
+  rk.adia[sl.adg]--;
 }
 
 /* clear a full row */
 static inline void cf_row(u8 row) {
-  rk.open_rows &= ~((rk.rows[row].open == 0) << row);
+  rk.open_rows &= ~((rk.rows[row] == 0) << row);
 }
 
 /* clear a full col */
 static inline void cf_col(u8 col) {
-  rk.open_cols &= ~((rk.cols[col].open == 0) << col);
+  rk.open_cols &= ~((rk.cols[col] == 0) << col);
 }
 
 /* clear a full row and col */
@@ -134,16 +121,11 @@ static inline void clear_full(u8 row, u8 col) {
 
 /* recompute ranks from scratch according to a given space */
 static inline void rerank(Slot s) {
-  if (at(s.row, s.col)) {
-    rk.rows[s.row].placed++;
-    rk.cols[s.col].placed++;
-    rk.dias[s.dia].placed++;
-    rk.adia[s.adg].placed++;
-  } else {
-    rk.rows[s.row].open++;
-    rk.cols[s.col].open++;
-    rk.dias[s.dia].open++;
-    rk.adia[s.adg].open++;
+  if is_open(s.row, s.col) {
+    rk.rows[s.row]++;
+    rk.cols[s.col]++;
+    rk.dias[s.dia]++;
+    rk.adia[s.adg]++;
     rk.open_rows |= 1 << s.row;
     rk.open_cols |= 1 << s.col;
   }
@@ -168,7 +150,6 @@ void init() {
 
   assert(N);
   assert(N <= 21); // going over requires threading & other work
-  assert(sizeof(Rank));
   assert(sizeof(Ranks));
   assert(sizeof(Board));
   assert(sizeof(boards));

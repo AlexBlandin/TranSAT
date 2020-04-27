@@ -67,11 +67,10 @@ static inline void transat() {
         set(sl.row, sl.col);
         bd.queens_left--;
         bd.open--;
-        placed_sl();
         derank_sl();
         
         /* propagate over row and update ranks */
-        for (u8 col = 0; rk.rows[sl.row].open and col < N; col++) {
+        for (u8 col = 0; (rk.rows[sl.row] or rk.cols[sl.col]) and col < N; col++) {
           if is_open(sl.row, col) {
             set(sl.row, col);
             bd.open--;
@@ -80,7 +79,7 @@ static inline void transat() {
           }
         }
         /* propagate over column and update ranks */
-        for (u8 row = 0; rk.cols[sl.col].open and row < N; row++) {
+        for (u8 row = 0; rk.cols[sl.col] and row < N; row++) {
           if is_open(row, sl.col) {
             set(row, sl.col);
             bd.open--;
@@ -90,31 +89,32 @@ static inline void transat() {
         }
         // clear_full(sl.row, sl.col);
 
-        /* propagate (AMO) over diagonals and update ranks (top-leftest is 0,0) */
-        for (u8 i = 1; (rk.dias[sl.dia].open or rk.adia[sl.adg].open) and i < N; i++) {
+        /* propagate outwards over diagonals and update ranks */
+        for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
           u8 up = sl.col-i; u8 down = sl.col+i;
           u8 left = sl.row-i; u8 right = sl.row+i;
-
-          if (left < N and up < N /* and rk.dias[diagonal(left, up)].open */ and is_open(left, up)) {
-            set(left, up);
+          
+          /* we're using underflow to our advantage */
+          if (left < N and up < N and is_open(left, up)) {
+            set(left, up); /* rk.dias[diagonal(left, up)].open */
             bd.open--;
             derank(left, up);
             // clear_full(left, up);
           }
-          if (left < N and down < N /* and rk.adia[antidiagonal(left, down)].open */ and is_open(left, down)) {
-            set(left, down);
+          if (left < N and down < N and is_open(left, down)) {
+            set(left, down); /* rk.adia[antidiagonal(left, down)].open */
             bd.open--;
             derank(left, down);
             // clear_full(left, down);
           }
-          if (right < N and up < N /* and rk.adia[antidiagonal(right, up)].open */ and is_open(right, up)) {
-            set(right, up);
+          if (right < N and up < N and is_open(right, up)) {
+            set(right, up); /* rk.adia[antidiagonal(right, up)].open */
             bd.open--;
             derank(right, up);
             // clear_full(right, up);
           }
-          if (right < N and down < N /* and rk.dias[diagonal(right, down)].open */ and is_open(right, down)) {
-            set(right, down);
+          if (right < N and down < N and is_open(right, down)) {
+            set(right, down); /* rk.dias[diagonal(right, down)].open */
             bd.open--;
             derank(right, down);
             // clear_full(right, down);
@@ -128,8 +128,8 @@ static inline void transat() {
         // clear_full(sl.row, sl.col);
 
         /* ALO propagation (forced move) */
-        if (rk.rows[sl.row].open - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
-          for (u8 col = 0; rk.rows[sl.row].open and col < N; col++) {
+        if (rk.rows[sl.row] - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
+          for (u8 col = 0; rk.rows[sl.row] and col < N; col++) {
             if is_open(sl.row, col) {
               queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
               is_queued = true;
@@ -137,8 +137,8 @@ static inline void transat() {
             }
           }
         }
-        if (not is_queued and rk.cols[sl.col].open - 1 == 1) {
-          for (u8 row = 0; rk.cols[sl.col].open and row < N; row++) {
+        if (not is_queued and rk.cols[sl.col] - 1 == 1) {
+          for (u8 row = 0; rk.cols[sl.col] and row < N; row++) {
             if is_open(row, sl.col) {
               queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
               is_queued = true;
