@@ -70,8 +70,8 @@ static inline void transat() {
         derank_sl();
         
         /* propagate over row and update ranks */
-        for (u8 col = 0; (rk.rows[sl.row] or rk.cols[sl.col]) and col < N; col++) {
-          if is_open(sl.row, col) {
+        for (u8 col = 0; (bd.rows[sl.row] != full_row or bd.cols[sl.col] != full_row) and col < N; col++) {
+          if open(sl.row, col) {
             set(sl.row, col);
             bd.open--;
             derank(sl.row, col);
@@ -79,8 +79,8 @@ static inline void transat() {
           }
         }
         /* propagate over column and update ranks */
-        for (u8 row = 0; rk.cols[sl.col] and row < N; row++) {
-          if is_open(row, sl.col) {
+        for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
+          if open(row, sl.col) {
             set(row, sl.col);
             bd.open--;
             derank(row, sl.col);
@@ -95,25 +95,25 @@ static inline void transat() {
           u8 left = sl.row-i; u8 right = sl.row+i;
           
           /* we're using underflow to our advantage */
-          if (left < N and up < N and is_open(left, up)) {
+          if (left < N and up < N and open(left, up)) {
             set(left, up); /* rk.dias[diagonal(left, up)].open */
             bd.open--;
             derank(left, up);
             // clear_full(left, up);
           }
-          if (left < N and down < N and is_open(left, down)) {
+          if (left < N and down < N and open(left, down)) {
             set(left, down); /* rk.adia[antidiagonal(left, down)].open */
             bd.open--;
             derank(left, down);
             // clear_full(left, down);
           }
-          if (right < N and up < N and is_open(right, up)) {
+          if (right < N and up < N and open(right, up)) {
             set(right, up); /* rk.adia[antidiagonal(right, up)].open */
             bd.open--;
             derank(right, up);
             // clear_full(right, up);
           }
-          if (right < N and down < N and is_open(right, down)) {
+          if (right < N and down < N and open(right, down)) {
             set(right, down); /* rk.dias[diagonal(right, down)].open */
             bd.open--;
             derank(right, down);
@@ -128,18 +128,18 @@ static inline void transat() {
         // clear_full(sl.row, sl.col);
 
         /* ALO propagation (forced move) */
-        if (rk.rows[sl.row] - 1 == 1) { // if, after closing a slot, there is only 1 open, it's a forced move
-          for (u8 col = 0; rk.rows[sl.row] and col < N; col++) {
-            if is_open(sl.row, col) {
+        if (bitcount32(bd.rows[sl.row]) == N-1) { // if, after closing a slot, there is only 1 open, it's a forced move
+          for (u8 col = 0; bd.rows[sl.row] != full_row and col < N; col++) {
+            if open(sl.row, col) {
               queued = slot(sl.row, col); // queue a forced move from the same row for the next loop
               is_queued = true;
               break;
             }
           }
         }
-        if (not is_queued and rk.cols[sl.col] - 1 == 1) {
-          for (u8 row = 0; rk.cols[sl.col] and row < N; row++) {
-            if is_open(row, sl.col) {
+        if (not is_queued and bitcount32(bd.cols[sl.col]) == N-1) {
+          for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
+            if open(row, sl.col) {
               queued = slot(row, sl.col); // queue a forced move from the same col for the next loop
               is_queued = true;
               break;
