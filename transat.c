@@ -6,7 +6,7 @@
 
 /* pick a heuristic */
 #if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
-#define SQUAREENUM
+#define TAW
 #endif
 
 /* pick a space any (open) space */
@@ -162,8 +162,11 @@ int main() {
     lut[i] = (d < r) ? slot(d, r - 1) : slot(r - 1, 2*r - d - 2);
   #endif
   }
-
-  transat();
+  if (N <= 1) {
+    nq = 1;
+  } else {
+    transat();
+  }
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
     printf(N > 9 ? "%d |" : " %d |", N);
