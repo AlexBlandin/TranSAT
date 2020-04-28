@@ -21,7 +21,7 @@ static inline Slot heuristic() {
   float top_prod = 0, top_sum = 0;
   for (u8 row = 0; row < N; row++) {
     if (bd.rows[row] != full_row) {
-      for (u8 row = 0; row < N; row++) {
+      for (u8 col = 0; col < N; col++) {
         Slot v = slot(row, col);
         WeightPair h = heuristics(v);
         float prod = h.first * h.second;
