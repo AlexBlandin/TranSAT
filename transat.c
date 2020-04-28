@@ -5,9 +5,9 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-#if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
-#define TAW
-#endif
+// #if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
+// #define TAW
+// #endif
 
 /* pick a space any (open) space */
 static inline Slot heuristic() {
@@ -79,73 +79,66 @@ static inline bool falsified() {
 /* the TranSAT N-Queens solver */
 static inline void transat() {
   while(board > -1) { /* starts at 0 */
-    bd.visits++;
+    // bd.visits++;
 
     if (falsified() or satisfied()) {
       board--;
     } else {
+      /* select branching variable (the slot/space we're focusing on) */
+      sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
+      
+      /* forbid a space */
+      set(sl.row, sl.col);
+      bd.open--;
+      derank_sl();
+      
+      /* place a queen */
+      copy_board();
+      bd.queens_left--;
+      
+      /* propagate over row and update ranks */
+      for (u8 col = 0; (bd.rows[sl.row] != full_row or bd.cols[sl.col] != full_row) and col < N; col++) {
+        if open(sl.row, col) {
+          set(sl.row, col);
+          bd.open--;
+          derank(sl.row, col);
+        }
+      }
+      /* propagate over column and update ranks */
+      for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
+        if open(row, sl.col) {
+          set(row, sl.col);
+          bd.open--;
+          derank(row, sl.col);
+        }
+      }
 
-      /* odd is placed, even is forbid */
-      if (bd.visits & 1) {
-        /* select branching variable (the slot/space we're focusing on) */
-        sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
+      /* propagate outwards over diagonals and update ranks */
+      for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
+        u8 up = sl.col-i; u8 down = sl.col+i;
+        u8 left = sl.row-i; u8 right = sl.row+i;
         
-        /* place a queen */
-        copy_board();
-        set(sl.row, sl.col);
-        bd.queens_left--;
-        bd.open--;
-        derank_sl();
-        
-        /* propagate over row and update ranks */
-        for (u8 col = 0; (bd.rows[sl.row] != full_row or bd.cols[sl.col] != full_row) and col < N; col++) {
-          if open(sl.row, col) {
-            set(sl.row, col);
-            bd.open--;
-            derank(sl.row, col);
-          }
+        /* we're using underflow to our advantage */
+        if (left < N and up < N and open(left, up)) {
+          set(left, up); /* rk.dias[diagonal(left, up)].open */
+          bd.open--;
+          derank(left, up);
         }
-        /* propagate over column and update ranks */
-        for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
-          if open(row, sl.col) {
-            set(row, sl.col);
-            bd.open--;
-            derank(row, sl.col);
-          }
+        if (left < N and down < N and open(left, down)) {
+          set(left, down); /* rk.adia[antidiagonal(left, down)].open */
+          bd.open--;
+          derank(left, down);
         }
-
-        /* propagate outwards over diagonals and update ranks */
-        for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
-          u8 up = sl.col-i; u8 down = sl.col+i;
-          u8 left = sl.row-i; u8 right = sl.row+i;
-          
-          /* we're using underflow to our advantage */
-          if (left < N and up < N and open(left, up)) {
-            set(left, up); /* rk.dias[diagonal(left, up)].open */
-            bd.open--;
-            derank(left, up);
-          }
-          if (left < N and down < N and open(left, down)) {
-            set(left, down); /* rk.adia[antidiagonal(left, down)].open */
-            bd.open--;
-            derank(left, down);
-          }
-          if (right < N and up < N and open(right, up)) {
-            set(right, up); /* rk.adia[antidiagonal(right, up)].open */
-            bd.open--;
-            derank(right, up);
-          }
-          if (right < N and down < N and open(right, down)) {
-            set(right, down); /* rk.dias[diagonal(right, down)].open */
-            bd.open--;
-            derank(right, down);
-          }
+        if (right < N and up < N and open(right, up)) {
+          set(right, up); /* rk.adia[antidiagonal(right, up)].open */
+          bd.open--;
+          derank(right, up);
         }
-      } else {
-        /* forbid a space */
-        set(sl.row, sl.col);
-        bd.open--;
-        derank_sl();
+        if (right < N and down < N and open(right, down)) {
+          set(right, down); /* rk.dias[diagonal(right, down)].open */
+          bd.open--;
+          derank(right, down);
+        }
       }
     }
   }
