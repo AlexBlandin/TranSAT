@@ -5,9 +5,9 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-// #if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
-// #define TAW
-// #endif
+#if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
+#define TAW
+#endif
 
 /* pick a space any (open) space */
 static inline Slot heuristic() {
@@ -20,17 +20,19 @@ static inline Slot heuristic() {
   #elif defined(TAW)
   float top_prod = 0, top_sum = 0;
   for (u8 row = 0; row < N; row++) {
-    if (bd.rows[row] != full_row) {
+    if space_left(bd.rows[row]) {
       for (u8 col = 0; col < N; col++) {
-        Slot v = slot(row, col);
-        WeightPair h = heuristics(v);
-        float prod = h.first * h.second;
-        if (prod >= top_prod) {
-          float sum = h.first + h.second;
-          if (sum > top_sum) {
-            top_prod = prod;
-            top_sum = sum;
-            s = v;
+        if open(row, col) {
+          Slot v = slot(row, col);
+          WeightPair h = heuristics(v);
+          float prod = h.first * h.second;
+          if (prod >= top_prod) {
+            float sum = h.first + h.second;
+            if (sum > top_sum) {
+              top_prod = prod;
+              top_sum = sum;
+              s = v;
+            }
           }
         }
       }
@@ -39,17 +41,19 @@ static inline Slot heuristic() {
   #elif defined(ANTITAW)
   float low_prod = 0, low_sum = 0;
   for (u8 row = 0; row < N; row++) {
-    if (bd.rows[row] != full_row) {
+    if space_left(bd.rows[row]) {
       for (u8 col = 0; col < N; col++) {
-        Slot v = slot(row, col);
-        WeightPair h = heuristics(v);
-        float prod = h.first * h.second;
-        if (prod <= low_prod) {
-          float sum = h.first + h.second;
-          if (sum < low_sum) {
-            low_prod = prod;
-            low_sum = sum;
-            s = v;
+        if open(row, col) {
+          Slot v = slot(row, col);
+          WeightPair h = heuristics(v);
+          float prod = h.first * h.second;
+          if (prod <= low_prod) {
+            float sum = h.first + h.second;
+            if (sum < low_sum) {
+              low_prod = prod;
+              low_sum = sum;
+              s = v;
+            }
           }
         }
       }
@@ -92,12 +96,15 @@ static inline void transat() {
       bd.open--;
       derank_sl();
       
-      /* place a queen */
-      copy_board();
+      /* place a queen on a new board */
+      board++; /* move along the stack */
+      stack[board] = stack[board-1]; // is this faster?
+      // copy(sizeof(Board), stack[board-1], stack[board]);
+      bd.visits = 0; // all new board have 0 visits
       bd.queens_left--;
       
       /* propagate over row and update ranks */
-      for (u8 col = 0; (bd.rows[sl.row] != full_row or bd.cols[sl.col] != full_row) and col < N; col++) {
+      for (u8 col = 0; (space_left(bd.rows[sl.row]) or space_left(bd.cols[sl.col])) and col < N; col++) {
         if open(sl.row, col) {
           set(sl.row, col);
           bd.open--;
@@ -105,7 +112,7 @@ static inline void transat() {
         }
       }
       /* propagate over column and update ranks */
-      for (u8 row = 0; bd.cols[sl.col] != full_row and row < N; row++) {
+      for (u8 row = 0; space_left(bd.cols[sl.col]) and row < N; row++) {
         if open(row, sl.col) {
           set(row, sl.col);
           bd.open--;

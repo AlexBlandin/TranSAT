@@ -12,14 +12,15 @@ typedef u32 row_t;
 typedef u64 exrow_t;
 
 const row_t full_row = (1 << N) - 1;
+#define space_left(rowcol) (rowcol != full_row)
 
 static inline exrow_t embed(row_t row) { return ((exrow_t) row) << N; }
 static inline row_t truncate(exrow_t exrow) { return (row_t) (exrow >> N); }
 static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t) row) << N); }
 
-#define bd boards[board]
+#define bd stack[board]
 #define sl bd.slot
-#define rk boards[board].ranks
+#define rk bd.ranks
 #define index(row, col) (row*N + col)
 #define diagonal(row, col) ((row) + (col))
 #define antidiagonal(row, col) (N - (col) + (row) - 1)
@@ -63,7 +64,7 @@ typedef struct _Board {
 /* DATA */
 static u64 nq = 0; /* solutions */
 static s8 board = 0; /* current board */
-static Board boards[N]; /* ALCS boards w/ ranks */
+static Board stack[N]; /* ALCS boards w/ ranks */
 static Slot lut[N*N]; /* 0..N*N-1 to slot LUT */
 
 static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
@@ -74,12 +75,6 @@ static u64 solutions[] = {1, 1, 0, 0, 2, 10, 4, 40, 92, 352,
                           227514171973736, 2207893435808352,
                           22317699616364044, 234907967154122528};
 
-/* move along the stack */
-static inline void copy_board() {
-  copy(sizeof(Board), boards[board], boards[board+1]);
-  board++;
-  bd.visits = 0; // all new board have 0 visits
-}
 
 static inline u32 odegree(Slot s) {
   return n_open(bd.rows[s.row]) + n_open(bd.cols[s.col]) + rk.dias[s.dia] + rk.adia[s.adg]; 
@@ -128,7 +123,7 @@ void init() {
   assert(N <= 21); // going over requires threading & other work
   assert(sizeof(Ranks));
   assert(sizeof(Board));
-  assert(sizeof(boards));
+  assert(sizeof(stack));
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */

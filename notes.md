@@ -114,11 +114,11 @@ Transat v0.4.5
  N | FIRSTROW
 -----------------
  9 | 0m0.047s
-10 | 0m0.375s
-11 | 0m3.406s
-12 | 0m31.969s
-13 | 5m20.469s
-14 | 56m16.359s
+10 | 0m0.328s
+11 | 0m3.047s
+12 | 0m29.547s
+13 | 4m59.828s
+14 | 52m33.047s
 
  N | SQUAREENUM
 -----------------
@@ -128,6 +128,18 @@ Transat v0.4.5
 12 | 0m28.297s
 13 | 4m39.500s
 14 | 49m41.328s
+
+ N | TAW
+-----------------
+ 9 | 0m0.063s
+10 | 0m0.516s
+11 | 0m4.406s
+12 | 0m38.844s
+13 | 6m23.750s
+14 | 65m55.891s
+
+ANTITAW is just TOO SLOW (bc. it has to redo everything and go from the least changes each time so it does the most work for least gain)
+
 
 
 
