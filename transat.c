@@ -143,17 +143,15 @@ static inline void prop_alo() {
     }
   }
   
-  for (u8 i = 0; i < have_placed; i++) {
-    if (not peaceful(queue[have_placed], queue[i])) {
-      // bd.falsified = true;
-    }
-  }
-  
   if (not falsified()) {
     for (;have_placed > -1; have_placed--) {
-      // occupy(queue[have_placed]);
-      // bd.queens_left--;
-      // prop_amo(queue[have_placed]);
+      if open_sl(queue[have_placed]) {
+        occupy(queue[have_placed]);
+        bd.queens_left--;
+        prop_amo(queue[have_placed]);
+      } else {
+        bd.falsified = true; /* the space has been closed since, meaning there is a Queen that can capture this */
+      }
     }
   }
 }

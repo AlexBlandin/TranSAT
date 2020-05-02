@@ -28,6 +28,7 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define at(row, col) (bd.rows[(row)] & (1 << (col)))
 #define set(row, col) ((bd.rows[(row)] |= (1 << (col))), (bd.cols[(col)] |= (1 << (row))))
 #define open(row, col) (not at(row, col))
+#define open_sl(s) (open((s).row, (s).col))
 #define lut_open(i) (open(lut[i].row, lut[i].col))
 
 /* given bd.rows[row] or bd.cols[col] */
