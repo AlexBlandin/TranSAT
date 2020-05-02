@@ -81,28 +81,28 @@ static inline bool falsified() {
 }
 
 /* for the current slot, AMO propagate */
-static inline void prop_amo() {
+static inline void prop_amo(Slot s) {
   /* AMO propagate over row and update ranks */
-  for (u8 col = 0; (space_left(bd.rows[sl.row]) or space_left(bd.cols[sl.col])) and col < N; col++) {
-    if open(sl.row, col) {
-      set(sl.row, col);
+  for (u8 col = 0; space_left(bd.rows[s.row]) and col < N; col++) {
+    if open(s.row, col) {
+      set(s.row, col);
       bd.open--;
-      derank(sl.row, col);
+      derank(s.row, col);
     }
   }
   /* AMO propagate over column and update ranks */
-  for (u8 row = 0; space_left(bd.cols[sl.col]) and row < N; row++) {
-    if open(row, sl.col) {
-      set(row, sl.col);
+  for (u8 row = 0; space_left(bd.cols[s.col]) and row < N; row++) {
+    if open(row, s.col) {
+      set(row, s.col);
       bd.open--;
-      derank(row, sl.col);
+      derank(row, s.col);
     }
   }
 
   /* AMO propagate outwards over diagonals and update ranks */
-  for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
-    u8 up = sl.col-i; u8 down = sl.col+i;
-    u8 left = sl.row-i; u8 right = sl.row+i;
+  for (u8 i = 1; (rk.dias[s.dia] or rk.adia[s.adg]) and i < N; i++) {
+    u8 up = s.col-i; u8 down = s.col+i;
+    u8 left = s.row-i; u8 right = s.row+i;
     
     /* we're using underflow to our advantage */
     if (left < N and up < N and open(left, up)) {
@@ -131,37 +131,36 @@ static inline void prop_amo() {
 /* for the current board, ALO propagate */
 static inline void prop_alo() {
   static Slot queue[4] = {};
-  s8 have_placed = -1; /* 0 to 3 can be used */
+  s8 have_placed = -1; /* indices 0 to 3 in the queue or -1 (empty queue) */
   
   /* ALO propagate over rows/cols */
-  for (u8 rowcol = 0; bd.open and not bd.falsified and rowcol < N; rowcol++) {
+  for (u8 rowcol = 0; not falsified() and rowcol < N; rowcol++) {
     if (space_left(bd.rows[rowcol]) and n_open(bd.rows[rowcol]) == 1) {
-      queue[++have_placed] = slot(sl.row, forced(bd.rows[rowcol]));
-      
-      for (u8 i = 0; i < have_placed; i++) {
-        if (not peaceful(queue[have_placed], queue[i]))
-          bd.falsified = true;
-      }
+      queue[++have_placed] = slot(rowcol, forced(bd.rows[rowcol]));
     }
     if (space_left(bd.cols[rowcol]) and n_open(bd.cols[rowcol]) == 1) {
       queue[++have_placed] = slot(forced(bd.cols[rowcol]), rowcol);
-      for (u8 i = 0; i < have_placed; i++) {
-        if (not peaceful(queue[have_placed], queue[i]))
-          bd.falsified = true;
-      }
     }
   }
   
-  for (;have_placed > -1; have_placed--) {
-    sl = queue[have_placed];
-    occupy_slot();
-    bd.queens_left--;
-    prop_amo();
+  for (u8 i = 0; i < have_placed; i++) {
+    if (not peaceful(queue[have_placed], queue[i])) {
+      // bd.falsified = true;
+    }
+  }
+  
+  if (not falsified()) {
+    for (;have_placed > -1; have_placed--) {
+      // occupy(queue[have_placed]);
+      // bd.queens_left--;
+      // prop_amo(queue[have_placed]);
+    }
   }
 }
 
 /* the TranSAT N-Queens solver */
 static inline void transat() {
+  u32 prev_open;
   while(board > -1) { /* starts at 0 */
 
     if (falsified() or satisfied()) {
@@ -171,7 +170,8 @@ static inline void transat() {
       sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
       
       /* forbid a space */
-      occupy_slot();
+      occupy(sl);
+      // prop_alo();
       
       /* place a queen on a new board */
       board++; /* move along the stack */
@@ -179,18 +179,14 @@ static inline void transat() {
       // copy(sizeof(Board), stack[board-1], stack[board]);
       bd.queens_left--;
       
-      u32 prev_open;
+      /* AMO propagate */
+      prop_amo(sl);
       
-      do { /* propagation closure */
-        prev_open = bd.open; /* we can tell if propagation has occured as the number of open slots will have decreased */
-        
-        /* AMO propagate */
-        prop_amo();
-        
-        /* ALO propagate */
-        // prop_alo();
-        
-      } while(not falsified() and bd.open != prev_open); /* until falsified or it stops propagating */
+      // do { /* propagation closure */
+      //   prev_open = bd.open; /* we can tell if propagation has occured as the number of open slots will have decreased */
+      //   /* ALO propagate */
+      //   prop_alo();
+      // } while(not falsified() and bd.open != prev_open); /* until falsified or it stops propagating */
     }
   }
 }

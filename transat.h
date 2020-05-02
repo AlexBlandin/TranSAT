@@ -36,7 +36,7 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 /* given bd.rows[row] or bd.cols[col] with a forced move, find it */
 #define forced(rowcol) (which_bit(~(rowcol)))
 
-#define peaceful(a, b) ((a.row == b.row and a.col == b.col) or (a.row != b.row and a.col != b.col and diagonal(a.row, a.col) != diagonal(b.row, b.col) and antidiagonal(a.row, a.col) != antidiagonal(b.row, b.col)))
+#define peaceful(a, b) ((a.row == b.row and a.col == b.col) or (a.row != b.row and a.col != b.col and a.dia != b.dia and a.adg != b.adg))
 
 typedef struct _Slot {
   u8 row; /* better to have separated row/col than having to always divide */
@@ -98,16 +98,16 @@ static inline void derank(u8 row, u8 col) {
 }
 
 /* reduce open ranks for the current slot */
-static inline void derank_sl() {
-  rk.dias[sl.dia]--;
-  rk.adia[sl.adg]--;
+static inline void derank_sl(Slot s) {
+  rk.dias[s.dia]--;
+  rk.adia[s.adg]--;
 }
 
-/* forbids the current slow */
-static inline void occupy_slot() {
-  set(sl.row, sl.col);
+/* forbids the current slot in the current board */
+static inline void occupy(Slot s) {
+  set(s.row, s.col);
   bd.open--;
-  derank_sl();
+  derank_sl(s);
 }
 
 /* initialise boards and ranks */
