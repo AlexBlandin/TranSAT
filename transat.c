@@ -158,9 +158,20 @@ static inline void prop_alo() {
   }
 }
 
+static inline void prop_closure() {
+  u32 prev_open; /* we can tell if propagation has occured as the number of open slots will have decreased */
+  /* AMO propagate */
+  prop_amo(sl);
+  
+  // do {
+  //   prev_open = bd.open; 
+  //   /* ALO propagate */
+  //   prop_alo();
+  // } while(not falsified() and bd.open != prev_open); /* until falsified or it stops propagating */
+}
+
 /* the TranSAT N-Queens solver */
 static inline void transat() {
-  u32 prev_open;
   while(board > -1) { /* starts at 0 */
 
     if (falsified() or satisfied()) {
@@ -179,14 +190,7 @@ static inline void transat() {
       // copy(sizeof(Board), stack[board-1], stack[board]);
       bd.queens_left--;
       
-      /* AMO propagate */
-      prop_amo(sl);
-      
-      // do { /* propagation closure */
-      //   prev_open = bd.open; /* we can tell if propagation has occured as the number of open slots will have decreased */
-      //   /* ALO propagate */
-      //   prop_alo();
-      // } while(not falsified() and bd.open != prev_open); /* until falsified or it stops propagating */
+      prop_closure();
     }
   }
 }
