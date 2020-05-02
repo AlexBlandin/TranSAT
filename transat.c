@@ -77,13 +77,92 @@ static inline bool satisfied() {
 
 /* is this board valid / usable for further queen placement? */
 static inline bool falsified() {
-  return bd.open == 0; /* ALO unsatisfiable, as AMO sat is guaranteed by heuristic generation */
+  return bd.falsified or bd.open == 0;
+}
+
+/* for the current slot, AMO propagate */
+static inline void prop_amo() {
+  /* AMO propagate over row and update ranks */
+  for (u8 col = 0; (space_left(bd.rows[sl.row]) or space_left(bd.cols[sl.col])) and col < N; col++) {
+    if open(sl.row, col) {
+      set(sl.row, col);
+      bd.open--;
+      derank(sl.row, col);
+    }
+  }
+  /* AMO propagate over column and update ranks */
+  for (u8 row = 0; space_left(bd.cols[sl.col]) and row < N; row++) {
+    if open(row, sl.col) {
+      set(row, sl.col);
+      bd.open--;
+      derank(row, sl.col);
+    }
+  }
+
+  /* AMO propagate outwards over diagonals and update ranks */
+  for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
+    u8 up = sl.col-i; u8 down = sl.col+i;
+    u8 left = sl.row-i; u8 right = sl.row+i;
+    
+    /* we're using underflow to our advantage */
+    if (left < N and up < N and open(left, up)) {
+      set(left, up); /* rk.dias[diagonal(left, up)].open */
+      bd.open--;
+      derank(left, up);
+    }
+    if (left < N and down < N and open(left, down)) {
+      set(left, down); /* rk.adia[antidiagonal(left, down)].open */
+      bd.open--;
+      derank(left, down);
+    }
+    if (right < N and up < N and open(right, up)) {
+      set(right, up); /* rk.adia[antidiagonal(right, up)].open */
+      bd.open--;
+      derank(right, up);
+    }
+    if (right < N and down < N and open(right, down)) {
+      set(right, down); /* rk.dias[diagonal(right, down)].open */
+      bd.open--;
+      derank(right, down);
+    }
+  }
+}
+
+/* for the current board, ALO propagate */
+static inline void prop_alo() {
+  static Slot queue[4] = {};
+  s8 have_placed = -1; /* 0 to 3 can be used */
+  
+  /* ALO propagate over rows/cols */
+  for (u8 rowcol = 0; bd.open and not bd.falsified and rowcol < N; rowcol++) {
+    if (space_left(bd.rows[rowcol]) and n_open(bd.rows[rowcol]) == 1) {
+      queue[++have_placed] = slot(sl.row, forced(bd.rows[rowcol]));
+      
+      for (u8 i = 0; i < have_placed; i++) {
+        if (not peaceful(queue[have_placed], queue[i]))
+          bd.falsified = true;
+      }
+    }
+    if (space_left(bd.cols[rowcol]) and n_open(bd.cols[rowcol]) == 1) {
+      queue[++have_placed] = slot(forced(bd.cols[rowcol]), rowcol);
+      for (u8 i = 0; i < have_placed; i++) {
+        if (not peaceful(queue[have_placed], queue[i]))
+          bd.falsified = true;
+      }
+    }
+  }
+  
+  for (;have_placed > -1; have_placed--) {
+    sl = queue[have_placed];
+    occupy_slot();
+    bd.queens_left--;
+    prop_amo();
+  }
 }
 
 /* the TranSAT N-Queens solver */
 static inline void transat() {
   while(board > -1) { /* starts at 0 */
-    // bd.visits++;
 
     if (falsified() or satisfied()) {
       board--;
@@ -92,61 +171,26 @@ static inline void transat() {
       sl = heuristic(); /* always chooses an open slot, so no need to worry about that */
       
       /* forbid a space */
-      set(sl.row, sl.col);
-      bd.open--;
-      derank_sl();
+      occupy_slot();
       
       /* place a queen on a new board */
       board++; /* move along the stack */
-      stack[board] = stack[board-1]; // is this faster?
+      stack[board] = stack[board-1]; /* clone the board */
       // copy(sizeof(Board), stack[board-1], stack[board]);
-      bd.visits = 0; // all new board have 0 visits
       bd.queens_left--;
       
-      /* propagate over row and update ranks */
-      for (u8 col = 0; (space_left(bd.rows[sl.row]) or space_left(bd.cols[sl.col])) and col < N; col++) {
-        if open(sl.row, col) {
-          set(sl.row, col);
-          bd.open--;
-          derank(sl.row, col);
-        }
-      }
-      /* propagate over column and update ranks */
-      for (u8 row = 0; space_left(bd.cols[sl.col]) and row < N; row++) {
-        if open(row, sl.col) {
-          set(row, sl.col);
-          bd.open--;
-          derank(row, sl.col);
-        }
-      }
-
-      /* propagate outwards over diagonals and update ranks */
-      for (u8 i = 1; (rk.dias[sl.dia] or rk.adia[sl.adg]) and i < N; i++) {
-        u8 up = sl.col-i; u8 down = sl.col+i;
-        u8 left = sl.row-i; u8 right = sl.row+i;
+      u32 prev_open;
+      
+      do { /* propagation closure */
+        prev_open = bd.open; /* we can tell if propagation has occured as the number of open slots will have decreased */
         
-        /* we're using underflow to our advantage */
-        if (left < N and up < N and open(left, up)) {
-          set(left, up); /* rk.dias[diagonal(left, up)].open */
-          bd.open--;
-          derank(left, up);
-        }
-        if (left < N and down < N and open(left, down)) {
-          set(left, down); /* rk.adia[antidiagonal(left, down)].open */
-          bd.open--;
-          derank(left, down);
-        }
-        if (right < N and up < N and open(right, up)) {
-          set(right, up); /* rk.adia[antidiagonal(right, up)].open */
-          bd.open--;
-          derank(right, up);
-        }
-        if (right < N and down < N and open(right, down)) {
-          set(right, down); /* rk.dias[diagonal(right, down)].open */
-          bd.open--;
-          derank(right, down);
-        }
-      }
+        /* AMO propagate */
+        prop_amo();
+        
+        /* ALO propagate */
+        // prop_alo();
+        
+      } while(not falsified() and bd.open != prev_open); /* until falsified or it stops propagating */
     }
   }
 }

@@ -122,6 +122,24 @@ typedef float f32;
 #define is_pow2(n) ((n) && !((n) & ((n)-1)))
 #endif
 
+#ifndef which_bit
+/* given a value with only a single bit set, which bit is it? */
+/* (https://graphics.stanford.edu/~seander/bithacks.html#IntegerLog) */
+u32 which_bit(u32 v) {
+  static const u32 b[] = {0xAAAAAAAA, 0xCCCCCCCC, 0xF0F0F0F0, 0xFF00FF00, 0xFFFF0000};
+  // register u32 r = (v & b[0]) != 0;
+  // for (u8 i = 4; i > 0; i--)
+  //   r |= ((v & b[i]) != 0) << i;
+  // return r;
+  
+  return ((v & b[0]) != 0)
+       | ((v & b[1]) != 0) << 1
+       | ((v & b[2]) != 0) << 2
+       | ((v & b[3]) != 0) << 3
+       | ((v & b[4]) != 0) << 4;
+}
+#endif
+
 /* n bits to ceil(n/8) bytes */
 #define bits(n) (((n) + 7) / 8)
 

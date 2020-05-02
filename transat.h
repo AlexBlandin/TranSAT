@@ -12,7 +12,7 @@ typedef u32 row_t;
 typedef u64 exrow_t;
 
 const row_t full_row = (1 << N) - 1;
-#define space_left(rowcol) (rowcol != full_row)
+#define space_left(rowcol) ((rowcol) != full_row)
 
 static inline exrow_t embed(row_t row) { return ((exrow_t) row) << N; }
 static inline row_t truncate(exrow_t exrow) { return (row_t) (exrow >> N); }
@@ -21,7 +21,7 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define bd stack[board]
 #define sl bd.slot
 #define rk bd.ranks
-#define index(row, col) (row*N + col)
+#define index(row, col) ((row)*N + (col))
 #define diagonal(row, col) ((row) + (col))
 #define antidiagonal(row, col) (N - (col) + (row) - 1)
 
@@ -31,7 +31,12 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define lut_open(i) (open(lut[i].row, lut[i].col))
 
 /* given bd.rows[row] or bd.cols[col] */
-#define n_open(rowcol) (N - bitcount32(rowcol))
+#define n_open(rowcol) (N - bitcount32((rowcol)))
+
+/* given bd.rows[row] or bd.cols[col] with a forced move, find it */
+#define forced(rowcol) (which_bit(~(rowcol)))
+
+#define peaceful(a, b) ((a.row == b.row and a.col == b.col) or (a.row != b.row and a.col != b.col and diagonal(a.row, a.col) != diagonal(b.row, b.col) and antidiagonal(a.row, a.col) != antidiagonal(b.row, b.col)))
 
 typedef struct _Slot {
   u8 row; /* better to have separated row/col than having to always divide */
@@ -54,8 +59,8 @@ typedef struct _Board {
   u8 queens_left; /* how many pieces we have left to place */
   u16 i; /* where we placed (tyically row*N+col, for lookup in LUT) */
   Slot slot;
+  bool falsified;
   u32 open; /* how many spaces are open */
-  u16 visits; /* how many times this has been the current board on entry to the main loop */
   row_t rows[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   row_t cols[N]; /* transposed */
   Ranks ranks;
@@ -96,6 +101,13 @@ static inline void derank(u8 row, u8 col) {
 static inline void derank_sl() {
   rk.dias[sl.dia]--;
   rk.adia[sl.adg]--;
+}
+
+/* forbids the current slow */
+static inline void occupy_slot() {
+  set(sl.row, sl.col);
+  bd.open--;
+  derank_sl();
 }
 
 /* initialise boards and ranks */
