@@ -1,6 +1,8 @@
 #ifndef TRANSAT_H_IMPLEMENTED
 #define TRANSAT_H_IMPLEMENTED
 
+#include "s.h"       /* short.hand */
+
 /* N <= 21 */
 #ifndef N
 #define N 4
@@ -132,7 +134,7 @@ void init() {
   for (u8 i = 0; i < N; i++) {
     for (u8 j = 0; j < N; j++) {
       Slot s = slot(i, j);
-      if open (s.row, s.col) {
+      if open(s.row, s.col) {
         rk.dias[s.dia]++;
         rk.adia[s.adg]++;
       }

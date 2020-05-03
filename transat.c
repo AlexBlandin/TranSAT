@@ -1,8 +1,4 @@
-// /* https://github.com/nothings/stb */
-// #include "stretchy_buffer.h" /* requires -Wno-unused-value */
-
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
-#include "s.h"       /* short.hand */
 
 /* pick a heuristic */
 #if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
