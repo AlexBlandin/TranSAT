@@ -144,24 +144,24 @@ u32 which_bit(u32 v) {
 #define bits(n) (((n) + 7) / 8)
 
 /* x's value in the n'th bit */
-#define bs_in(x, n) ((x)[(n)/8] & (1 << ((n) % 8)))
+#define bs_in(x, n) ((x)[(n) / 8] & (1 << ((n) % 8)))
 
 /* set x's n'th bit to 1 */
-#define bs_set(x, n) ((x)[(n)/8] |= (1 << ((n) % 8)))
+#define bs_set(x, n) ((x)[(n) / 8] |= (1 << ((n) % 8)))
 
 /* set x's n'th bit to 0 */
-#define bs_clear(x, n) ((x)[(n)/8] &= ~(1 << ((n) % 8)))
+#define bs_clear(x, n) ((x)[(n) / 8] &= ~(1 << ((n) % 8)))
 
 /* set x's bits from n on to 0 */
-#define bs_clearall(x, n) ((x)[(n)/8] &= ~((1 << (((n) % 8) + 1))-1))
+#define bs_clearall(x, n) ((x)[(n) / 8] &= ~((1 << (((n) % 8) + 1))-1))
 
 /* toggle x's n'th bit */
-#define bs_toggle(x, n) ((x)[(n)/8] ^= (1 << ((n) % 8)))
+#define bs_toggle(x, n) ((x)[(n) / 8] ^= (1 << ((n) % 8)))
 
 #if !defined(bitcount)
 i32 bitcount64(uint64_t v) { /* clang-10 favoured bc. 64 bit magic??? */
   i32 r = 0;
-  while(v != 0) {
+  while (v != 0) {
     v &= v - 1;
     r++;
   }
@@ -193,7 +193,7 @@ bool prime(u32 n) {
 #endif
 
 /* just prints a newline */
-void println(){
+void println() {
 #ifdef _WIN32
   printf("\r\n");
 #else
