@@ -1,7 +1,7 @@
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */
-#if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW) and not defined(ANTITAW)
+#if not defined(FIRSTROW) and not defined(SQUAREENUM) and not defined(TAW)
 #define TAW
 #endif
 
@@ -11,51 +11,26 @@ static inline Slot heuristic() {
 #if defined(FIRSTROW) or defined(SQUAREENUM)
   /* from 0,0 indices */
   for (; bd.i < N * N; bd.i++)
-    if
-      lut_open(bd.i) return lut[bd.i];
+    if (lut_open(bd.i))
+      return lut[bd.i];
 #elif defined(TAW)
   float top_prod = 0, top_sum = 0;
   for (u8 row = 0; row < N; row++) {
-    if
-      space_left(bd.rows[row]) {
+    if (space_left(bd.rows[row])) {
         for (u8 col = 0; col < N; col++) {
-          if
-            open(row, col) {
-              Slot v = slot(row, col);
-              WeightPair h = heuristics(v);
-              float prod = h.first * h.second;
-              if (prod >= top_prod) {
-                float sum = h.first + h.second;
-                if (sum > top_sum) {
-                  top_prod = prod;
-                  top_sum = sum;
-                  s = v;
-                }
+          if (open(row, col)) {
+            Slot v = slot(row,col);
+            WeightPair h = heuristics(v);
+            float prod = h.first * h.second;
+            if (prod >= top_prod) {
+              float sum = h.first + h.second;
+              if (sum > top_sum) {
+                top_prod = prod;
+                top_sum = sum;
+                s = v;
               }
             }
-        }
-      }
-  }
-#elif defined(ANTITAW)
-  float low_prod = 0, low_sum = 0;
-  for (u8 row = 0; row < N; row++) {
-    if
-      space_left(bd.rows[row]) {
-        for (u8 col = 0; col < N; col++) {
-          if
-            open(row, col) {
-              Slot v = slot(row, col);
-              WeightPair h = heuristics(v);
-              float prod = h.first * h.second;
-              if (prod <= low_prod) {
-                float sum = h.first + h.second;
-                if (sum < low_sum) {
-                  low_prod = prod;
-                  low_sum = sum;
-                  s = v;
-                }
-              }
-            }
+          }
         }
       }
   }
@@ -82,21 +57,19 @@ static inline bool falsified() { return bd.falsified or bd.open == 0; }
 static inline void prop_amo(Slot s) {
   /* AMO propagate over row and update ranks */
   for (u8 col = 0; space_left(bd.rows[s.row]) and col < N; col++) {
-    if
-      open(s.row, col) {
-        set(s.row, col);
-        bd.open--;
-        derank(s.row, col);
-      }
+    if (open(s.row, col)) {
+      set(s.row, col);
+      bd.open--;
+      derank(s.row, col);
+    }
   }
   /* AMO propagate over column and update ranks */
   for (u8 row = 0; space_left(bd.cols[s.col]) and row < N; row++) {
-    if
-      open(row, s.col) {
-        set(row, s.col);
-        bd.open--;
-        derank(row, s.col);
-      }
+    if (open(row, s.col)) {
+      set(row, s.col);
+      bd.open--;
+      derank(row, s.col);
+    }
   }
 
   /* AMO propagate outwards over diagonals and update ranks */
@@ -147,13 +120,11 @@ static inline void prop_alo() {
 
   if (not falsified()) {
     for (; have_placed > -1; have_placed--) {
-      if
-        open_sl(queue[have_placed]) {
+      if (open_sl(queue[have_placed])) {
           occupy(queue[have_placed]);
           bd.queens_left--;
           prop_amo(queue[have_placed]);
-        }
-      else {
+      } else {
         bd.falsified = true; /* the space has been closed since, meaning there is a Queen that can capture this */
       }
     }
@@ -200,7 +171,7 @@ static inline void transat() {
 int main() {
   init();
   for (u16 i = 0; i < N * N; i++) {
-#if defined(FIRSTROW)
+#if defined(FIRSTROW) or defined(TAW)
     lut[i] = slot(i / N, i % N);
 #elif defined(SQUAREENUM)
     u16 r = (u16)ceil(sqrt(i + 1));
