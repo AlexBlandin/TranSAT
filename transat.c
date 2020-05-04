@@ -20,7 +20,7 @@ static inline Slot heuristic() {
         for (u8 col = 0; col < N; col++) {
           if (open(row, col)) {
             Slot v = slot(row,col);
-            WeightPair h = heuristics(v);
+            WeightPair h = taw_weights(v);
             float prod = h.first * h.second;
             if (prod >= top_prod) {
               float sum = h.first + h.second;

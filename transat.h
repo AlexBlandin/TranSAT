@@ -5,7 +5,7 @@
 
 /* N <= 21 */
 #ifndef N
-#define N 4
+#define N 21
 #endif
 
 /* simple bitset for N-Queens row-like structures */
@@ -26,6 +26,9 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define index(row, col) ((row)*N + (col))
 #define diagonal(row, col) ((row) + (col))
 #define antidiagonal(row, col) (N - (col) + (row)-1)
+
+/* given bd.row and row or bd.cols and col, return that one */
+#define access(rcs, rc) (bd.rowscols[(rc) / 8] & (((1 << N) - 1) << ((rc) % 8)))
 
 #define at(row, col) (bd.rows[(row)] & (1 << (col)))
 #define set(row, col) ((bd.rows[(row)] |= (1 << (col))), (bd.cols[(col)] |= (1 << (row))))
@@ -50,9 +53,9 @@ typedef struct _Slot {
   u8 adg; /* antidiagonal(row, col) */
 } Slot;
 
-typedef struct _Ranks {                       /* how many spaces are open */
-  u8 dias[2 * N - 1];                         /* row + sl */
-  u8 adia[2 * N - 1]; /* N - col + row - 1 */ /* Done this way to handle limited ranges */
+typedef struct _Ranks { /* how many spaces are open */
+  u8 dias[2 * N - 1];   /* row + col */
+  u8 adia[2 * N - 1];   /* N - col + row - 1, done this way to handle limited ranges */
 } Ranks;
 
 static inline Slot slot(u8 row, u8 col) {
@@ -97,7 +100,7 @@ typedef struct _WeightPair {
 static const float weights[] = {0,      0,      4.85,   1,      0.354,  0.11,   0.0694, 0.9740,
                                 0.9488, 0.9242, 0.9002, 0.8769, 0.8542, 0.8320, 0.8104, 0.7894,
                                 0.7690, 0.7490, 0.7296, 0.7107, 0.6923, 0.6743, 0.6569};
-static inline WeightPair heuristics(Slot s) {
+static inline WeightPair taw_weights(Slot s) {
   return (WeightPair) { odegree(s) * weights[2], weights[n_open(bd.rows[s.row])] + weights[n_open(bd.cols[s.col])] };
 }
 
@@ -146,6 +149,7 @@ void init() {
   assert(sizeof(Ranks));
   assert(sizeof(Board));
   assert(sizeof(stack));
+  assert(sizeof(lut));
 }
 
 #endif /* TRANSAT_H_IMPLEMENTED */
