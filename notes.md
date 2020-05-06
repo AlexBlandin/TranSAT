@@ -138,8 +138,16 @@ Transat v0.4.5
 13 | 6m23.750s
 14 | 65m55.891s
 
-ANTITAW is just TOO SLOW (bc. it has to redo everything and go from the least changes each time so it does the most work for least gain)
 
+Transat v0.4.5 + 1KiB Ballast / board
+
+ N | FIRSTROW
+-----------------
+ 9 | 0m0.047s
+10 | 0m0.422s
+11 | 0m4.156s
+12 | 0m34.578s
+13 | 7m6.906s
 
 
 
@@ -169,50 +177,6 @@ TranSAT v1.0
 21 | 
 
 
-      If I expand Rank to store open, even for just the diags (adiags are easy to calc) that's expensive
-      I would need to take the queens out again to drop from 124kB to 99kB...
-
->>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=N+8+2+(N*N+7)//8+N*N*(3+1*(N*N+7)//8+(N+N+2*(2*N+2*N-1-1))))} | {ns(x/N)}") for N in range(16,25)][0]
- N |  Size   | Maybe
----------------------
-16 | 49.0 kB | 3.1 kB
-17 | 59.6 kB | 3.5 kB
-18 | 71.3 kB | 4.0 kB
-19 | 84.9 kB | 4.5 kB
-20 | 99.7 kB | 5.0 kB
-21 | 117.0 kB | 5.6 kB
-22 | 135.6 kB | 6.2 kB
-23 | 156.7 kB | 6.8 kB
-24 | 179.2 kB | 7.5 kB
->>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=N+8+2+(N*N+7)//8+N*N*(3+1*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
- N |  Size   | Maybe
----------------------
-16 | 41.0 kB | 2.6 kB
-17 | 50.1 kB | 2.9 kB
-18 | 60.0 kB | 3.3 kB
-19 | 71.6 kB | 3.8 kB
-20 | 84.1 kB | 4.2 kB
-21 | 98.9 kB | 4.7 kB
-22 | 114.8 kB | 5.2 kB
-23 | 132.9 kB | 5.8 kB
-24 | 152.2 kB | 6.3 kB
->>> print(" N |  Size   | Maybe\n---------------------"); [print(f"{N} | {ns(x:=0*N+8+2+(N*N+7)//8+N*N*(3+2*(N*N+7)//8+(N+N+2*(2*N-1)+2*N-1)))} | {ns(x/N)}") for N in range(16,25)][0]
- N |  Size   | Maybe
----------------------
-16 | 49.5 kB | 3.1 kB
-17 | 60.7 kB | 3.6 kB
-18 | 73.3 kB | 4.1 kB
-19 | 88.1 kB | 4.6 kB
-20 | 104.5 kB | 5.2 kB
-21 | 123.5 kB | 5.9 kB
-22 | 144.3 kB | 6.6 kB
-23 | 168.3 kB | 7.3 kB
-24 | 194.2 kB | 8.1 kB
-
-
-
-
-#### probably can't do in retrospect
 
 [SIMD](https://software.intel.com/sites/landingpage/IntrinsicsGuide/)
 

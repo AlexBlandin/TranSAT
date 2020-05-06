@@ -69,6 +69,7 @@ typedef struct _Board {
   Slot slot;
   bool falsified;
   u32 open;      /* how many spaces are open */
+  row_t ballast[256];
   row_t rows[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   row_t cols[N]; /* transposed */
   Ranks ranks;
