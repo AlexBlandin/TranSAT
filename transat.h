@@ -27,8 +27,9 @@ static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)
 #define diagonal(row, col) ((row) + (col))
 #define antidiagonal(row, col) (N - (col) + (row)-1)
 
-/* given bd.row and row or bd.cols and col, return that one */
-#define access(rcs, rc) (bd.rowscols[(rc) / 8] & (((1 << N) - 1) << ((rc) % 8)))
+/* given an N*N integral bitset and offset to the first value, return N bits worth */
+/* PLACEHOLDER TO DEMONSTRATE, NO SUCH BITSET EXISTS IN STANDARD C */
+#define access(bitset, offset) (bitset & (((1 << N) - 1) << (offset)))
 
 #define at(row, col) (bd.rows[(row)] & (1 << (col)))
 #define set(row, col) ((bd.rows[(row)] |= (1 << (col))), (bd.cols[(col)] |= (1 << (row))))
@@ -69,7 +70,7 @@ typedef struct _Board {
   Slot slot;
   bool falsified;
   u32 open;      /* how many spaces are open */
-  row_t ballast[256];
+  row_t ballast[16]; /* optional ballast */
   row_t rows[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   row_t cols[N]; /* transposed */
   Ranks ranks;
