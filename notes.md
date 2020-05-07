@@ -55,7 +55,7 @@ qcount d
 
 
 TranSAT v0.1
- N | FIRSTROW
+ N | FirstRow
 -----------------
  8 | 0m0.188s
  9 | 0m1.875s
@@ -65,7 +65,7 @@ TranSAT v0.1
 
 
 TranSAT v0.3
- N | FIRSTROW
+ N | FirstRow
 -----------------
  8 | 0m0.016s
  9 | 0m0.094s
@@ -76,7 +76,7 @@ TranSAT v0.3
 
 
 TranSAT v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
- N | FIRSTROW
+ N | FirstRow
 -----------------
  8 | 0m0.016s
  9 | 0m0.078s
@@ -87,7 +87,7 @@ TranSAT v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking m
 
 
 TranSAT v0.3.5 (Square Enumeration)
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -98,7 +98,7 @@ TranSAT v0.3.5 (Square Enumeration)
 
 
 TranSAT v0.4
- N | FIRSTROW
+ N | FirstRow
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -107,7 +107,7 @@ TranSAT v0.4
 12 | 0m57.219s
 13 | 9m33.203s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  8 | 0m0.016s
  9 | 0m0.063s
@@ -118,36 +118,18 @@ TranSAT v0.4
 
 
 TranSAT v0.4.5
- N | FIRSTROW
------------------
- 9 | 0m0.031s
-10 | 0m0.313s
-11 | 0m2.922s
-12 | 0m26.266s
-13 | 4m55.516s
-14 | 52m29.656s
-
- N | SQUAREENUM
------------------
- 9 | 0m0.031s
-10 | 0m0.297s
-11 | 0m2.563s
-12 | 0m23.484s
-13 | 4m6.594s
-14 | 44m25.094s
-
- N | TAW
------------------
- 9 | 0m0.063s
-10 | 0m0.516s
-11 | 0m4.406s
-12 | 0m38.844s
-13 | 6m23.750s
-14 | 65m55.891s
+ N | FirstRow   | SquareEnum | Taw
+-------------------------------------------
+ 9 | 0m0.031s   | 0m0.031s   | 0m0.063s
+10 | 0m0.313s   | 0m0.297s   | 0m0.516s
+11 | 0m2.922s   | 0m2.563s   | 0m4.406s
+12 | 0m26.266s  | 0m23.484s  | 0m38.844s
+13 | 4m55.516s  | 4m6.594s   | 6m23.750s
+14 | 52m29.656s | 44m25.094s | 65m55.891s
 
 
 TranSAT v0.4.5 + 32B Ballast / board
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.031s
 10 | 0m0.344s
@@ -155,7 +137,7 @@ TranSAT v0.4.5 + 32B Ballast / board
 12 | 0m27.500s
 13 | 5m5.031s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.031s
 10 | 0m0.297s
@@ -163,7 +145,7 @@ TranSAT v0.4.5 + 32B Ballast / board
 12 | 0m24.391s
 13 | 4m22.313s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.063s
 10 | 0m0.531s
@@ -173,7 +155,7 @@ TranSAT v0.4.5 + 32B Ballast / board
 
 
 TranSAT v0.4.5 + 64B Ballast / board
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.031s
 10 | 0m0.344s
@@ -181,7 +163,7 @@ TranSAT v0.4.5 + 64B Ballast / board
 12 | 0m28.078s
 13 | 5m7.391s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.047s
 10 | 0m0.313s
@@ -189,7 +171,7 @@ TranSAT v0.4.5 + 64B Ballast / board
 12 | 0m25.094s
 13 | 4m18.781s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.063s
 10 | 0m0.531s
@@ -199,7 +181,7 @@ TranSAT v0.4.5 + 64B Ballast / board
 
 
 TranSAT v0.4.5 + 128B Ballast / board
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.047s
 10 | 0m0.359s
@@ -207,7 +189,7 @@ TranSAT v0.4.5 + 128B Ballast / board
 12 | 0m30.391s
 13 | 5m49.969s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.047s
 10 | 0m0.344s
@@ -215,7 +197,7 @@ TranSAT v0.4.5 + 128B Ballast / board
 12 | 0m27.734s
 13 | 5m1.359s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.078s
 10 | 0m0.594s
@@ -225,7 +207,7 @@ TranSAT v0.4.5 + 128B Ballast / board
 
 
 TranSAT v0.4.5 + 256B Ballast / board
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.047s
 10 | 0m0.391s
@@ -233,7 +215,7 @@ TranSAT v0.4.5 + 256B Ballast / board
 12 | 0m30.516s
 13 | 5m53.125s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.063s
 10 | 0m0.344s
@@ -241,7 +223,7 @@ TranSAT v0.4.5 + 256B Ballast / board
 12 | 0m28.453s
 13 | 5m7.172s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.078s
 10 | 0m0.594s
@@ -252,7 +234,7 @@ TranSAT v0.4.5 + 256B Ballast / board
 
 
 TranSAT v0.4.5 + 512B Ballast / board
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.063s
 10 | 0m0.391s
@@ -260,7 +242,7 @@ TranSAT v0.4.5 + 512B Ballast / board
 12 | 0m32.141s
 13 | 6m45.281s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.063s
 10 | 0m0.375s
@@ -268,7 +250,7 @@ TranSAT v0.4.5 + 512B Ballast / board
 12 | 0m29.516s
 13 | 5m57.094s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.094s
 10 | 0m0.656s
@@ -279,7 +261,7 @@ TranSAT v0.4.5 + 512B Ballast / board
 
 TranSAT v0.4.5 + 1KiB Ballast / board
 
- N | FIRSTROW
+ N | FirstRow
 -----------------
  9 | 0m0.047s
 10 | 0m0.422s
@@ -288,7 +270,7 @@ TranSAT v0.4.5 + 1KiB Ballast / board
 13 | 7m6.906s
 14 | 67m49.984s
 
- N | SQUAREENUM
+ N | SquareEnum
 -----------------
  9 | 0m0.047s
 10 | 0m0.391s
@@ -297,7 +279,7 @@ TranSAT v0.4.5 + 1KiB Ballast / board
 13 | 6m22.359s
 14 | 58m53.078s
 
- N | TAW
+ N | Taw
 -----------------
  9 | 0m0.078s
 10 | 0m0.641s

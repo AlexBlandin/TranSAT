@@ -8,6 +8,11 @@
 #define N 21
 #endif
 
+/* can supply a ballast amount i.e. -DBALLAST=1024 */
+#ifndef BALLAST
+#define BALLAST 0
+#endif
+
 /* simple bitset for N-Queens row-like structures */
 typedef u32 row_t;
 /* extended bitset for up to 3*N (assuming N <= 21) */
@@ -70,7 +75,7 @@ typedef struct _Board {
   Slot slot;
   bool falsified;
   u32 open;      /* how many spaces are open */
-  // row_t ballast[8]; /* optional ballast */
+  u8 ballast[BALLAST]; /* optional ballast */
   row_t rows[N]; /* each row on the board as 32bit columns, 0 = open, 1 = forbidden or placed in */
   row_t cols[N]; /* transposed */
   Ranks ranks;

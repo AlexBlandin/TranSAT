@@ -186,7 +186,7 @@ int main() {
   }
 
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
-    printf(N > 9 ? "%d |" : " %d |", N);
+    printf(N > 9 ? "%d | " : " %d | ", N);
   else
     printf("Q(%d) gave %" LU ", should be %" LU "\n", N, nq, solutions[N]);
   return nq != solutions[N];
