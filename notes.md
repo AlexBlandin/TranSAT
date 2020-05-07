@@ -64,7 +64,7 @@ TranSAT v0.1
 12 | 42m53.125s
 
 
-Transat v0.3
+TranSAT v0.3
  N | FIRSTROW
 -----------------
  8 | 0m0.016s
@@ -75,7 +75,7 @@ Transat v0.3
 13 | 13m39.484s
 
 
-Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
+TranSAT v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
  N | FIRSTROW
 -----------------
  8 | 0m0.016s
@@ -86,7 +86,7 @@ Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking m
 13 | 10m55.922s
 
 
-Transat v0.3.5 (Square Enumeration)
+TranSAT v0.3.5 (Square Enumeration)
  N | SQUAREENUM
 -----------------
  8 | 0m0.016s
@@ -97,7 +97,7 @@ Transat v0.3.5 (Square Enumeration)
 13 | 9m19.594s
 
 
-Transat v0.4
+TranSAT v0.4
  N | FIRSTROW
 -----------------
  8 | 0m0.016s
@@ -117,7 +117,7 @@ Transat v0.4
 13 | 8m24.438s
 
 
-Transat v0.4.5
+TranSAT v0.4.5
  N | FIRSTROW
 -----------------
  9 | 0m0.031s
@@ -146,11 +146,59 @@ Transat v0.4.5
 14 | 65m55.891s
 
 
-Transat v0.4.5 + 64B Ballast / board
+TranSAT v0.4.5 + 32B Ballast / board
+ N | FIRSTROW
+-----------------
+ 9 | 0m0.031s
+10 | 0m0.344s
+11 | 0m2.953s
+12 | 0m27.500s
+13 | 5m5.031s
+
+ N | SQUAREENUM
+-----------------
+ 9 | 0m0.031s
+10 | 0m0.297s
+11 | 0m2.609s
+12 | 0m24.391s
+13 | 4m22.313s
+
+ N | TAW
+-----------------
+ 9 | 0m0.063s
+10 | 0m0.531s
+11 | 0m4.547s
+12 | 0m40.078s
+13 | 6m27.000s
 
 
+TranSAT v0.4.5 + 64B Ballast / board
+ N | FIRSTROW
+-----------------
+ 9 | 0m0.031s
+10 | 0m0.344s
+11 | 0m2.984s
+12 | 0m28.078s
+13 | 5m7.391s
 
-Transat v0.4.5 + 128B Ballast / board
+ N | SQUAREENUM
+-----------------
+ 9 | 0m0.047s
+10 | 0m0.313s
+11 | 0m2.625s
+12 | 0m25.094s
+13 | 4m18.781s
+
+ N | TAW
+-----------------
+ 9 | 0m0.063s
+10 | 0m0.531s
+11 | 0m4.656s
+12 | 0m40.734s
+13 | 6m35.500s
+
+
+TranSAT v0.4.5 + 128B Ballast / board
  N | FIRSTROW
 -----------------
  9 | 0m0.047s
@@ -176,7 +224,7 @@ Transat v0.4.5 + 128B Ballast / board
 13 | 7m39.734s
 
 
-Transat v0.4.5 + 256B Ballast / board
+TranSAT v0.4.5 + 256B Ballast / board
  N | FIRSTROW
 -----------------
  9 | 0m0.047s
@@ -203,7 +251,7 @@ Transat v0.4.5 + 256B Ballast / board
 
 
 
-Transat v0.4.5 + 512B Ballast / board
+TranSAT v0.4.5 + 512B Ballast / board
  N | FIRSTROW
 -----------------
  9 | 0m0.063s
@@ -229,7 +277,7 @@ Transat v0.4.5 + 512B Ballast / board
 13 | 8m44.766s
 
 
-Transat v0.4.5 + 1KiB Ballast / board
+TranSAT v0.4.5 + 1KiB Ballast / board
 
  N | FIRSTROW
 -----------------
