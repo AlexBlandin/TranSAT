@@ -10,7 +10,8 @@
 
 /* can supply a ballast amount i.e. -DBALLAST=1024 */
 #ifndef BALLAST
-#define BALLAST 0
+#error "YOU NEED A BALLAST"
+// #define BALLAST 0
 #endif
 
 /* simple bitset for N-Queens row-like structures */
