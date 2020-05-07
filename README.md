@@ -5,7 +5,7 @@ Based on the [GenericSAT](https://github.com/OKullmann/oklibrary/tree/master/Sat
 
 #### Tools
 
-Built with [musl 1.2.0](https://musl.libc.org/) on [gcc 8.3.0](https://gcc.gnu.org/) using `-fplan9-extensions`. [midipix](https://midipix.org/) can be used to convert musl's system calls to Windows' [Native API](https://en.wikipedia.org/wiki/Native_API) calls.
+Built with [musl 1.2.0](https://musl.libc.org/) on [gcc 8.3.0](https://gcc.gnu.org/). [midipix](https://midipix.org/) can be used to convert musl's system calls to Windows' [Native API](https://en.wikipedia.org/wiki/Native_API) calls.
 
 Can use [clang 10.0.0](https://clang.llvm.org/) for a more portable Unix/Windows compilation experience.
 
@@ -13,7 +13,7 @@ Reference GenericSAT from commit [`abc4193`](https://github.com/OKullmann/oklibr
 
 #### Simple build
 ```bash
-$ musl-gcc -fplan9-extensions -static transat.c -o transat
+$ musl-gcc -static transat.c -o transat
 ```
 
 #### Build Script
@@ -24,6 +24,11 @@ $ ./build.sh transat <N>
 #### Simple Timings
 ```bash
 $ ./timeit.sh
+```
+
+#### Ballast Timings
+```bash
+$ ./ballast.sh <N>
 ```
 
 #### Profile
