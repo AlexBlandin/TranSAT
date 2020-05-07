@@ -4,12 +4,10 @@
 - watched literals
 
 
-testing can use
+testing uses
 - gcc 8.3
-- gcc 9.3
-- gcc trunk
-- clang 7
 - clang 10
+
 
  N | Solutions
 ------------------
@@ -21,6 +19,7 @@ testing can use
 19 | 4968057848
 20 | 39029188884
 21 | 314666222712
+
 
 Rosetta
  N | Time
@@ -34,6 +33,7 @@ Rosetta
 20 | 147m46.599s
 21 | 1235m0.767s
 
+
 ExpQueens
  N | Time
 -----------------
@@ -42,6 +42,7 @@ ExpQueens
 16 | 1m0.359s
 17 | 6m27.906s
 18 | 45m49.609s
+
 
 qcount d
  N | Time
@@ -52,6 +53,7 @@ qcount d
 17 | 0m59.125s
 18 | 7m1.172s
 
+
 TranSAT v0.1
  N | FIRSTROW
 -----------------
@@ -60,6 +62,7 @@ TranSAT v0.1
 10 | 0m19.188s
 11 | 3m28.703s
 12 | 42m53.125s
+
 
 Transat v0.3
  N | FIRSTROW
@@ -71,6 +74,7 @@ Transat v0.3
 12 | 1m16.203s
 13 | 13m39.484s
 
+
 Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking mem. footprint, leaving the old state in as ballast gives v0.3 timings, proving size matters for prefetching)
  N | FIRSTROW
 -----------------
@@ -81,6 +85,7 @@ Transat v0.3.5 (v0.3 but using bitsets and taking out the old state, shrinking m
 12 | 1m2.828s
 13 | 10m55.922s
 
+
 Transat v0.3.5 (Square Enumeration)
  N | SQUAREENUM
 -----------------
@@ -90,6 +95,7 @@ Transat v0.3.5 (Square Enumeration)
 11 | 0m5.484s
 12 | 0m54.453s
 13 | 9m19.594s
+
 
 Transat v0.4
  N | FIRSTROW
@@ -109,6 +115,7 @@ Transat v0.4
 11 | 0m5.031s
 12 | 0m49.469s
 13 | 8m24.438s
+
 
 Transat v0.4.5
  N | FIRSTROW
@@ -148,7 +155,25 @@ Transat v0.4.5 + 1KiB Ballast / board
 11 | 0m4.156s
 12 | 0m34.578s
 13 | 7m6.906s
+14 | 67m49.984s
 
+ N | SQUAREENUM
+-----------------
+ 9 | 0m0.047s
+10 | 0m0.391s
+11 | 0m3.797s
+12 | 0m32.047s
+13 | 6m22.359s
+14 | 58m53.078s
+
+ N | TAW
+-----------------
+ 9 | 0m0.078s
+10 | 0m0.641s
+11 | 0m5.859s
+12 | 0m48.594s
+13 | 9m5.797s
+14 | 83m22.328s
 
 
 TranSAT v0.5
