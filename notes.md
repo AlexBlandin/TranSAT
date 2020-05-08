@@ -1,8 +1,7 @@
+<!-- COPYRIGHT Alex Blandin (c) 2020 -->
+<!-- See LICENSE -->
+
 ./genericsat = ./oklibrary/Satisfiability/Transformers/Generators/Queens/GenericSAT
-
-- propagation
-- watched literals
-
 
 testing uses
 - gcc 8.3

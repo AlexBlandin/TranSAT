@@ -1,3 +1,6 @@
+/* COPYRIGHT Alex Blandin (c) 2020 */
+/* See LICENSE */
+
 #include "transat.h" /* transat header (types & related funcs, etc, not main logic) */
 
 /* pick a heuristic */

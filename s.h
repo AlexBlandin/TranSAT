@@ -1,3 +1,6 @@
+/* COPYRIGHT Alex Blandin (c) 2020 */
+/* See LICENSE */
+
 /* short.hand */
 #ifndef SHORTHAND_H_INCLUDED
 #define SHORTHAND_H_INCLUDED

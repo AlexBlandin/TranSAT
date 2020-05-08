@@ -1,3 +1,6 @@
+/* COPYRIGHT Alex Blandin (c) 2020 */
+/* See LICENSE */
+
 #ifndef TRANSAT_H_IMPLEMENTED
 #define TRANSAT_H_IMPLEMENTED
 

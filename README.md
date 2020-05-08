@@ -40,3 +40,6 @@ $ gcc --coverage -DN=11 -o transat transat.c && ./transat && gcov transat.c -m
 ```cmd
 > clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 ```
+
+<!-- COPYRIGHT Alex Blandin (c) 2020 -->
+<!-- See LICENSE -->
