@@ -41,5 +41,11 @@ $ gcc --coverage -DN=11 -o transat transat.c && ./transat && gcov transat.c -m
 > clang-cl -fuse-ld=lld -Z7 -MTd transat.c -o transat.exe && remedybg dbg.rdbg
 ```
 
+#### TODO:
+
+- Fix propagation regression (and thus performance regression)
+- Add full symmetry breaking (~8x)
+- New heuristics
+
 <!-- COPYRIGHT Alex Blandin (c) 2020 -->
 <!-- See LICENSE -->
