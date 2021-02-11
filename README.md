@@ -7,6 +7,8 @@ Based on the [GenericSAT](https://github.com/OKullmann/oklibrary/tree/master/Sat
 
 Built with [musl 1.2.0](https://musl.libc.org/) on [gcc 8.3.0](https://gcc.gnu.org/). [midipix](https://midipix.org/) can be used to convert musl's system calls to Windows' [Native API](https://en.wikipedia.org/wiki/Native_API) calls.
 
+The most recent commit is a test of [Cosmopolitan libc](https://justine.lol/cosmopolitan/index.html) using GCC (add `-Icosmo --DNDEBUG -DN=13` to standard Cosmopolitan `gcc` arguments.
+
 Can use [clang 10.0.0](https://clang.llvm.org/) for a more portable Unix/Windows compilation experience.
 
 Reference GenericSAT from commit [`abc4193`](https://github.com/OKullmann/oklibrary/commit/abc419334da4e73f44dd1c13cc4d3ae78a534b63).

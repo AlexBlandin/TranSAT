@@ -25,7 +25,7 @@ const row_t full_row = (1 << N) - 1;
 #define space_left(rowcol) ((rowcol) != full_row)
 
 static inline exrow_t embed(row_t row) { return ((exrow_t)row) << N; }
-static inline row_t truncate(exrow_t exrow) { return (row_t)(exrow >> N); }
+static inline row_t ex_truncate(exrow_t exrow) { return (row_t)(exrow >> N); }
 static inline exrow_t add(row_t row, exrow_t exrow) { return exrow | (((exrow_t)row) << N); }
 
 #define bd stack[board]

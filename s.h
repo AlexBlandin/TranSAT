@@ -5,6 +5,7 @@
 #ifndef SHORTHAND_H_INCLUDED
 #define SHORTHAND_H_INCLUDED
 
+#ifdef _WIN32
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -13,6 +14,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#endif
 
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -54,14 +56,6 @@ typedef int8_t s8;
 
 typedef double f64;
 typedef float f32;
-
-#ifdef _WIN32
-/* use in a "... %"LU" ..." pattern, allows formatting */
-#define LU "llu"
-#else
-/* use in a "... %"LU" ..." pattern, allows formatting */
-#define LU "lu"
-#endif
 
 #if !defined(bool) && defined(_Bool)
 #define bool _Bool
@@ -197,11 +191,7 @@ bool prime(u32 n) {
 
 /* just prints a newline */
 void println() {
-#ifdef _WIN32
-  printf("\r\n");
-#else
   printf("\n");
-#endif
 }
 
 /* 2 u32s into a u64, `a` goes into "left" (higher) bits */

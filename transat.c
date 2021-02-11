@@ -54,7 +54,7 @@ static inline bool satisfied() {
 }
 
 /* is this board valid / usable for further queen placement? */
-static inline bool falsified() { return bd.falsified or bd.open == 0; }
+static inline bool falsified() { return bd.falsified or bd.open == 0 or bd.queens_left == 0; }
 
 /* for the current slot, AMO propagate */
 static inline void prop_amo(Slot s) {
@@ -124,20 +124,23 @@ static inline void prop_alo() {
   if (not falsified()) {
     for (; have_placed > -1; have_placed--) {
       if (open_sl(queue[have_placed])) {
-          occupy(queue[have_placed]);
-          bd.queens_left--;
-          prop_amo(queue[have_placed]);
+        occupy(queue[have_placed]);
+        bd.queens_left--;
+        prop_amo(queue[have_placed]);
       } else {
         bd.falsified = true; /* the space has been closed since, meaning there is a Queen that can capture this */
       }
     }
   }
+  
+  if (bd.queens_left == 0 and not bd.falsified and bd.open) nq++;
 }
 
 static inline void prop_closure() {
   u32 prev_open; /* we can tell if propagation has occured as the number of open slots will have decreased */
   /* AMO propagate */
   prop_amo(sl);
+  // prop_alo();
 
   // do {
   //   prev_open = bd.open;
@@ -191,6 +194,6 @@ int main() {
   if (nq == solutions[N]) /* addressed by N as N=0 is included */
     printf(N > 9 ? "%d | " : " %d | ", N);
   else
-    printf("Q(%d) gave %" LU ", should be %" LU "\n", N, nq, solutions[N]);
+    printf("Q(%d) gave %lu, should be %lu\n", N, nq, solutions[N]);
   return nq != solutions[N];
 }
