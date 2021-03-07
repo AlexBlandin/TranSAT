@@ -35,6 +35,8 @@
 !*.*
 *.exe
 *.out
+*.com
+*.com.dbg
 *.app
 *.i*86
 *.x86_64

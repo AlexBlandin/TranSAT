@@ -5,6 +5,7 @@
 #ifndef SHORTHAND_H_INCLUDED
 #define SHORTHAND_H_INCLUDED
 
+/* trialing Cosmopolitan libc support, cosmopolitan.h has all the standard ones I use*/
 #ifdef _WIN32
 #include <assert.h>
 #include <stddef.h>
@@ -191,7 +192,7 @@ bool prime(u32 n) {
 
 /* just prints a newline */
 void println() {
-  printf("\n");
+  printf("%n");
 }
 
 /* 2 u32s into a u64, `a` goes into "left" (higher) bits */
