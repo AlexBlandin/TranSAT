@@ -59,5 +59,5 @@ $ gcc --coverage -DN=11 -o transat transat.c && ./transat && gcov transat.c -m
 - Add full symmetry breaking (~8x)
 - New heuristics
 
-<!-- COPYRIGHT Alex Blandin (c) 2020- -->
+<!-- COPYRIGHT Alex Blandin (c) 2021 -->
 <!-- See LICENSE -->
