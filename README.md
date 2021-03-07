@@ -23,14 +23,20 @@ $ musl-gcc -static transat.c -o transat
 ```bash
 $ gcc -g -Os -static -fno-pie -no-pie -mno-red-zone -nostdlib -nostdinc \
   -fno-omit-frame-pointer -pg -mnop-mcount -Wl,--build-id=none -Icosmo \
-  -o transat.com.dbg transat.c -Wl,--gc-sections -fuse-ld=bfd \
-  -Wl,-T,cosmo/ape.lds  cosmo/cosmopolitan.h cosmo/crt.o cosmo/ape.o cosmo/cosmopolitan.a --DNDEBUG -DN=13
+  --DNDEBUG -DN=13 -o transat.com.dbg transat.c -Wl,--gc-sections -fuse-ld=bfd \
+  -Wl,-T,cosmo/ape.lds  cosmo/cosmopolitan.h cosmo/crt.o cosmo/ape.o cosmo/cosmopolitan.a
 $ objcopy -SO binary transat.com.dbg transat.com
 ```
 
 ### Build Script
 ```bash
 $ ./build.sh transat <N>
+```
+
+Or, with Cosmopolitan Libc
+
+```bash
+$ ./build-cosmo.sh transat <N> 
 ```
 
 ### Simple Timings
