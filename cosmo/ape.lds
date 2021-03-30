@@ -6,9 +6,10 @@ PHDRS {
   stack PT_GNU_STACK FLAGS(6);
 }
 SECTIONS {
-  .head SEGMENT_START("text-segment", 0x400000) : {
+  .head SEGMENT_START("text-segment", 0x400000) : AT(0x2000) {
     HIDDEN(_base = .);
     KEEP(*(.head))
+    KEEP(*(.text.head))
     . = ALIGN(8);
     HIDDEN(ape_phdrs = .);
     KEEP(*(.elf.phdrs))
@@ -22,21 +23,18 @@ SECTIONS {
     HIDDEN(ape_pe_sections = .);
     KEEP(*(.pe.sections))
     HIDDEN(ape_pe_sections_end = .);
-    . += 1;
     KEEP(*(.macho))
     . = ALIGN(8);
     HIDDEN(ape_macho_end = .);
-    . += 1;
     KEEP(*(.ape.pad.head))
-    . = ALIGN(((255 & 4) == 4) ? 0x1000 : 16);
+    . = ALIGN(((255 & 4) == 4) || ((255 & 2) == 2) ? 0x1000 : 16);
     HIDDEN(_ehead = .);
   } :Head
   .text . : {
     *(.text.real)
     KEEP(*(SORT_BY_NAME(.sort.text.real.*)))
-    *(.rodata.real)
-    KEEP(*(SORT_BY_NAME(.sort.rodata.real.*)))
     HIDDEN(_ereal = .);
+    . += 1;
     *(.start)
     KEEP(*(.initprologue))
     KEEP(*(SORT_BY_NAME(.init.*)))
@@ -64,15 +62,15 @@ SECTIONS {
     *(.text .stub .text.*)
     KEEP(*(SORT_BY_NAME(.sort.text.*)))
     KEEP(*(.ape.pad.test));
-    HIDDEN(__test_start = .);
     *(.test.unlikely)
     *(.test .test.*)
     KEEP(*(.ape.pad.privileged));
+    . += . > 0 ? 1 : 0;
     HIDDEN(__privileged_start = .);
-    HIDDEN(__test_end = .);
-    . += 1;
+    . += . > 0 ? 1 : 0;
     *(.privileged)
     HIDDEN(__privileged_end = .);
+    . += . > 0 ? 1 : 0;
     KEEP(*(.ape.pad.rodata));
     *(.rodata .rodata.*)
     *(.ubsan.types)
@@ -82,7 +80,6 @@ SECTIONS {
     KEEP(*(.commentepilogue))
     KEEP(*(.idata.ro));
     KEEP(*(SORT_BY_NAME(.idata.ro.*)))
-    . += 1;
     . = ALIGN(8);
     PROVIDE_HIDDEN(__init_array_start = .);
     KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
@@ -127,22 +124,24 @@ SECTIONS {
     HIDDEN(_edata = .);
     PROVIDE_HIDDEN(edata = .);
   } :Ram
-  .bss . : {
+  .zip . : {
+    KEEP(*(SORT_BY_NAME(.zip.*)))
+    HIDDEN(_ezip = .);
+  }
+  .bss ALIGN(8) : {
     KEEP(*(SORT_BY_NAME(.piro.bss.init.*)))
     *(.piro.bss)
     KEEP(*(SORT_BY_NAME(.piro.bss.sort.*)))
     HIDDEN(__piro_end = .);
+    . += . > 0 ? 1 : 0;
     *(SORT_BY_ALIGNMENT(.bss))
     *(SORT_BY_ALIGNMENT(.bss.*))
     *(COMMON)
     KEEP(*(SORT_BY_NAME(.sort.bss.*)))
-    . = ALIGN(0x1000);
-    *(.xlm)
-    . = ALIGN(0x1000);
     . = ALIGN(0x10000);
     HIDDEN(_end = .);
     PROVIDE_HIDDEN(end = .);
-  } :Ram
+  }
   .shstrtab : { *(.shstrtab) }
   .strtab : { *(.strtab) }
   .symtab : { *(.symtab) }
@@ -202,10 +201,16 @@ HIDDEN(ape_rom_rva = ((ape_rom_vaddr) - (0x400000)));
 HIDDEN(ape_ram_offset = ape_rom_offset + ape_rom_filesz);
 HIDDEN(ape_ram_vaddr = ADDR(.data));
 HIDDEN(ape_ram_paddr = LOADADDR(.data));
-HIDDEN(ape_ram_filesz = LOADADDR(.bss) - LOADADDR(.data));
+HIDDEN(ape_ram_filesz = SIZEOF(.data));
 HIDDEN(ape_ram_memsz = ADDR(.bss) + SIZEOF(.bss) - ape_ram_vaddr);
 HIDDEN(ape_ram_align = 0x1000);
 HIDDEN(ape_ram_rva = ((ape_ram_vaddr) - (0x400000)));
+HIDDEN(ape_stack_offset = ape_ram_offset + ape_ram_filesz);
+HIDDEN(ape_stack_vaddr = 0x700000000000 - 0x100000);
+HIDDEN(ape_stack_paddr = ape_ram_paddr + ape_ram_filesz);
+HIDDEN(ape_stack_filesz = 0);
+HIDDEN(ape_stack_memsz = 0x100000);
+HIDDEN(ape_stack_align = 16);
 HIDDEN(ape_note_offset = ape_rom_offset + (ape_note - ape_rom_vaddr));
 HIDDEN(ape_note_vaddr = ape_note);
 HIDDEN(ape_note_paddr = ape_rom_paddr + ape_note_offset);
@@ -237,20 +242,30 @@ HIDDEN(ape_macho_dd_count_bcs0 = (((ape_macho_end - ape_macho) / 8) < 10000 ? 0x
 HIDDEN(ape_pe_offset = (ape_pe - ape_mz)); HIDDEN(ape_pe_offset_bcs0 = (((((((ape_pe - ape_mz) >> ((0)*8)) >> 0)&0x7) + 0x30) << 24) | ((((((ape_pe - ape_mz) >> ((0)*8)) >> 3)&0x7) + 0x30) << 16) | (((((((ape_pe - ape_mz) >> ((0)*8))&0xff) >> 6)&0x7) + 0x30) << 8) | 0x5c)); HIDDEN(ape_pe_offset_bcs1 = (((((((ape_pe - ape_mz) >> ((1)*8)) >> 0)&0x7) + 0x30) << 24) | ((((((ape_pe - ape_mz) >> ((1)*8)) >> 3)&0x7) + 0x30) << 16) | (((((((ape_pe - ape_mz) >> ((1)*8))&0xff) >> 6)&0x7) + 0x30) << 8) | 0x5c)); HIDDEN(ape_pe_offset_bcs2 = (((((((ape_pe - ape_mz) >> ((2)*8)) >> 0)&0x7) + 0x30) << 24) | ((((((ape_pe - ape_mz) >> ((2)*8)) >> 3)&0x7) + 0x30) << 16) | (((((((ape_pe - ape_mz) >> ((2)*8))&0xff) >> 6)&0x7) + 0x30) << 8) | 0x5c)); HIDDEN(ape_pe_offset_bcs3 = (((((((ape_pe - ape_mz) >> ((3)*8)) >> 0)&0x7) + 0x30) << 24) | ((((((ape_pe - ape_mz) >> ((3)*8)) >> 3)&0x7) + 0x30) << 16) | (((((((ape_pe - ape_mz) >> ((3)*8))&0xff) >> 6)&0x7) + 0x30) << 8) | 0x5c));
 HIDDEN(ape_pe_optsz = ape_pe_sections - (ape_pe + 24));
 HIDDEN(ape_pe_shnum = (ape_pe_sections_end - ape_pe_sections) / 40);
-HIDDEN(ape_idata_idtsize = ape_idata_idtend - ape_idata_idt);
-HIDDEN(ape_idata_iatsize = ape_idata_iatend - ape_idata_iat);
-HIDDEN(v_ntsubsystem = (DEFINED(GetMessage)
-                        ? 2
-                        : 3));
+HIDDEN(ape_pe_base = 0x400000);
+HIDDEN(ape_idata = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? ((ape_idata_iat) - (0x400000)) : 0);
+HIDDEN(ape_idata_iatsize = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? ape_idata_iatend - ape_idata_iat : 0);
+HIDDEN(ape_idata = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? ((ape_idata_idt) - (0x400000)) : 0);
+HIDDEN(ape_idata_idtsize = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? ape_idata_idtend - ape_idata_idt : 0);
+HIDDEN(v_ntversion = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? 6 : 1);
+HIDDEN(v_ntdllchar = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? 288 : 0);
+HIDDEN(v_ntsubversion = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? 6 : 5);
+HIDDEN(v_ntsubsystem = ((((255 & 4) == 4) && !DEFINED(EfiMain))
+                        ? (DEFINED(GetMessage)
+                           ? 2
+                           : 3)
+                        : 10));
+HIDDEN(ape_pe_entry = (((255 & 4) == 4) && !DEFINED(EfiMain)) ? WinMain : EfiMain);
 HIDDEN(v_ape_realsectors =
-           (((((((_edata) - (0x400000))) + (4096)-1) & -(4096))) > (0x40000 - (0x1000 + (((0x2240 + 8) + (0x1000)-1) & -(0x1000)))) ? (0x40000 - (0x1000 + (((0x2240 + 8) + (0x1000)-1) & -(0x1000)))) : ((((((_edata) - (0x400000))) + (4096)-1) & -(4096)))) / 512);
+           (((((((_edata) - (0x400000))) + (4096)-1) & -(4096))) > (0x70000 - 0x2000) ? (0x70000 - 0x2000) : ((((((_edata) - (0x400000))) + (4096)-1) & -(4096)))) / 512);
 HIDDEN(v_ape_realpages = v_ape_realsectors / (4096 / 512));
 HIDDEN(v_ape_highsectors =
            ((((((_edata) - (0x400000))) + (512)-1) & -(512)) / 512) - v_ape_realsectors);
 HIDDEN(v_zip_cdoffset = DEFINED(__zip_start) ? __zip_start - 0x400000 : 0);;
 HIDDEN(v_zip_cdirsize = DEFINED(__zip_start) ? __zip_end - __zip_start : 0);;
-HIDDEN(v_zip_records = DEFINED(__zip_start) ? v_zip_cdirsize / (((46 + 248) + (64)-1) & -(64)) : 0);;
-HIDDEN(v_zip_commentsize = DEFINED(__zip_start) ? _edata - __zip_end - 22 : 0);;
+ASSERT(v_zip_cdirsize % (((46 + 248) + (2)-1) & -(2)) == 0, "bad zip cdir");
+HIDDEN(v_zip_records = DEFINED(__zip_start) ? v_zip_cdirsize / (((46 + 248) + (2)-1) & -(2)) : 0);;
+HIDDEN(v_zip_commentsize = DEFINED(__zip_start) ? _ezip - __zip_end - 22 : 0);;
 HIDDEN(ape_uuid1 = 88172645463325252);
 HIDDEN(ape_uuid2 = 88172645463325252);
 ape_uuid1 = ((ape_uuid1 | (ape_bss_align >> 12)) - (ape_uuid1 & (ape_bss_align >> 12))); ape_uuid1 = ((ape_uuid1 | (ape_bss_align << 25)) - (ape_uuid1 & (ape_bss_align << 25))); ape_uuid1 = ((ape_uuid1 | (ape_bss_align >> 27)) - (ape_uuid1 & (ape_bss_align >> 27))); ape_uuid1 = (ape_uuid1 + (ape_bss_align >> 000) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid1 = (ape_uuid1 + (ape_bss_align >> 010) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid1 = (ape_uuid1 + (ape_bss_align >> 020) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid1 = (ape_uuid1 + (ape_bss_align >> 030) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid2 = ((ape_uuid2 | (ape_bss_align >> 12)) - (ape_uuid2 & (ape_bss_align >> 12))); ape_uuid2 = ((ape_uuid2 | (ape_bss_align << 25)) - (ape_uuid2 & (ape_bss_align << 25))); ape_uuid2 = ((ape_uuid2 | (ape_bss_align >> 27)) - (ape_uuid2 & (ape_bss_align >> 27))); ape_uuid2 = (ape_uuid2 + (ape_bss_align >> 000) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid2 = (ape_uuid2 + (ape_bss_align >> 010) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid2 = (ape_uuid2 + (ape_bss_align >> 020) & 0xFF) * 0x9e3779b9925d4c17; ape_uuid2 = (ape_uuid2 + (ape_bss_align >> 030) & 0xFF) * 0x9e3779b9925d4c17;
@@ -324,5 +339,5 @@ ASSERT((!DEFINED(ape_grub) ? 1 : ((ape_grub) - (0x400000)) < 8192),
        "grub stub needs to be in first 8kb of image");
 ASSERT(DEFINED(_start) || DEFINED(_start16),
        "please link a _start() or _start16() entrypoint");
-ASSERT(!DEFINED(_start16) || ((_end) - (0x400000 - (0x1000 + (((0x2240 + 8) + (0x1000)-1) & -(0x1000))))) < 65536,
+ASSERT(!DEFINED(_start16) || ((_end) - (0x400000 - 0x2000)) < 65536,
        "ape won't support non-tiny real mode programs");

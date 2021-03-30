@@ -137,9 +137,6 @@
 #define __CHAR16_TYPE__  short unsigned int
 #define __CHAR32_TYPE__  unsigned int
 #define __WINT_TYPE__    unsigned int
-#define __CHAR16_TYPE__  short unsigned int
-#define __WCHAR_TYPE__   int
-#define __CHAR32_TYPE__  unsigned int
 
 #define __INT_LEAST8_TYPE__   __INT8_TYPE__
 #define __UINT_LEAST8_TYPE__  __UINT8_TYPE__
@@ -221,9 +218,6 @@
 #define __CHAR16_TYPE__  short unsigned int
 #define __CHAR32_TYPE__  unsigned int
 #define __WINT_TYPE__    unsigned int
-#define __CHAR16_TYPE__  short unsigned int
-#define __WCHAR_TYPE__   int
-#define __CHAR32_TYPE__  unsigned int
 
 #define __INT_LEAST8_TYPE__   __INT8_TYPE__
 #define __UINT_LEAST8_TYPE__  __UINT8_TYPE__
@@ -876,7 +870,7 @@ typedef struct __va_list va_list[1];
 #endif
 
 #ifndef unreachable
-#if defined(__GNUC__) && !defined(__STRICT_ANSI)
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define unreachable __builtin_unreachable()
 #else
 #define unreachable \
@@ -894,6 +888,7 @@ typedef struct __va_list va_list[1];
 #define textstartup _Section(".text.startup") noinstrument
 #define textexit    _Section(".text.exit") noinstrument
 #define textreal    _Section(".text.real")
+#define texthead    _Section(".text.head")
 #define textwindows _Section(".text.windows")
 #define antiquity   _Section(".text.antiquity")
 #else
@@ -901,6 +896,7 @@ typedef struct __va_list va_list[1];
 #define textstartup
 #define textexit
 #define textreal
+#define texthead
 #define textwindows
 #define antiquity
 #endif
@@ -953,6 +949,7 @@ typedef struct __va_list va_list[1];
 #pragma GCC diagnostic ignored "-Wparentheses" /* annoying tidy */
 #pragma GCC diagnostic ignored "-Wdangling-else" /* come on tidy */
 #pragma GCC diagnostic ignored "-Wformat-security" /* come on tidy */
+#pragma GCC diagnostic ignored "-Wunused-value" /* breaks macros */
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wimplicit-int"
 #endif /* C++ */
@@ -969,6 +966,7 @@ typedef struct __va_list va_list[1];
 #endif /* GCC6+ */
 #if __GNUC__ >= 8
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
+#pragma GCC diagnostic ignored "-Wstringop-overflow" /* breaks strndup */
 #endif /* GCC8+ */
 #if __GNUC__ + 0 >= 9
 #pragma GCC diagnostic ignored /* "always true" breaks dce */ "-Waddress"
@@ -1018,7 +1016,7 @@ typedef struct __va_list va_list[1];
 #pragma GCC diagnostic error "-Wredundant-decls"
 #if __GNUC__ >= 6
 #pragma GCC diagnostic error "-Wnonnull-compare"
-#if !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)
+#if defined(COSMO) && !defined(MODE_DBG) && !defined(STACK_FRAME_UNLIMITED)
 #pragma GCC diagnostic error "-Wframe-larger-than=4096"
 #if __GNUC__ >= 9
 #pragma GCC diagnostic error "-Walloca-larger-than=1024"
@@ -1205,6 +1203,8 @@ void __assert_fail(const char *, const char *, int) hidden wontreturn relegated;
       unreachable;                              \
     }                                           \
   } while (0)
+
+#define static_assert _Static_assert
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -2135,23 +2135,16 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
 
 #define COSMOPOLITAN_LIBC_LIMITS_H_
 
-#define __MAX2MIN(I) (-I - 1)
+#define UCHAR_MIN 0
+#define UCHAR_MAX 255
 
-#define SIZEOF_SHORT       __SIZEOF_SHORT__
-#define SIZEOF_INT         __SIZEOF_INT__
-#define SIZEOF_LONG        __SIZEOF_LONG__
-#define SIZEOF_LONG_LONG   __SIZEOF_LONG_LONG__
-#define SIZEOF_POINTER     __SIZEOF_POINTER__
-#define SIZEOF_PTRDIFF_T   __SIZEOF_PTRDIFF_T__
-#define SIZEOF_SIZE_T      __SIZEOF_SIZE_T__
-#define SIZEOF_WCHAR_T     __SIZEOF_WCHAR_T__
-#define SIZEOF_WINT_T      __SIZEOF_WINT_T__
-#define SIZEOF_FLOAT       __SIZEOF_FLOAT__
-#define SIZEOF_FLOAT128    __SIZEOF_FLOAT128__
-#define SIZEOF_DOUBLE      __SIZEOF_DOUBLE__
-#define SIZEOF_FLOAT80     __SIZEOF_FLOAT80__
-#define SIZEOF_LONG_DOUBLE __SIZEOF_LONG_DOUBLE__
-#define SIZEOF_INTMAX      __SIZEOF_INTMAX__
+#if '\200' < 0
+#define CHAR_MIN '\200'
+#define CHAR_MAX '\177'
+#else
+#define CHAR_MIN '\0'
+#define CHAR_MAX '\377'
+#endif
 
 #define SCHAR_MAX     __SCHAR_MAX__
 #define SHRT_MAX      __SHRT_MAX__
@@ -2168,50 +2161,52 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
 #define WCHAR_MAX     __WCHAR_MAX__
 #define INTPTR_MAX    __INTPTR_MAX__
 #define PTRDIFF_MAX   __PTRDIFF_MAX__
+#define UINTPTR_MAX   __UINTPTR_MAX__
+#define UINT8_MAX     __UINT8_MAX__
+#define UINT16_MAX    __UINT16_MAX__
+#define UINT32_MAX    __UINT32_MAX__
+#define UINT64_MAX    __UINT64_MAX__
 
-#define SCHAR_MIN     __MAX2MIN(SCHAR_MAX)
-#define SHRT_MIN      __MAX2MIN(SHRT_MAX)
-#define INT_MIN       __MAX2MIN(INT_MAX)
-#define LONG_MIN      __MAX2MIN(LONG_MAX)
-#define LLONG_MIN     __MAX2MIN(LLONG_MAX)
-#define LONG_LONG_MIN __MAX2MIN(LONG_LONG_MAX)
-#define SIZE_MIN      __MAX2MIN(SIZE_MAX)
-#define INT8_MIN      __MAX2MIN(INT8_MAX)
-#define INT16_MIN     __MAX2MIN(INT16_MAX)
-#define INT32_MIN     __MAX2MIN(INT32_MAX)
-#define INT64_MIN     __MAX2MIN(INT64_MAX)
-#define INTMAX_MIN    __MAX2MIN(INTMAX_MAX)
-#define INTPTR_MIN    __MAX2MIN(INTPTR_MAX)
-#define WINT_MIN      __MAX2MIN(WINT_MAX)
-#define WCHAR_MIN     __MAX2MIN(WCHAR_MAX)
-#define PTRDIFF_MIN   __MAX2MIN(PTRDIFF_MAX)
+#define SCHAR_MIN     (-SCHAR_MAX - 1)
+#define SHRT_MIN      (-SHRT_MAX - 1)
+#define INT_MIN       (-INT_MAX - 1)
+#define LONG_MIN      (-LONG_MAX - 1)
+#define LLONG_MIN     (-LLONG_MAX - 1)
+#define LONG_LONG_MIN (-LONG_LONG_MAX - 1)
+#define SIZE_MIN      (-SIZE_MAX - 1)
+#define INT8_MIN      (-INT8_MAX - 1)
+#define INT16_MIN     (-INT16_MAX - 1)
+#define INT32_MIN     (-INT32_MAX - 1)
+#define INT64_MIN     (-INT64_MAX - 1)
+#define INTMAX_MIN    (-INTMAX_MAX - 1)
+#define INTPTR_MIN    (-INTPTR_MAX - 1)
+#define WINT_MIN      (-WINT_MAX - 1)
+#define WCHAR_MIN     (-WCHAR_MAX - 1)
+#define PTRDIFF_MIN   (-PTRDIFF_MAX - 1)
 
-#define USHRT_MAX      (SHRT_MAX << 1 | 1)
-#define UINT_MAX       (~0U)
-#define ULONG_MAX      (~0LU)
-#define ULLONG_MAX     (~0LLU)
-#define ULONG_LONG_MAX (~0LLU)
+#define USHRT_MAX 65535
+#define UINT_MAX  0xffffffffu
+#if __SIZEOF_LONG__ == 8
+#define ULONG_MAX 0xfffffffffffffffful
+#else
+#define ULONG_MAX 0xfffffffful
+#endif
+#define ULLONG_MAX     0xffffffffffffffffull
+#define ULONG_LONG_MAX 0xffffffffffffffffull
 
-#define UINTPTR_MAX __UINTPTR_MAX__
-#define UINT8_MAX   __UINT8_MAX__
-#define UINT16_MAX  __UINT16_MAX__
-#define UINT32_MAX  __UINT32_MAX__
-#define UINT64_MAX  __UINT64_MAX__
+#define USHRT_MIN      0
+#define UINT_MIN       0u
+#define ULONG_MIN      0ul
+#define ULLONG_MIN     0ull
+#define ULONG_LONG_MIN 0ull
+#define UINT8_MIN      0
+#define UINT16_MIN     0
+#define UINT32_MIN     0u
+#define UINT64_MIN     0ull
+#define UINTPTR_MIN    0ull
 
-#define USHRT_MIN      ((unsigned short)0)
-#define UINT_MIN       ((unsigned)0)
-#define ULONG_MIN      ((unsigned long)0)
-#define ULLONG_MIN     ((unsigned long long)0)
-#define ULONG_LONG_MIN ((unsigned long long)0)
-#define UINT8_MIN      ((uint8_t)0)
-#define UINT16_MIN     ((uint16_t)0)
-#define UINT32_MIN     ((uint32_t)0)
-#define UINT64_MIN     ((uint64_t)0)
-#define UINTMAX_MIN    ((uintmax_t)0)
-#define UINTPTR_MIN    ((uintptr_t)0)
-
-#define MB_CUR_MAX 6
-#define MB_LEN_MAX 6
+#define MB_CUR_MAX 4
+#define MB_LEN_MAX 4
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 
@@ -2222,11 +2217,13 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
   (((uintmax_t)0xffffffffffffffff) << 64 | (uintmax_t)0xffffffffffffffff)
 #define INT128_MIN  INTMAX_MIN
 #define INT128_MAX  INTMAX_MAX
+#define UINTMAX_MIN ((uintmax_t)0)
 #define UINT128_MIN ((uintmax_t)0)
 #define UINT128_MAX UINTMAX_MAX
 #else
 #define INTMAX_MAX  __INT64_MAX__
 #define UINTMAX_MAX __UINT64_MAX__
+#define UINTMAX_MIN UINT64_MIN
 #endif /* GCC 4.6+ */
 
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -2293,7 +2290,7 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
               █████████████ ████████░░███████░░░██████ ▓██████████
                █████████████ ██████░░░████████████  █████████████
 ╔────────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § xnu's not unix » carnegie mellon mach microkernel         ─╬─│┼
+│ cosmopolitan § xnu's not unix! » carnegie mellon mach microkernel        ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 #define XNU_SYSCALL_MASK_MACH     0x1000000
@@ -2307,50 +2304,14 @@ typedef __UINT_LEAST64_TYPE__ uint_least64_t;
 #define kXnuNtNsBase     0x060 /* uint64_t */
 #define kXnuNtGeneration 0x068 /* uint32_t */
 
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
 bool swtch(void);
-bool swtch_pri(int pri);
+bool swtch_pri(int);
 
-
-
-/*!BEGIN libc/macros.h */
-
-#define COSMOPOLITAN_LIBC_MACROS_H_
-#if 0
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § macros                                                    ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-#endif
-
-/**
- * @fileoverview Common C preprocessor, assembler, and linker macros.
- */
-
-#define TRUE  1
-#define FALSE 0
-
-#define alignas(x) _Alignas(x)
-
-#define ROUNDUP(X, K)       (((X) + (K)-1) & -(K))
-#define ROUNDDOWN(X, K)     ((X) & -(K))
-#define ABS(X)              ((X) >= 0 ? (X) : -(X))
-#define MIN(X, Y)           ((Y) > (X) ? (X) : (Y))
-#define MAX(X, Y)           ((Y) < (X) ? (X) : (Y))
-#define PASTE(A, B)         __PASTE(A, B)
-#define STRINGIFY(A)        __STRINGIFY(A)
-#define EQUIVALENT(X, Y)    (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))
-#define TYPE_BIT(type)      (sizeof(type) * CHAR_BIT)
-#define TYPE_SIGNED(type)   (((type)-1) < 0)
-#define TYPE_INTEGRAL(type) (((type)0.5) != 0.5)
-#define INT_STRLEN_MAXIMUM(type) \
-  ((TYPE_BIT(type) - TYPE_SIGNED(type)) * 302 / 1000 + 1 + TYPE_SIGNED(type))
-
-#define ARRAYLEN(A) \
-  ((sizeof(A) / sizeof(*(A))) / ((unsigned)!(sizeof(A) % sizeof(*(A)))))
-
-#define __STRINGIFY(A) #A
-#define __PASTE(A, B)  A##B
-#ifdef __ASSEMBLER__
-#endif /* __ASSEMBLER__ */
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
 /*!BEGIN libc/math.h */
@@ -2503,6 +2464,8 @@ double sqrt(double);
 double tan(double);
 double tanh(double);
 double trunc(double);
+double lgamma(double);
+double lgamma_r(double, int *);
 
 float acosf(float);
 float acoshf(float);
@@ -3157,6 +3120,7 @@ int wcscmp(const wchar_t *, const wchar_t *) strlenesque;
 int wcsncmp(const wchar_t *, const wchar_t *, size_t) strlenesque;
 int wmemcmp(const wchar_t *, const wchar_t *, size_t) strlenesque;
 int strcasecmp(const char *, const char *) strlenesque;
+int memcasecmp(const void *, const void *, size_t) strlenesque;
 int strcasecmp16(const char16_t *, const char16_t *) strlenesque;
 int wcscasecmp(const wchar_t *, const wchar_t *) strlenesque;
 int strncasecmp(const char *, const char *, size_t) strlenesque;
@@ -3213,14 +3177,12 @@ compatfn wchar_t *wmemcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmempcpy(wchar_t *, const wchar_t *, size_t) memcpyesque;
 compatfn wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t) memcpyesque;
 int timingsafe_memcmp(const void *, const void *, size_t);
+void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
 void *memmem(const void *, size_t, const void *, size_t)
     paramsnonnull() nothrow nocallback nosideeffect;
 char *strerror(int) returnsnonnull nothrow nocallback;
-
-char *tinystrstr(const char *, const char *) strlenesque;
-char16_t *tinystrstr16(const char16_t *, const char16_t *) strlenesque;
-void *tinymemmem(const void *, size_t, const void *, size_t) strlenesque;
-void *tinymemccpy(void *, const void *, int, size_t) memcpyesque;
+long a64l(const char *);
+char *l64a(long);
 
 char *strntolower(char *, size_t);
 char *strtolower(char *) paramsnonnull();
@@ -3253,8 +3215,21 @@ int mbtowc(wchar_t *, const char *, size_t);
 size_t mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);
 size_t mbsrtowcs(wchar_t *, const char **, size_t, mbstate_t *);
 size_t mbstowcs(wchar_t *, const char *, size_t);
+size_t wcrtomb(char *, wchar_t, mbstate_t *);
+size_t c32rtomb(char *, char32_t, mbstate_t *);
+size_t mbrtoc32(char32_t *, const char *, size_t, mbstate_t *);
+size_t c16rtomb(char *, char16_t, mbstate_t *);
+size_t mbrtoc16(char16_t *, const char *, size_t, mbstate_t *);
+size_t mbrlen(const char *, size_t, mbstate_t *);
+size_t mbsnrtowcs(wchar_t *, const char **, size_t, size_t, mbstate_t *);
+size_t wcsnrtombs(char *, const wchar_t **, size_t, size_t, mbstate_t *);
+size_t wcsrtombs(char *, const wchar_t **, size_t, mbstate_t *);
+size_t wcstombs(char *, const wchar_t *, size_t);
+int mbsinit(const mbstate_t *);
+int mblen(const char *, size_t);
 int wctomb(char *, wchar_t);
 int wctob(wint_t);
+wint_t btowc(int);
 
 size_t strclen(const char *) nosideeffect;
 size_t strnclen(const char *, size_t) nosideeffect;
@@ -3441,7 +3416,7 @@ COSMOPOLITAN_C_END_
 
 #define kZipAlign 2
 
-#define kZipCosmopolitanVersion 1
+#define kZipCosmopolitanVersion 20
 
 #define kZipOsDos         0
 #define kZipOsAmiga       1
@@ -3476,7 +3451,7 @@ COSMOPOLITAN_C_END_
 
 #define kZipCdirHdrMagic   0x06054b50 /* PK♣♠ "PK\5\6" */
 #define kZipCdirHdrMinSize 22
-#define kZipCdirAlign      64 /* our choice; actually 2 */
+#define kZipCdirAlign      kZipAlign
 #define kZipCdirHdrLinkableSize \
   ROUNDUP(kZipCfileHdrMinSize + PATH_MAX, kZipCdirAlign)
 
@@ -3500,6 +3475,7 @@ COSMOPOLITAN_C_END_
 #define kZipLfileOffsetLastmodifieddate  12
 #define kZipLfileOffsetCrc32             14
 #define kZipLfileOffsetCompressedsize    18
+#define kZipLfileOffsetUncompressedsize  22
 
 #define kZipGflagUtf8 0x800
 
@@ -3571,11 +3547,12 @@ COSMOPOLITAN_C_END_
 #define ZIP_LFILE_CRC32(P) READ32LE((P) + kZipLfileOffsetCrc32)
 #define ZIP_LFILE_COMPRESSEDSIZE(P) \
   READ32LE((P) + kZipLfileOffsetCompressedsize)
-#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) READ32LE((P) + 22)
-#define ZIP_LFILE_NAMESIZE(P)         READ16LE((P) + 26)
-#define ZIP_LFILE_EXTRASIZE(P)        READ16LE((P) + 28)
-#define ZIP_LFILE_NAME(P)             ((const char *)(&(P)[30]))
-#define ZIP_LFILE_EXTRA(P)            (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
+#define ZIP_LFILE_UNCOMPRESSEDSIZE(P) \
+  READ32LE((P) + kZipLfileOffsetUncompressedsize)
+#define ZIP_LFILE_NAMESIZE(P)  READ16LE((P) + 26)
+#define ZIP_LFILE_EXTRASIZE(P) READ16LE((P) + 28)
+#define ZIP_LFILE_NAME(P)      ((const char *)(&(P)[30]))
+#define ZIP_LFILE_EXTRA(P)     (&(P)[30 + ZIP_LFILE_NAMESIZE(P)])
 #define ZIP_LFILE_HDRSIZE(P) \
   (ZIP_LFILE_NAMESIZE(P) + ZIP_LFILE_EXTRASIZE(P) + kZipLfileHdrMinSize)
 #define ZIP_LFILE_CONTENT(P) ((P) + ZIP_LFILE_HDRSIZE(P))
@@ -3669,92 +3646,6 @@ intptr_t critbit0_allprefixed(struct critbit0 *, const char *,
 bool critbit0_emplace(struct critbit0 *, char *, size_t) paramsnonnull();
 
 COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
-/*!BEGIN libc/alg/reverse.h */
-
-#define COSMOPOLITAN_LIBC_ALG_REVERSE_H_
-
-
-/*!BEGIN libc/bits/xchg.h */
-
-#define COSMOPOLITAN_LIBC_BITS_XCHG_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-/**
- * Exchanges *MEMORY into *LOCALVAR.
- *
- * @return *MEMORY
- * @see lockcmpxchg()
- * todo(jart): what's the point of this?
- */
-#define xchg(MEMORY, LOCALVAR)              \
-  ({                                        \
-    autotype(MEMORY) Memory = (MEMORY);     \
-    typeof(Memory) LocalVar = (LOCALVAR);   \
-    typeof(*Memory) Temp;                   \
-    memcpy(&Temp, Memory, sizeof(Temp));    \
-    memcpy(Memory, LocalVar, sizeof(Temp)); \
-    memcpy(LocalVar, &Temp, sizeof(Temp));  \
-    Temp;                                   \
-  })
-
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-/**
- * Reverses array.
- *
- * @param ARRAY is a typed array or a pointer to one
- * @param COUNT is the number of items
- * @return pointer to start of array
- * @see ARRAYLEN()
- */
-#ifndef reverse
-#define reverse(ARRAY, COUNT)              \
-  ({                                       \
-    autotype(&(ARRAY)[0]) Array = (ARRAY); \
-    size_t Count = (COUNT);                \
-    if (Count) {                           \
-      size_t Start = 0;                    \
-      size_t End = Count - 1;              \
-      while (Start < End) {                \
-        xchg(&Array[Start], &Array[End]);  \
-        ++Start;                           \
-        --End;                             \
-      }                                    \
-    }                                      \
-    Array;                                 \
-  })
-#endif /* reverse */
-
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
-/*!BEGIN libc/alg/shuffle.h */
-
-#define COSMOPOLITAN_LIBC_RAND_SHUFFLE_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-
-/**
- * Fisher-Yates shuffle.
- *
- * @param R is a function like rand() → ≥0
- * @param A is a typed array
- * @param n is the number of items in A
- * @see ARRAYLEN()
- */
-#ifndef shuffle
-#define shuffle(R, A, n)                      \
-  do {                                        \
-    autotype(A) Array = (A);                  \
-    for (size_t i = (n)-1; i >= 1; --i) {     \
-      xchg(&Array[i], &Array[R() % (i + 1)]); \
-    }                                         \
-  } while (0)
-#endif /* shuffle */
-
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
@@ -4410,178 +4301,6 @@ COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
-/*!BEGIN libc/bits/safemacros.h */
-
-#define COSMOPOLITAN_LIBC_BITS_SAFEMACROS_H_
-
-
-/*!BEGIN libc/runtime/runtime.h */
-
-#define COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § runtime                                                   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-typedef long jmp_buf[8] forcealign(CACHELINE);
-
-extern int g_argc;                                  /* CRT */
-extern char **g_argv;                               /* CRT */
-extern char **environ;                              /* CRT */
-extern unsigned long *g_auxv;                       /* CRT */
-extern char *program_invocation_name;               /* RII */
-extern char *program_invocation_short_name;         /* RII */
-extern uint64_t g_syscount;                         /* RII */
-extern const uint64_t kStartTsc;                    /* RII */
-extern const char kTmpPath[];                       /* RII */
-extern const char kNtSystemDirectory[];             /* RII */
-extern const char kNtWindowsDirectory[];            /* RII */
-extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */
-extern unsigned char _ehead[] forcealign(PAGESIZE); /* αpε */
-extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
-extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
-extern unsigned char _end[] forcealign(FRAMESIZE);  /* αpε */
-extern unsigned char _ereal;                        /* αpε */
-extern unsigned char __privileged_start;            /* αpε */
-extern unsigned char __test_start;                  /* αpε */
-extern unsigned char __ro;                          /* αpε */
-extern unsigned char *__relo_start[];               /* αpε */
-extern unsigned char *__relo_end[];                 /* αpε */
-extern uint8_t __zip_start[];                       /* αpε */
-extern uint8_t __zip_end[];                         /* αpε */
-
-long missingno();
-void mcount(void);
-unsigned long getauxval(unsigned long);
-void *mapanon(size_t) vallocesque attributeallocsize((1));
-int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
-void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
-void exit(int) wontreturn;
-void _exit(int) libcesque wontreturn;
-void _Exit(int) libcesque wontreturn;
-void abort(void) wontreturn noinstrument;
-void panic(void) wontreturn noinstrument privileged;
-void triplf(void) wontreturn noinstrument privileged;
-int __cxa_atexit(void *, void *, void *) libcesque;
-int atfork(void *, void *) libcesque;
-int atexit(void (*)(void)) libcesque;
-void free_s(void *) paramsnonnull() libcesque;
-int close_s(int *) paramsnonnull() libcesque;
-char *getenv(const char *) paramsnonnull() nosideeffect libcesque;
-int putenv(char *) paramsnonnull();
-int setenv(const char *, const char *, int) paramsnonnull();
-int unsetenv(const char *);
-int clearenv(void);
-void fpreset(void);
-void savexmm(void *);
-void loadxmm(void *);
-void peekall(void);
-int issetugid(void);
-void weakfree(void *) libcesque;
-bool isheap(void *);
-void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
-void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
-int munmap(void *, uint64_t);
-int mprotect(void *, uint64_t, int) privileged;
-int msync(void *, size_t, int);
-void __print(const void *, size_t);
-void __print_string(const char *);
-void *sbrk(intptr_t);
-int brk(void *);
-int NtGetVersion(void);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § runtime » optimizations                                   ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define _exit(RC) _Exit(RC)
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-long min(long, long);
-long max(long, long);
-long roundup(long, long);
-long rounddown(long, long);
-bool isempty(const char *);
-const char *nulltoempty(const char *);
-const char *emptytonull(const char *);
-const char *firstnonnull(const char *, const char *);
-uint64_t(unsignedsubtract)(uint64_t, uint64_t) pureconst;
-
-#if !defined(__STRICT_ANSI__) && defined(__GNUC__) && \
-!defined(__VSCODE_INTELLISENSE__)
-
-#define min(x, y)              \
-  ({                           \
-    autotype(x) MinX = (x);    \
-    autotype(y) MinY = (y);    \
-    MinX < MinY ? MinX : MinY; \
-  })
-
-#define max(x, y)              \
-  ({                           \
-    autotype(x) MaxX = (x);    \
-    autotype(y) MaxY = (y);    \
-    MaxX > MaxY ? MaxX : MaxY; \
-  })
-
-#define roundup(x, k)            \
-  ({                             \
-    autotype(x) RoundupX = (x);  \
-    autotype(k) RoundupK = (k);  \
-    ROUNDUP(RoundupX, RoundupK); \
-  })
-
-#define rounddown(x, k)                \
-  ({                                   \
-    autotype(x) RounddownX = (x);      \
-    autotype(k) RounddownK = (k);      \
-    ROUNDDOWN(RounddownX, RounddownK); \
-  })
-
-#define isempty(s)              \
-  ({                            \
-    autotype(s) IsEmptyS = (s); \
-    !IsEmptyS || !(*IsEmptyS);  \
-  })
-
-#define nulltoempty(s)                \
-  ({                                  \
-    autotype(s) NullToEmptyS = (s);   \
-    NullToEmptyS ? NullToEmptyS : ""; \
-  })
-
-#define firstnonnull(a, b)                         \
-  ({                                               \
-    autotype(a) FirstNonNullA = (a);               \
-    autotype(a) FirstNonNullB = (b);               \
-    if (!FirstNonNullA && !FirstNonNullB) abort(); \
-    FirstNonNullA ? FirstNonNullA : FirstNonNullB; \
-  })
-
-#define emptytonull(s)                                      \
-  ({                                                        \
-    autotype(s) EmptyToNullS = (s);                         \
-    EmptyToNullS && !(*EmptyToNullS) ? NULL : EmptyToNullS; \
-  })
-
-#define unsignedsubtract(a, b)                                 \
-  ({                                                           \
-    uint64_t UnsubA = (a);                                     \
-    uint64_t UnsubB = (b);                                     \
-    UnsubA >= UnsubB ? UnsubA - UnsubB : ~UnsubB + UnsubA + 1; \
-  })
-
-#endif /* GNU && !ANSI */
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
 /*!BEGIN libc/bits/segmentation.h */
 
 #define COSMOPOLITAN_LIBC_BITS_SEGMENTATION_H_
@@ -4707,7 +4426,7 @@ struct siginfo {
     };
     char __ignoreme[128 - 2 * sizeof(int32_t) - sizeof(int64_t)];
   };
-} forcealign(8);
+};
 
 typedef struct siginfo siginfo_t;
 
@@ -4808,7 +4527,7 @@ struct FpuStackEntry {
   uint16_t padding[3];
 };
 
-struct FpuState {
+struct thatispacked FpuState {
   uint16_t cwd;
   uint16_t swd;
   uint16_t ftw;
@@ -4865,26 +4584,7 @@ struct MachineContext {
 typedef struct MachineContext mcontext_t;
 
 struct ucontext {
-  union {
-    uint64_t uc_flags;
-    struct {
-      unsigned cf : 1;  /* bit  0: carry flag */
-      unsigned vf : 1;  /* bit  1: V flag: was 8085 signed-number overflow */
-      unsigned pf : 1;  /* bit  2: parity flag */
-      unsigned rf : 1;  /* bit  3: always zero [undoc] */
-      unsigned af : 1;  /* bit  4: auxiliary flag */
-      unsigned kf : 1;  /* bit  5: K flag = V flag ⊕ sgn(result) [undoc] */
-      unsigned zf : 1;  /* bit  6: zero flag */
-      unsigned sf : 1;  /* bit  7: sign flag */
-      unsigned tf : 1;  /* bit  8: trap flag */
-      unsigned if_ : 1; /* bit  9: interrupt enable flag */
-      unsigned df : 1;  /* bit 10: direction flag */
-      unsigned of : 1;  /* bit 11: overflow flag */
-      unsigned pl : 2;  /* b12-13: i/o privilege level (80286+) */
-      unsigned nt : 1;  /* bit 14: nested task flag (80286+) */
-      unsigned pc : 1;  /* bit 15: oldskool flag */
-    };
-  };
+  uint64_t uc_flags;
   struct ucontext *uc_link;
   stack_t uc_stack;
   mcontext_t uc_mcontext; /* use this */
@@ -5378,6 +5078,28 @@ COSMOPOLITAN_C_END_
 #define COSMOPOLITAN_LIBC_FMT_PFLINK_H_
 
 
+/*!BEGIN libc/fmt/fmts.h */
+
+#define COSMOPOLITAN_LIBC_FMT_FMTS_H_
+
+#define PRINTF_NTOA_BUFFER_SIZE 144
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+int __fmt_pad(int (*)(long, void *), void *, unsigned long) hidden;
+int __fmt_stoa(int (*)(long, void *), void *, void *, unsigned long,
+               unsigned long, unsigned long, unsigned char,
+               unsigned char) hidden;
+int __fmt_ntoa(int (*)(long, void *), void *, va_list, unsigned char,
+               unsigned long, unsigned long, unsigned long, unsigned char,
+               const char *) hidden;
+char *__fmt_dtoa(double, int, int, int *, int *, char **) hidden;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+
 /*!BEGIN libc/mem/mem.h */
 
 #define COSMOPOLITAN_LIBC_MEM_MEM_H_
@@ -5403,8 +5125,7 @@ void *reallocarray(void *, size_t, size_t) nodiscard;
 void *valloc(size_t) attributeallocsize((1)) vallocesque;
 void *pvalloc(size_t) attributeallocsize((1)) mallocesque;
 char *strdup(const char *) paramsnonnull() mallocesque;
-char *strndup(const char *, size_t) paramsnonnull()
-    attributeallocsize((2)) mallocesque;
+char *strndup(const char *, size_t) paramsnonnull() mallocesque;
 int posix_memalign(void **, size_t, size_t); /* wut */
 bool __grow(void *, size_t *, size_t, size_t) paramsnonnull((1, 2)) libcesque;
 
@@ -5443,11 +5164,119 @@ COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
+/*!BEGIN libc/runtime/runtime.h */
+
+#define COSMOPOLITAN_LIBC_RUNTIME_RUNTIME_H_
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § runtime                                                   ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+typedef long jmp_buf[8] forcealign(CACHELINE);
+
+extern int __argc;                                  /* CRT */
+extern char **__argv;                               /* CRT */
+extern char **environ;                              /* CRT */
+extern unsigned long *__auxv;                       /* CRT */
+extern char *program_invocation_name;               /* RII */
+extern char *program_invocation_short_name;         /* RII */
+extern uint64_t g_syscount;                         /* RII */
+extern const uint64_t kStartTsc;                    /* RII */
+extern const char kTmpPath[];                       /* RII */
+extern const char kNtSystemDirectory[];             /* RII */
+extern const char kNtWindowsDirectory[];            /* RII */
+extern unsigned char _base[] forcealign(PAGESIZE);  /* αpε */
+extern unsigned char _ehead[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _etext[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _edata[] forcealign(PAGESIZE); /* αpε */
+extern unsigned char _end[] forcealign(FRAMESIZE);  /* αpε */
+extern unsigned char _ereal;                        /* αpε */
+extern unsigned char __privileged_start;            /* αpε */
+extern unsigned char __test_start;                  /* αpε */
+extern unsigned char __ro;                          /* αpε */
+extern unsigned char *__relo_start[];               /* αpε */
+extern unsigned char *__relo_end[];                 /* αpε */
+extern uint8_t __zip_start[];                       /* αpε */
+extern uint8_t __zip_end[];                         /* αpε */
+
+void mcount(void);
+unsigned long getauxval(unsigned long);
+void *mapanon(size_t) vallocesque attributeallocsize((1));
+int setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+void longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
+int _setjmp(jmp_buf) libcesque returnstwice paramsnonnull();
+void _longjmp(jmp_buf, int) libcesque wontreturn paramsnonnull();
+void exit(int) wontreturn;
+void _exit(int) libcesque wontreturn;
+void _Exit(int) libcesque wontreturn;
+void abort(void) wontreturn noinstrument;
+int __cxa_atexit(void *, void *, void *) libcesque;
+int atfork(void *, void *) libcesque;
+int atexit(void (*)(void)) libcesque;
+char *getenv(const char *) paramsnonnull() nosideeffect libcesque;
+int putenv(char *) paramsnonnull();
+int setenv(const char *, const char *, int) paramsnonnull();
+int unsetenv(const char *);
+int clearenv(void);
+void fpreset(void);
+int issetugid(void);
+void *mmap(void *, uint64_t, int32_t, int32_t, int32_t, int64_t);
+void *mremap(void *, uint64_t, uint64_t, int32_t, void *);
+int munmap(void *, uint64_t);
+int mprotect(void *, uint64_t, int) privileged;
+int msync(void *, size_t, int);
+void *sbrk(intptr_t);
+int brk(void *);
+
+bool _isheap(void *);
+int NtGetVersion(void);
+long missingno();
+void __print(const void *, size_t);
+void __print_string(const char *);
+void _loadxmm(void *);
+void _peekall(void);
+void _savexmm(void *);
+void _weakfree(void *);
+void free_s(void *) paramsnonnull() libcesque;
+int close_s(int *) paramsnonnull() libcesque;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+
 /*!BEGIN libc/unicode/unicode.h */
 
 #define COSMOPOLITAN_LIBC_UNICODE_UNICODE_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
+
+struct lconv {
+  char *decimal_point;
+  char *thousands_sep;
+  char *grouping;
+  char *int_curr_symbol;
+  char *currency_symbol;
+  char *mon_decimal_point;
+  char *mon_thousands_sep;
+  char *mon_grouping;
+  char *positive_sign;
+  char *negative_sign;
+  char int_frac_digits;
+  char frac_digits;
+  char p_cs_precedes;
+  char p_sep_by_space;
+  char n_cs_precedes;
+  char n_sep_by_space;
+  char p_sign_posn;
+  char n_sign_posn;
+  char int_p_cs_precedes;
+  char int_n_cs_precedes;
+  char int_p_sep_by_space;
+  char int_n_sep_by_space;
+  char int_p_sign_posn;
+  char int_n_sign_posn;
+};
 
 int wcwidth(wchar_t) pureconst;
 int wcswidth(const wchar_t *, size_t) strlenesque;
@@ -5456,6 +5285,7 @@ int strwidth(const char *, size_t) strlenesque;
 int strnwidth(const char *, size_t, size_t) strlenesque;
 int strwidth16(const char16_t *, size_t) strlenesque;
 int strnwidth16(const char16_t *, size_t, size_t) strlenesque;
+struct lconv *localeconv(void);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -5471,19 +5301,20 @@ COSMOPOLITAN_C_END_
  * format strings are constexprs that only contain directives.
  */
 
-#define PFLINK(FMT)                                               \
-  ({                                                              \
-    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                       \
-      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");    \
-      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror"); \
-      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||           \
-                        ___PFLINK(FMT, strpbrk, "0123456789"))) { \
-        STATIC_YOINK("strnwidth");                                \
-        STATIC_YOINK("strnwidth16");                              \
-        STATIC_YOINK("wcsnwidth");                                \
-      }                                                           \
-    }                                                             \
-    FMT;                                                          \
+#define PFLINK(FMT)                                                     \
+  ({                                                                    \
+    if (___PFLINK(FMT, strpbrk, "faAeEgG")) STATIC_YOINK("__fmt_dtoa"); \
+    if (___PFLINK(FMT, strpbrk, "cmrqs")) {                             \
+      if (___PFLINK(FMT, strchr, '#')) STATIC_YOINK("kCp437");          \
+      if (___PFLINK(FMT, strstr, "%m")) STATIC_YOINK("strerror");       \
+      if (!IsTiny() && (___PFLINK(FMT, strstr, "%*") ||                 \
+                        ___PFLINK(FMT, strpbrk, "0123456789"))) {       \
+        STATIC_YOINK("strnwidth");                                      \
+        STATIC_YOINK("strnwidth16");                                    \
+        STATIC_YOINK("wcsnwidth");                                      \
+      }                                                                 \
+    }                                                                   \
+    FMT;                                                                \
   })
 
 #define SFLINK(FMT)                    \
@@ -5521,6 +5352,7 @@ COSMOPOLITAN_C_END_
 #define SFLINK(FMT) FMT
 #ifdef __GNUC__
 __asm__(".section .yoink\n\t"
+        "nopl\t__fmt_dtoa(%rip)\n\t"
         "nopl\tkCp437(%rip)\n\t"
         "nopl\tstrerror(%rip)\n\t"
         "nopl\tstrnwidth(%rip)\n\t"
@@ -5533,6 +5365,7 @@ __asm__(".section .yoink\n\t"
 #else
 static long __pflink(long x) {
   x |= kCp437[0];
+  x |= __fmt_dtoa(0, 0, 0, 0, 0, 0);
   x |= strnwidth(0, 0, 0);
   x |= strnwidth16(0, 0, 0);
   x |= wcsnwidth(0, 0, 0);
@@ -5772,9 +5605,6 @@ COSMOPOLITAN_C_START_
 
 typedef int sig_atomic_t;
 
-extern const struct sigset kSigsetFull;
-extern const struct sigset kSigsetEmpty;
-
 DIR *fdopendir(int) nodiscard;
 DIR *opendir(const char *) nodiscard;
 bool fileexists(const char *);
@@ -5953,9 +5783,9 @@ int vdprintf(int, const char *, va_list) paramsnonnull();
 void _init_onntconsoleevent(void);
 void _init_wincrash(void);
 
-#ifndef __SIGACTION
-#define __SIGACTION(FN, SIG, ...)          \
-  ({                                       \
+#ifndef __SIGACTION_YOINK
+#define __SIGACTION_YOINK(SIG)             \
+  do {                                     \
     if (SupportsWindows()) {               \
       if (__builtin_constant_p(SIG)) {     \
         switch (SIG) {                     \
@@ -5980,14 +5810,23 @@ void _init_wincrash(void);
         YOINK(_init_wincrash);             \
       }                                    \
     }                                      \
-    (FN)(SIG, __VA_ARGS__);                \
-  })
+  } while (0)
 #endif
 
-#define dprintf(FD, FMT, ...)    (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
-#define sigaction(SIG, ACT, OLD) __SIGACTION(sigaction, SIG, ACT, OLD)
-#define signal(SIG, HAND)        __SIGACTION(signal, SIG, HAND)
-#define vdprintf(FD, FMT, VA)    (vdprintf)(FD, PFLINK(FMT), VA)
+#define sigaction(SIG, ACT, OLD) \
+  ({                             \
+    __SIGACTION_YOINK(SIG);      \
+    sigaction(SIG, (ACT), OLD);  \
+  })
+
+#define signal(SIG, HAND)   \
+  ({                        \
+    __SIGACTION_YOINK(SIG); \
+    signal(SIG, HAND);      \
+  })
+
+#define dprintf(FD, FMT, ...) (dprintf)(FD, PFLINK(FMT), ##__VA_ARGS__)
+#define vdprintf(FD, FMT, VA) (vdprintf)(FD, PFLINK(FMT), VA)
 
 #endif /* GNU && !ANSI */
 COSMOPOLITAN_C_END_
@@ -6345,6 +6184,7 @@ int ioctl(int, uint64_t, void *);
 
 #define ioctl(FD, REQUEST, MEMORY) ioctl_dispatch(FD, REQUEST, MEMORY)
 
+#define __EQUIVALENT(X, Y) (__builtin_constant_p((X) == (Y)) && ((X) == (Y)))
 #define __IOCTL_DISPATCH(CMP, FD, REQUEST, MEMORY)                       \
   do {                                                                   \
     if (CMP(request, TIOCGWINSZ)) return ioctl_tiocgwinsz(FD, MEMORY);   \
@@ -6366,7 +6206,7 @@ int ioctl_tiocswinsz_nt(int, void *);
 int ioctl_default(int, uint64_t, void *);
 
 forceinline int ioctl_dispatch(int fd, uint64_t request, void *memory) {
-  __IOCTL_DISPATCH(EQUIVALENT, fd, request, memory);
+  __IOCTL_DISPATCH(__EQUIVALENT, fd, request, memory);
   return ioctl_default(fd, request, memory);
 }
 
@@ -6552,9 +6392,9 @@ int posix_openpt(int) nodiscard;
 
 #define tcsetattr(FD, OPT, TIO) tcsetattr_dispatch(FD, OPT, TIO)
 forceinline int tcsetattr_dispatch(int fd, int opt, const struct termios *tio) {
-  if (EQUIVALENT(opt, TCSANOW)) return ioctl(fd, TCSETS, (void *)tio);
-  if (EQUIVALENT(opt, TCSADRAIN)) return ioctl(fd, TCSETSW, (void *)tio);
-  if (EQUIVALENT(opt, TCSAFLUSH)) return ioctl(fd, TCSETSF, (void *)tio);
+  if (__EQUIVALENT(opt, TCSANOW)) return ioctl(fd, TCSETS, (void *)tio);
+  if (__EQUIVALENT(opt, TCSADRAIN)) return ioctl(fd, TCSETSW, (void *)tio);
+  if (__EQUIVALENT(opt, TCSAFLUSH)) return ioctl(fd, TCSETSF, (void *)tio);
   return (tcsetattr)(fd, opt, tio);
 }
 
@@ -6848,7 +6688,10 @@ struct msghdr {            /* Linux+NT ABI */
 };
 
 const char *inet_ntop(int, const void *, char *, uint32_t);
-int inet_pton(int af, const char *, void *);
+int inet_aton(const char *, struct in_addr *);
+int inet_pton(int, const char *, void *);
+uint32_t inet_addr(const char *);
+char *inet_ntoa(struct in_addr);
 int parseport(const char *);
 
 int socket(int, int, int) nodiscard;
@@ -6871,7 +6714,7 @@ ssize_t writev(int, const struct iovec *, int);
 ssize_t sendfile(int, int, int64_t *, size_t);
 int getsockopt(int, int, int, void *, uint32_t *) paramsnonnull((5));
 int setsockopt(int, int, int, const void *, uint32_t);
-int socketpair(int, int, int, int64_t[2]) paramsnonnull();
+int socketpair(int, int, int, int[2]) paramsnonnull();
 int poll(struct pollfd *, uint64_t, int32_t) paramsnonnull();
 int ppoll(struct pollfd *, uint64_t, const struct timespec *,
           const struct sigset *) paramsnonnull((1, 4));
@@ -6894,16 +6737,186 @@ COSMOPOLITAN_C_END_
 /*!BEGIN libc/dns/dns.h */
 
 #define COSMOPOLITAN_LIBC_DNS_DNS_H_
+
+
+/*!BEGIN libc/dns/resolvconf.h */
+
+#define COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_
+
+
+/*!BEGIN libc/stdio/stdio.h */
+
+#define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
+
+#define FILENAME_MAX PATH_MAX
+
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-#define DNS_PORT 53
-#define DNS_NAME_MAX 253
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o                                              ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+typedef struct FILE {
+  uint8_t bufmode; /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
+  bool noclose;    /* 0x01 for fake dup() */
+  uint32_t iomode; /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
+  int32_t state;   /* 0x08 0=OK, -1=EOF, >0=errno */
+  int fd;          /* 0x0c ≥0=fd, -1=closed|buffer */
+  uint32_t beg;    /* 0x10 */
+  uint32_t end;    /* 0x14 */
+  char *buf;       /* 0x18 */
+  uint32_t size;   /* 0x20 */
+  uint32_t nofree; /* 0x24 */
+  int pid;         /* 0x28 */
+} FILE;
+
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+
+errno_t ferror(FILE *) paramsnonnull();
+void clearerr(FILE *) paramsnonnull();
+int feof(FILE *) paramsnonnull();
+int getc(FILE *) paramsnonnull();
+int putc(int, FILE *) paramsnonnull();
+int fflush(FILE *);
+int fgetc(FILE *) paramsnonnull();
+int ungetc(int, FILE *) paramsnonnull();
+int fileno(FILE *) paramsnonnull() nosideeffect;
+int fputc(int, FILE *) paramsnonnull();
+int fputs(const char *, FILE *) paramsnonnull();
+int fputws(const wchar_t *, FILE *) paramsnonnull();
+char *fgets(char *, int, FILE *) paramsnonnull();
+wchar_t *fgetws(wchar_t *, int, FILE *) paramsnonnull();
+wint_t putwc(wchar_t, FILE *) paramsnonnull();
+wint_t fputwc(wchar_t, FILE *) paramsnonnull();
+wint_t putwchar(wchar_t);
+wint_t getwchar(void);
+wint_t getwc(FILE *) paramsnonnull();
+wint_t fgetwc(FILE *) paramsnonnull();
+wint_t ungetwc(wint_t, FILE *) paramsnonnull();
+int getchar(void);
+int putchar(int);
+int puts(const char *) paramsnonnull();
+ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
+ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
+FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;
+FILE *fdopen(int, const char *) paramsnonnull() nodiscard;
+FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;
+FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
+size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
+size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
+int fclose(FILE *);
+int fclose_s(FILE **) paramsnonnull();
+int fseek(FILE *, long, int) paramsnonnull();
+long ftell(FILE *) paramsnonnull();
+int fseeko(FILE *, int64_t, int) paramsnonnull();
+int64_t ftello(FILE *) paramsnonnull();
+void rewind(FILE *) paramsnonnull();
+int fopenflags(const char *) paramsnonnull();
+void setbuf(FILE *, char *);
+void setbuffer(FILE *, char *, size_t);
+int setvbuf(FILE *, char *, int, size_t);
+FILE *popen(const char *, const char *);
+int pclose(FILE *);
+
+typedef uint64_t fpos_t;
+compatfn char *gets(char *) paramsnonnull();
+compatfn int fgetpos(FILE *, fpos_t *) paramsnonnull();
+compatfn int fsetpos(FILE *, const fpos_t *) paramsnonnull();
+
+int system(const char *);
+int systemexec(const char *);
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o » formatting                                 ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+int printf(const char *, ...) printfesque(1)
+    paramsnonnull((1)) nothrow nocallback;
+int vprintf(const char *, va_list) paramsnonnull() nothrow nocallback;
+int fprintf(FILE *, const char *, ...) printfesque(2)
+    paramsnonnull((1, 2)) nothrow nocallback;
+int vfprintf(FILE *, const char *, va_list) paramsnonnull() nothrow nocallback;
+int scanf(const char *, ...) scanfesque(1);
+int vscanf(const char *, va_list);
+int fscanf(FILE *, const char *, ...) scanfesque(2);
+int vfscanf(FILE *, const char *, va_list);
+
+/*───────────────────────────────────────────────────────────────────────────│─╗
+│ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define getc(f)     fgetc(f)
+#define getwc(f)    fgetwc(f)
+#define putc(c, f)  fputc(c, f)
+#define putwc(c, f) fputwc(c, f)
+
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
+#define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
+#define fprintf(F, FMT, ...) (fprintf)(F, PFLINK(FMT), ##__VA_ARGS__)
+#define vfprintf(F, FMT, VA) (vfprintf)(F, PFLINK(FMT), VA)
+#define vscanf(FMT, VA)      (vscanf)(SFLINK(FMT), VA)
+#define scanf(FMT, ...)      (scanf)(SFLINK(FMT), ##__VA_ARGS__)
+#define fscanf(F, FMT, ...)  (fscanf)(F, SFLINK(FMT), ##__VA_ARGS__)
+#define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
+#endif
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define stdin  SYMBOLIC(stdin)
+#define stdout SYMBOLIC(stdout)
+#define stderr SYMBOLIC(stderr)
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+struct Nameservers {
+  size_t i, n;
+  struct sockaddr_in *p;
+};
+
+struct ResolvConf {
+  struct Nameservers nameservers;
+};
+
+const struct ResolvConf *getresolvconf(void) returnsnonnull;
+int parseresolvconf(struct ResolvConf *, struct FILE *) paramsnonnull();
+void freeresolvconf(struct ResolvConf **) paramsnonnull();
+int getntnameservers(struct ResolvConf *) paramsnonnull();
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+#define DNS_PORT      53
+#define DNS_NAME_MAX  253
 #define DNS_LABEL_MAX 63
 
-struct sockaddr;
-struct sockaddr_in;
-struct ResolvConf;
+#define EAI_SUCCESS     0
+#define EAI_BADFLAGS    -1
+#define EAI_NONAME      -2
+#define EAI_AGAIN       -3
+#define EAI_FAIL        -4
+#define EAI_NODATA      -5
+#define EAI_FAMILY      -6
+#define EAI_SOCKTYPE    -7
+#define EAI_SERVICE     -8
+#define EAI_ADDRFAMILY  -9
+#define EAI_MEMORY      -10
+#define EAI_OVERFLOW    -12
+#define EAI_SYSTEM      -11
+#define EAI_ALLDONE     -103
+#define EAI_CANCELED    -101
+#define EAI_IDN_ENCODE  -105
+#define EAI_INPROGRESS  -100
+#define EAI_INTR        -104
+#define EAI_NOTCANCELED -102
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
 
 struct addrinfo {
   int32_t ai_flags;    /* AI_XXX */
@@ -6922,7 +6935,7 @@ struct addrinfo {
 int getaddrinfo(const char *, const char *, const struct addrinfo *,
                 struct addrinfo **) paramsnonnull((4));
 int freeaddrinfo(struct addrinfo *);
-const char *eai2str(int);
+const char *gai_strerror(int);
 int dnsnamecmp(const char *, const char *) paramsnonnull();
 int pascalifydnsname(uint8_t *, size_t, const char *) paramsnonnull();
 int resolvedns(const struct ResolvConf *, int, const char *, struct sockaddr *,
@@ -7013,33 +7026,6 @@ void sorthoststxt(struct HostsTxt *) paramsnonnull();
 int resolvehoststxt(const struct HostsTxt *, int, const char *,
                     struct sockaddr *, uint32_t, const char **)
     paramsnonnull((1, 3));
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
-/*!BEGIN libc/dns/resolvconf.h */
-
-#define COSMOPOLITAN_LIBC_DNS_RESOLVCONF_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-struct FILE;
-struct sockaddr_in;
-
-struct Nameservers {
-  size_t i, n;
-  struct sockaddr_in *p;
-};
-
-struct ResolvConf {
-  struct Nameservers nameservers;
-};
-
-const struct ResolvConf *getresolvconf(void) returnsnonnull;
-int parseresolvconf(struct ResolvConf *, struct FILE *) paramsnonnull();
-void freeresolvconf(struct ResolvConf **) paramsnonnull();
-int getntnameservers(struct ResolvConf *) paramsnonnull();
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -8006,7 +7992,6 @@ div_t div(int, int) pureconst;
 ldiv_t ldiv(long, long) pureconst;
 lldiv_t lldiv(long long, long long) pureconst;
 imaxdiv_t imaxdiv(intmax_t, intmax_t) pureconst;
-double RoundDecimalPlaces(double, double, double (*)(double));
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § conversion » optimizations                                ─╬─│┼
@@ -8056,7 +8041,7 @@ int vsscanf(const char *, const char *, va_list);
 int vcscanf(int (*)(void *), int (*)(int, void *), void *, const char *,
             va_list);
 int strerror_r(int, char *, size_t) nothrow nocallback;
-int palandprintf(void *, void *, const char *, va_list) hidden;
+int __fmt(void *, void *, const char *, va_list) hidden;
 char *itoa(int, char *, int) compatfn;
 char *fcvt(double, int, int *, int *);
 char *ecvt(double, int, int *, int *);
@@ -8122,28 +8107,6 @@ COSMOPOLITAN_C_START_
 int sleb128(const void *, size_t, int128_t);
 int unsleb128(const void *, size_t, int128_t *);
 #endif /* ANSI */
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
-/*!BEGIN libc/fmt/palandprintf.h */
-
-#define COSMOPOLITAN_LIBC_FMT_PALANDPRINTF_H_
-
-#define PRINTF_NTOA_BUFFER_SIZE 144
-#define PRINTF_FTOA_BUFFER_SIZE 64
-
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-int spacepad(int (*)(long, void *), void *, unsigned long) hidden;
-int ftoa(int (*)(long, void *), void *, long double, int, unsigned long,
-         unsigned long) hidden;
-int stoa(int (*)(long, void *), void *, void *, unsigned long, unsigned long,
-         unsigned long, unsigned char, unsigned char) hidden;
-int ntoa(int (*)(long, void *), void *, va_list, unsigned char, unsigned long,
-         unsigned long, unsigned long, unsigned char, const char *) hidden;
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -11469,130 +11432,6 @@ COSMOPOLITAN_C_END_
 /*!BEGIN libc/log/log.h */
 
 #define COSMOPOLITAN_LIBC_LOG_LOG_H_
-
-
-/*!BEGIN libc/stdio/stdio.h */
-
-#define COSMOPOLITAN_LIBC_STDIO_STDIO_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o                                              ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-typedef struct FILE {
-  uint8_t bufmode;              /* 0x00 _IOFBF, etc. (ignored if fd=-1) */
-  bool noclose;                 /* 0x01 for fake dup() */
-  uint32_t iomode;              /* 0x04 O_RDONLY, etc. (ignored if fd=-1) */
-  int32_t state;                /* 0x08 0=OK, -1=EOF, >0=errno */
-  int fd;                       /* 0x0c ≥0=fd, -1=closed|buffer */
-  uint32_t beg;                 /* 0x10 */
-  uint32_t end;                 /* 0x14 */
-  uint8_t *buf;                 /* 0x18 */
-  uint32_t size;                /* 0x20 */
-  uint32_t nofree;              /* 0x24 */
-  int (*reader)(struct FILE *); /* 0x28 */
-  int (*writer)(struct FILE *); /* 0x30 */
-  int pid;                      /* 0x34 */
-} FILE;
-
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
-
-errno_t ferror(FILE *) paramsnonnull();
-void clearerr(FILE *) paramsnonnull();
-int feof(FILE *) paramsnonnull();
-int getc(FILE *) paramsnonnull();
-int putc(int, FILE *) paramsnonnull();
-int fflush(FILE *);
-int fgetc(FILE *) paramsnonnull();
-int ungetc(int, FILE *) paramsnonnull();
-int fileno(FILE *) paramsnonnull() nosideeffect;
-int fputc(int, FILE *) paramsnonnull();
-int fputs(const char *, FILE *) paramsnonnull();
-int fputws(const wchar_t *, FILE *) paramsnonnull();
-char *fgets(char *, int, FILE *) paramsnonnull();
-wchar_t *fgetws(wchar_t *, int, FILE *) paramsnonnull();
-wint_t fputwc(wchar_t, FILE *) paramsnonnull();
-wint_t putwchar(wchar_t);
-wint_t getwchar(void);
-wint_t fgetwc(FILE *) paramsnonnull();
-int getchar(void);
-int putchar(int);
-int puts(const char *) paramsnonnull();
-ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
-ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-FILE *fopen(const char *, const char *) paramsnonnull() nodiscard;
-FILE *fdopen(int, const char *) paramsnonnull() nodiscard;
-FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) nodiscard;
-FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
-size_t fread(void *, size_t, size_t, FILE *) paramsnonnull();
-size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull();
-int fclose(FILE *);
-int fclose_s(FILE **) paramsnonnull();
-long fseek(FILE *, long, int) paramsnonnull();
-long ftell(FILE *) paramsnonnull();
-void rewind(FILE *) paramsnonnull();
-int fopenflags(const char *) paramsnonnull();
-unsigned favail(FILE *);
-void setbuf(FILE *, char *);
-void setbuffer(FILE *, char *, size_t);
-int setvbuf(FILE *, char *, int, size_t);
-FILE *popen(const char *, const char *);
-int pclose(FILE *);
-
-typedef uint64_t fpos_t;
-compatfn char *gets(char *) paramsnonnull();
-compatfn int fgetpos(FILE *, fpos_t *) paramsnonnull();
-compatfn int fsetpos(FILE *, const fpos_t *) paramsnonnull();
-compatfn int64_t fseeko(FILE *, long, int) paramsnonnull();
-compatfn int64_t ftello(FILE *) paramsnonnull();
-
-int system(const char *);
-int systemexec(const char *);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o » formatting                                 ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-int printf(const char *, ...) printfesque(1)
-    paramsnonnull((1)) nothrow nocallback;
-int vprintf(const char *, va_list) paramsnonnull() nothrow nocallback;
-int fprintf(FILE *, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) nothrow nocallback;
-int vfprintf(FILE *, const char *, va_list) paramsnonnull() nothrow nocallback;
-int scanf(const char *, ...) scanfesque(1);
-int vscanf(const char *, va_list);
-int fscanf(FILE *, const char *, ...) scanfesque(2);
-int vfscanf(FILE *, const char *, va_list);
-
-/*───────────────────────────────────────────────────────────────────────────│─╗
-│ cosmopolitan § standard i/o » optimizations                              ─╬─│┼
-╚────────────────────────────────────────────────────────────────────────────│*/
-
-#define getc(f)    (f->beg < f->end ? f->buf[f->beg++] : fgetc(f))
-#define putc(c, f) fputc(c, f)
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-#define printf(FMT, ...)     (printf)(PFLINK(FMT), ##__VA_ARGS__)
-#define vprintf(FMT, VA)     (vprintf)(PFLINK(FMT), VA)
-#define fprintf(F, FMT, ...) (fprintf)(F, PFLINK(FMT), ##__VA_ARGS__)
-#define vfprintf(F, FMT, VA) (vfprintf)(F, PFLINK(FMT), VA)
-#define vscanf(FMT, VA)      (vscanf)(SFLINK(FMT), VA)
-#define scanf(FMT, ...)      (scanf)(SFLINK(FMT), ##__VA_ARGS__)
-#define fscanf(F, FMT, ...)  (fscanf)(F, SFLINK(FMT), ##__VA_ARGS__)
-#define vfscanf(F, FMT, VA)  (vfscanf)(F, SFLINK(FMT), VA)
-#endif
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-#define stdin  SYMBOLIC(stdin)
-#define stdout SYMBOLIC(stdout)
-#define stderr SYMBOLIC(stderr)
-
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § liblog                                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
@@ -11620,7 +11459,7 @@ COSMOPOLITAN_C_END_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-extern FILE *g_logfile;
+extern FILE *__log_file;
 
 void perror(const char *) relegated;   /* print the last system error */
 void __die(void) relegated wontreturn; /* print backtrace and abort() */
@@ -11643,11 +11482,11 @@ bool IsRunningUnderMake(void);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 #ifndef __STRICT_ANSI__
 
-extern unsigned g_loglevel; /* log level for runtime check */
+extern unsigned __log_level; /* log level for runtime check */
 
 #define LOGGABLE(LEVEL)                                          \
   ((!__builtin_constant_p(LEVEL) || (LEVEL) <= LOGGABLELEVEL) && \
-   (LEVEL) <= g_loglevel)
+   (LEVEL) <= __log_level)
 
 #define LOGF(FMT, ...)                                               \
   do {                                                               \
@@ -18287,6 +18126,482 @@ COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
+/*!BEGIN libc/nt/efi.h */
+
+#define COSMOPOLITAN_LIBC_NT_EFI_H_
+/*
+    ▐██ ░█████████▓   ▐██▌     ██▓░   ▐█▌  ▐██  ░██░    ▓█▌  ▓██▒     ▓██
+    ▐██     ░██░     ▒█▓██░    ████░  ▐█▌  ▐██  ░██░    ▓█▌  ▓███░   ▓███
+    ▐██     ░██░     ██░▐█▓    ██▒▓█░ ▐█▌  ▐██  ░██░    ▓█▌  ▓█▌▓█░ ▓█▒██
+    ▐██     ░██░    ▐█▌  ▓█▌   ██░░▓█░▐█▌  ▐██  ░██░    ▓█▌  ▓█▌░█▓▓█▒░██
+    ▐██     ░██░   ▒██▓█████░  ██░ ░▓▓▓█▌  ▐██  ░██░    ██░  ▓█▌ ░██▌ ░██
+    ▐██     ░██░   ▓█▌    ▓█▓  ██░  ░███▌  ▐██   ▐██▄▄▄▓█▓   ▓█▌      ░██
+╔────────────────────────────────────────────────────────────────────────────│─╗
+│ αcτµαlly pδrταblε εxεcµταblε § the unified extensible firmware interface ─╬─│┼
+╚────────────────────────────────────────────────────────────────────────────│*/
+
+#define EFI_SUCCESS           0x8000000000000000
+#define EFI_LOAD_ERROR        0x8000000000000001
+#define EFI_INVALID_PARAMETER 0x8000000000000002
+#define EFI_UNSUPPORTED       0x8000000000000003
+#define EFI_BAD_BUFFER_SIZE   0x8000000000000004
+#define EFI_BUFFER_TOO_SMALL  0x8000000000000005
+#define EFI_NOT_READY         0x8000000000000006
+#define EFI_DEVICE_ERROR      0x8000000000000007
+#define EFI_WRITE_PROTECTED   0x8000000000000008
+#define EFI_OUT_OF_RESOURCES  0x8000000000000009
+#define EFI_VOLUME_CORRUPTED  0x800000000000000a
+#define EFI_VOLUME_FULL       0x800000000000000b
+#define EFI_NO_MEDIA          0x800000000000000c
+#define EFI_MEDIA_CHANGED     0x800000000000000d
+#define EFI_NOT_FOUND         0x800000000000000e
+#define EFI_ACCESS_DENIED     0x800000000000000f
+#define EFI_NO_RESPONSE       0x8000000000000010
+#define EFI_NO_MAPPING        0x8000000000000011
+#define EFI_TIMEOUT           0x8000000000000012
+#define EFI_NOT_STARTED       0x8000000000000013
+#define EFI_ALREADY_STARTED   0x8000000000000014
+#define EFI_ABORTED           0x8000000000000015
+#define EFI_ICMP_ERROR        0x8000000000000016
+#define EFI_TFTP_ERROR        0x8000000000000017
+#define EFI_PROTOCOL_ERROR    0x8000000000000018
+
+#define EFI_VARIABLE_NON_VOLATILE                          0x00000001
+#define EFI_VARIABLE_BOOTSERVICE_ACCESS                    0x00000002
+#define EFI_VARIABLE_RUNTIME_ACCESS                        0x00000004
+#define EFI_VARIABLE_HARDWARE_ERROR_RECORD                 0x00000008
+#define EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS            0x00000010
+#define EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS 0x00000020
+#define EFI_VARIABLE_APPEND_WRITE                          0x00000040
+
+#define EFI_MEMORY_UC            0x0000000000000001U
+#define EFI_MEMORY_WC            0x0000000000000002U
+#define EFI_MEMORY_WT            0x0000000000000004U
+#define EFI_MEMORY_WB            0x0000000000000008U
+#define EFI_MEMORY_UCE           0x0000000000000010U
+#define EFI_MEMORY_WP            0x0000000000001000U
+#define EFI_MEMORY_RP            0x0000000000002000U
+#define EFI_MEMORY_XP            0x0000000000004000U
+#define EFI_MEMORY_RO            0x0000000000020000U
+#define EFI_MEMORY_NV            0x0000000000008000U
+#define EFI_MEMORY_MORE_RELIABLE 0x0000000000010000U
+#define EFI_MEMORY_RUNTIME       0x8000000000000000U
+
+#define EFI_OPTIONAL_PTR 0x00000001
+
+#define EFI_SCAN_NULL      0x0000
+#define EFI_SCAN_UP        0x0001
+#define EFI_SCAN_DOWN      0x0002
+#define EFI_SCAN_RIGHT     0x0003
+#define EFI_SCAN_LEFT      0x0004
+#define EFI_SCAN_HOME      0x0005
+#define EFI_SCAN_END       0x0006
+#define EFI_SCAN_INSERT    0x0007
+#define EFI_SCAN_DELETE    0x0008
+#define EFI_SCAN_PAGE_UP   0x0009
+#define EFI_SCAN_PAGE_DOWN 0x000A
+#define EFI_SCAN_F1        0x000B
+#define EFI_SCAN_F2        0x000C
+#define EFI_SCAN_F3        0x000D
+#define EFI_SCAN_F4        0x000E
+#define EFI_SCAN_F5        0x000F
+#define EFI_SCAN_F6        0x0010
+#define EFI_SCAN_F7        0x0011
+#define EFI_SCAN_F8        0x0012
+#define EFI_SCAN_F9        0x0013
+#define EFI_SCAN_F10       0x0014
+#define EFI_SCAN_ESC       0x0017
+
+#define EFI_EVT_TIMER                         0x80000000
+#define EFI_EVT_RUNTIME                       0x40000000
+#define EFI_EVT_NOTIFY_WAIT                   0x00000100
+#define EFI_EVT_NOTIFY_SIGNAL                 0x00000200
+#define EFI_EVT_SIGNAL_EXIT_BOOT_SERVICES     0x00000201
+#define EFI_EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE 0x60000202
+#define EFI_EVT_RUNTIME_CONTEXT               0x20000000
+
+#define LOADED_IMAGE_PROTOCOL                        \
+  {                                                  \
+    0x5B1B31A1, 0x9562, 0x11d2, {                    \
+      0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B \
+    }                                                \
+  }
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+#define EFIAPI     __attribute__((__ms_abi__))
+#define EFI_STATUS uint64_t
+#define EFI_EVENT  uintptr_t
+#define EFI_HANDLE uintptr_t
+
+typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
+typedef struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
+
+typedef enum {
+  EfiReservedMemoryType,
+  EfiLoaderCode,
+  EfiLoaderData,
+  EfiBootServicesCode,
+  EfiBootServicesData,
+  EfiRuntimeServicesCode,
+  EfiRuntimeServicesData,
+  EfiConventionalMemory,
+  EfiUnusableMemory,
+  EfiACPIReclaimMemory,
+  EfiACPIMemoryNVS,
+  EfiMemoryMappedIO,
+  EfiMemoryMappedIOPortSpace,
+  EfiPalCode,
+  EfiPersistentMemory,
+  EfiMaxMemoryType
+} EFI_MEMORY_TYPE;
+
+typedef enum {
+  EfiResetCold,
+  EfiResetWarm,
+  EfiResetShutdown,
+  EfiResetPlatformSpecific
+} EFI_RESET_TYPE;
+
+typedef enum {
+  AllocateAnyPages,
+  AllocateMaxAddress,
+  AllocateAddress,
+  MaxAllocateType
+} EFI_ALLOCATE_TYPE;
+
+typedef enum {
+  TimerCancel,
+  TimerPeriodic,
+  TimerRelative,
+} EFI_TIMER_DELAY;
+
+typedef struct {
+  uint32_t Resolution;
+  uint32_t Accuracy;
+  bool SetsToZero;
+} EFI_TIME_CAPABILITIES;
+
+typedef struct {
+  uint32_t Data1;
+  uint16_t Data2;
+  uint16_t Data3;
+  uint8_t Data4[8];
+} EFI_GUID;
+
+typedef struct {
+  uint16_t Year;
+  uint8_t Month;
+  uint8_t Day;
+  uint8_t Hour;
+  uint8_t Minute;
+  uint8_t Second;
+  uint8_t Pad1;
+  uint32_t Nanosecond;
+  int16_t TimeZone;
+  uint8_t Daylight;
+  uint8_t Pad2;
+} EFI_TIME;
+
+typedef struct {
+  uint32_t Type;
+  uint64_t PhysicalStart;
+  uint64_t VirtualStart;
+  uint64_t NumberOfPages;
+  uint64_t Attribute;
+} EFI_MEMORY_DESCRIPTOR;
+
+typedef struct {
+  EFI_GUID VendorGuid;
+  void *VendorTable;
+} EFI_CONFIGURATION_TABLE;
+
+typedef struct {
+  EFI_GUID CapsuleGuid;
+  uint32_t HeaderSize;
+  uint32_t Flags;
+  uint32_t CapsuleImageSize;
+} EFI_CAPSULE_HEADER;
+
+typedef struct {
+  uint16_t ScanCode;
+  char16_t UnicodeChar;
+} EFI_INPUT_KEY;
+
+typedef struct {
+  int32_t MaxMode;
+  int32_t Mode;
+  int32_t Attribute;
+  int32_t CursorColumn;
+  int32_t CursorRow;
+  bool CursorVisible;
+} EFI_SIMPLE_TEXT_OUTPUT_MODE;
+
+typedef struct {
+  uint64_t Signature;
+  uint32_t Revision;
+  uint32_t HeaderSize;
+  uint32_t CRC32;
+  uint32_t Reserved;
+} EFI_TABLE_HEADER;
+
+typedef struct {
+  uint8_t Type;
+  uint8_t SubType;
+  uint8_t Length[2];
+} EFI_DEVICE_PATH_PROTOCOL;
+
+typedef EFI_STATUS(EFIAPI *EFI_EXIT)(EFI_HANDLE ImageHandle,
+                                     EFI_STATUS ExitStatus,
+                                     uintptr_t ExitDataSize,
+                                     char16_t *opt_ExitData);
+
+typedef EFI_STATUS(EFIAPI *EFI_GET_VARIABLE)(char16_t *VariableName,
+                                             EFI_GUID *VendorGuid,
+                                             uint32_t *outopt_Attributes,
+                                             uintptr_t *inout_DataSize,
+                                             void *outopt_Data);
+typedef EFI_STATUS(EFIAPI *EFI_SET_VARIABLE)(char16_t *VariableName,
+                                             EFI_GUID *VendorGuid,
+                                             uint32_t Attributes,
+                                             uintptr_t DataSize, void *Data);
+typedef EFI_STATUS(EFIAPI *EFI_GET_NEXT_VARIABLE_NAME)(
+    uintptr_t *inout_VariableNameSize, char16_t *inout_VariableName,
+    EFI_GUID *inout_VendorGuid);
+typedef EFI_STATUS(EFIAPI *EFI_QUERY_VARIABLE_INFO)(
+    uint32_t Attributes, uint64_t *out_MaximumVariableStorageSize,
+    uint64_t *out_RemainingVariableStorageSize,
+    uint64_t *out_MaximumVariableSize);
+
+typedef EFI_STATUS(EFIAPI *EFI_ALLOCATE_PAGES)(EFI_ALLOCATE_TYPE Type,
+                                               EFI_MEMORY_TYPE MemoryType,
+                                               uintptr_t Pages,
+                                               uint64_t *inout_Memory);
+typedef EFI_STATUS(EFIAPI *EFI_FREE_PAGES)(uint64_t Memory, uintptr_t Pages);
+typedef EFI_STATUS(EFIAPI *EFI_GET_MEMORY_MAP)(
+    uintptr_t *inout_MemoryMapSize, EFI_MEMORY_DESCRIPTOR *inout_MemoryMap,
+    uintptr_t *out_MapKey, uintptr_t *out_DescriptorSize,
+    uint32_t *out_DescriptorVersion);
+
+typedef EFI_STATUS(EFIAPI *EFI_ALLOCATE_POOL)(EFI_MEMORY_TYPE PoolType,
+                                              uintptr_t Size, void *out_Buffer);
+typedef EFI_STATUS(EFIAPI *EFI_FREE_POOL)(void *Buffer);
+typedef void(EFIAPI *EFI_SET_MEM)(void *Buffer, uintptr_t Size, uint8_t Value);
+typedef void(EFIAPI *EFI_COPY_MEM)(void *Destination, void *Source,
+                                   uintptr_t Length);
+
+typedef EFI_STATUS(EFIAPI *EFI_CHECK_EVENT)(EFI_EVENT Event);
+typedef EFI_STATUS(EFIAPI *EFI_CLOSE_EVENT)(EFI_EVENT Event);
+typedef EFI_STATUS(EFIAPI *EFI_SIGNAL_EVENT)(EFI_EVENT Event);
+typedef EFI_STATUS(EFIAPI *EFI_WAIT_FOR_EVENT)(uintptr_t NumberOfEvents,
+                                               EFI_EVENT *Events,
+                                               uintptr_t *out_Index);
+typedef EFI_STATUS(EFIAPI *EFI_SET_TIMER)(EFI_EVENT Event, EFI_TIMER_DELAY Type,
+                                          uint64_t TriggerTime);
+typedef void(EFIAPI *EFI_EVENT_NOTIFY)(EFI_EVENT Event, void *Context);
+typedef EFI_STATUS(EFIAPI *EFI_CREATE_EVENT)(uint32_t Type, uintptr_t NotifyTpl,
+                                             EFI_EVENT_NOTIFY NotifyFunction,
+                                             void *NotifyContext,
+                                             EFI_EVENT *out_Event);
+typedef EFI_STATUS(EFIAPI *EFI_CREATE_EVENT_EX)(
+    uint32_t Type, uintptr_t NotifyTpl, EFI_EVENT_NOTIFY opt_NotifyFunction,
+    const void *opt_NotifyContext, const EFI_GUID *opt_EventGroup,
+    EFI_EVENT *out_Event);
+
+typedef EFI_STATUS(EFIAPI *EFI_UPDATE_CAPSULE)(
+    EFI_CAPSULE_HEADER **CapsuleHeaderArray, uintptr_t CapsuleCount,
+    uint64_t opt_ScatterGatherList);
+typedef EFI_STATUS(EFIAPI *EFI_QUERY_CAPSULE_CAPABILITIES)(
+    EFI_CAPSULE_HEADER **CapsuleHeaderArray, uintptr_t CapsuleCount,
+    uint64_t *out_MaximumCapsuleSize, EFI_RESET_TYPE *out_ResetType);
+typedef EFI_STATUS(EFIAPI *EFI_GET_WAKEUP_TIME)(bool *out_Enabled,
+                                                bool *out_Pending,
+                                                EFI_TIME *out_Time);
+typedef EFI_STATUS(EFIAPI *EFI_SET_WAKEUP_TIME)(bool Enable,
+                                                EFI_TIME *opt_Time);
+typedef EFI_STATUS(EFIAPI *EFI_SET_WATCHDOG_TIMER)(uintptr_t Timeout,
+                                                   uint64_t WatchdogCode,
+                                                   uintptr_t DataSize,
+                                                   char16_t *opt_WatchdogData);
+
+typedef EFI_STATUS(EFIAPI *EFI_SET_TIME)(EFI_TIME *Time);
+typedef EFI_STATUS(EFIAPI *EFI_GET_TIME)(
+    EFI_TIME *out_Time, EFI_TIME_CAPABILITIES *outopt_Capabilities);
+typedef EFI_STATUS(EFIAPI *EFI_GET_NEXT_HIGH_MONO_COUNT)(
+    uint32_t *out_HighCount);
+typedef EFI_STATUS(EFIAPI *EFI_STALL)(uintptr_t Microseconds);
+typedef EFI_STATUS(EFIAPI *EFI_GET_NEXT_MONOTONIC_COUNT)(uint64_t *out_Count);
+
+typedef EFI_STATUS(EFIAPI *EFI_SET_VIRTUAL_ADDRESS_MAP)(
+    uintptr_t MemoryMapSize, uintptr_t DescriptorSize,
+    uint32_t DescriptorVersion, EFI_MEMORY_DESCRIPTOR *VirtualMap);
+typedef void(EFIAPI *EFI_RESET_SYSTEM)(EFI_RESET_TYPE ResetType,
+                                       EFI_STATUS ResetStatus,
+                                       uintptr_t DataSize, void *opt_ResetData);
+typedef EFI_STATUS(EFIAPI *EFI_CONVERT_POINTER)(uintptr_t DebugDisposition,
+                                                void **inout_Address);
+
+typedef EFI_STATUS(EFIAPI *EFI_INPUT_RESET)(
+    EFI_SIMPLE_TEXT_INPUT_PROTOCOL *This, bool ExtendedVerification);
+typedef EFI_STATUS(EFIAPI *EFI_INPUT_READ_KEY)(
+    EFI_SIMPLE_TEXT_INPUT_PROTOCOL *This, EFI_INPUT_KEY *out_Key);
+
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_RESET)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool ExtendedVerification);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_STRING)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, char16_t *String);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_TEST_STRING)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, char16_t *String);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_QUERY_MODE)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t ModeNumber,
+    uint64_t *out_Columns, uint64_t *out_Rows);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_MODE)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t ModeNumber);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_ATTRIBUTE)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t Attribute);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_CLEAR_SCREEN)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_SET_CURSOR_POSITION)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, uint64_t Column, uint64_t Row);
+typedef EFI_STATUS(EFIAPI *EFI_TEXT_ENABLE_CURSOR)(
+    EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *This, bool Visible);
+
+typedef EFI_STATUS(EFIAPI *EFI_HANDLE_PROTOCOL)(EFI_HANDLE Handle,
+                                                EFI_GUID *Protocol,
+                                                void *out_Interface);
+
+typedef EFI_STATUS(EFIAPI *EFI_IMAGE_LOAD)(bool BootPolicy,
+                                           EFI_HANDLE ParentImageHandle,
+                                           EFI_DEVICE_PATH_PROTOCOL *DevicePath,
+                                           void *opt_SourceBuffer,
+                                           uintptr_t SourceSize,
+                                           EFI_HANDLE *out_ImageHandle);
+typedef EFI_STATUS(EFIAPI *EFI_IMAGE_UNLOAD)(EFI_HANDLE ImageHandle);
+typedef EFI_STATUS(EFIAPI *EFI_EXIT_BOOT_SERVICES)(EFI_HANDLE ImageHandle,
+                                                   uintptr_t MapKey);
+
+typedef struct {
+  EFI_TABLE_HEADER Hdr;
+  EFI_GET_TIME GetTime;
+  EFI_SET_TIME SetTime;
+  EFI_GET_WAKEUP_TIME GetWakeupTime;
+  EFI_SET_WAKEUP_TIME SetWakeupTime;
+  EFI_SET_VIRTUAL_ADDRESS_MAP SetVirtualAddressMap;
+  EFI_CONVERT_POINTER ConvertPointer;
+  EFI_GET_VARIABLE GetVariable;
+  EFI_GET_NEXT_VARIABLE_NAME GetNextVariableName;
+  EFI_SET_VARIABLE SetVariable;
+  EFI_GET_NEXT_HIGH_MONO_COUNT GetNextHighMonotonicCount;
+  EFI_RESET_SYSTEM ResetSystem;
+  EFI_UPDATE_CAPSULE UpdateCapsule;
+  EFI_QUERY_CAPSULE_CAPABILITIES QueryCapsuleCapabilities;
+  EFI_QUERY_VARIABLE_INFO QueryVariableInfo;
+} EFI_RUNTIME_SERVICES;
+
+typedef struct {
+  EFI_TABLE_HEADER Hdr;
+  void *RaiseTPL;
+  void *RestoreTPL;
+  EFI_ALLOCATE_PAGES AllocatePages;
+  EFI_FREE_PAGES FreePages;
+  EFI_GET_MEMORY_MAP GetMemoryMap;
+  EFI_ALLOCATE_POOL AllocatePool;
+  EFI_FREE_POOL FreePool;
+  EFI_CREATE_EVENT CreateEvent;
+  EFI_SET_TIMER SetTimer;
+  EFI_WAIT_FOR_EVENT WaitForEvent;
+  EFI_SIGNAL_EVENT SignalEvent;
+  EFI_CLOSE_EVENT CloseEvent;
+  EFI_CHECK_EVENT CheckEvent;
+  void *InstallProtocolInterface;
+  void *ReinstallProtocolInterface;
+  void *UninstallProtocolInterface;
+  EFI_HANDLE_PROTOCOL HandleProtocol;
+  void *Reserved;
+  void *RegisterProtocolNotify;
+  void *LocateHandle;
+  void *LocateDevicePath;
+  void *InstallConfigurationTable;
+  EFI_IMAGE_LOAD LoadImage;
+  void *StartImage;
+  EFI_EXIT Exit;
+  EFI_IMAGE_UNLOAD UnloadImage;
+  EFI_EXIT_BOOT_SERVICES ExitBootServices;
+  EFI_GET_NEXT_MONOTONIC_COUNT GetNextMonotonicCount;
+  EFI_STALL Stall;
+  EFI_SET_WATCHDOG_TIMER SetWatchdogTimer;
+  void *ConnectController;
+  void *DisconnectController;
+  void *OpenProtocol;
+  void *CloseProtocol;
+  void *OpenProtocolInformation;
+  void *ProtocolsPerHandle;
+  void *LocateHandleBuffer;
+  void *LocateProtocol;
+  void *InstallMultipleProtocolInterfaces;
+  void *UninstallMultipleProtocolInterfaces;
+  void *CalculateCrc32;
+  EFI_COPY_MEM CopyMem;
+  EFI_SET_MEM SetMem;
+  EFI_CREATE_EVENT_EX CreateEventEx;
+} EFI_BOOT_SERVICES;
+
+typedef struct {
+  EFI_TABLE_HEADER Hdr;
+  char16_t *FirmwareVendor;
+  uint32_t FirmwareRevision;
+  EFI_HANDLE ConsoleInHandle;
+  EFI_SIMPLE_TEXT_INPUT_PROTOCOL *ConIn;
+  EFI_HANDLE ConsoleOutHandle;
+  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *ConOut;
+  EFI_HANDLE StandardErrorHandle;
+  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *StdErr;
+  EFI_RUNTIME_SERVICES *RuntimeServices;
+  EFI_BOOT_SERVICES *BootServices;
+  uintptr_t NumberOfTableEntries;
+  EFI_CONFIGURATION_TABLE *ConfigurationTable;
+} EFI_SYSTEM_TABLE;
+
+struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL {
+  EFI_INPUT_RESET Reset;
+  EFI_INPUT_READ_KEY ReadKeyStroke;
+  EFI_EVENT WaitForKey;
+};
+
+struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL {
+  EFI_TEXT_RESET Reset;
+  EFI_TEXT_STRING OutputString;
+  EFI_TEXT_TEST_STRING TestString;
+  EFI_TEXT_QUERY_MODE QueryMode;
+  EFI_TEXT_SET_MODE SetMode;
+  EFI_TEXT_SET_ATTRIBUTE SetAttribute;
+  EFI_TEXT_CLEAR_SCREEN ClearScreen;
+  EFI_TEXT_SET_CURSOR_POSITION SetCursorPosition;
+  EFI_TEXT_ENABLE_CURSOR EnableCursor;
+  EFI_SIMPLE_TEXT_OUTPUT_MODE *Mode;
+};
+
+typedef struct {
+  uint32_t Revision;
+  EFI_HANDLE ParentHandle;
+  EFI_SYSTEM_TABLE *SystemTable;
+  EFI_HANDLE DeviceHandle;
+  EFI_DEVICE_PATH_PROTOCOL *FilePath;
+  void *Reserved;
+  uint32_t LoadOptionsSize;
+  void *LoadOptions;
+  void *ImageBase;
+  uint64_t ImageSize;
+  EFI_MEMORY_TYPE ImageCodeType;
+  EFI_MEMORY_TYPE ImageDataType;
+  EFI_IMAGE_UNLOAD Unload;
+} EFI_LOADED_IMAGE;
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+
 /*!BEGIN libc/nt/errors.h */
 
 #define COSMOPOLITAN_NT_ERRORS_H_
@@ -21762,32 +22077,14 @@ COSMOPOLITAN_C_END_
   In some cases it's necessary to use addend macros that change virtual
   addresses into the other two types: physical and real. */
 
+#define IMAGE_BASE_REAL 0x2000
+
 #ifndef IMAGE_BASE_VIRTUAL
 #define IMAGE_BASE_VIRTUAL 0x400000
 #endif
 
 #ifndef IMAGE_BASE_PHYSICAL
 #define IMAGE_BASE_PHYSICAL 0x100000
-#endif
-
-#ifndef REAL_SCRATCH_AREA
-/**
- * Location of anything goes memory for real mode.
- *
- * The MBR won't load program content beyond this address, so we have
- * room for buffers, page tables, etc. before we reach the stack frame.
- */
-#define REAL_SCRATCH_AREA 0x40000
-#endif
-
-#ifndef REAL_STACK_FRAME
-/**
- * Location of real mode 64kb stack frame.
- *
- * This address was chosen because memory beyond 0x80000 can't be
- * accessed safely without consulting e820.
- */
-#define REAL_STACK_FRAME 0x70000
 #endif
 
 /**
@@ -23290,7 +23587,7 @@ COSMOPOLITAN_C_START_
 │ cosmopolitan § random                                                    ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-#define RAND_MAX __INT_MAX__              /* only applies to rand() */
+#define RAND_MAX __INT_MAX__ /* only applies to rand() */
 void srand(uint64_t) nothrow nocallback;  /* seeds rand() only      */
 int rand(void) nothrow nocallback;        /* ≥0 unseeded lcg prng   */
 uint32_t rand32(void) nothrow nocallback; /* random as possible rng */
@@ -23309,6 +23606,10 @@ int64_t winrandish(void);
 uint64_t rdrand(void);
 uint64_t rdseed(void);
 float randf(void);
+char *initstate(unsigned, char *, size_t);
+char *setstate(char *);
+long random(void);
+void srandom(unsigned);
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -23361,56 +23662,21 @@ COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
-/*!BEGIN libc/runtime/directmap.h */
-
-#define COSMOPOLITAN_LIBC_RUNTIME_DIRECTMAP_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-struct DirectMap {
-  void *addr;
-  int64_t maphandle;
-};
-
-struct DirectMap __mmap(void *, size_t, int, int, int, int64_t);
-struct DirectMap sys_mmap_nt(void *, size_t, int, int, int64_t, int64_t);
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-
 /*!BEGIN libc/runtime/gc.h */
 
 #define COSMOPOLITAN_LIBC_RUNTIME_GC_H_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
-/**
- * @fileoverview Cosmopolitan Return-Oriented Garbage Collector.
- *
- * This is the same thing as {@code std::unique_ptr<>} in C++ or the
- * {@code defer} keyword in Go. We harness the power of ROP for good
- * using very few lines of code.
- */
+void *_gc(void *) hidden;
+void *_defer(void *, void *) hidden;
+void __defer(struct StackFrame *, void *, void *) hidden;
+void __deferer(struct StackFrame *, void *, void *) hidden;
+void _gclongjmp(jmp_buf, int) nothrow wontreturn;
 
-/**
- * Releases resource when function returns.
- *
- * @warning do not return a gc()'d pointer
- * @warning do not realloc() with gc()'d pointer
- */
-#define gc(THING) defer((void *)weakfree, (void *)(THING))
-
-/**
- * Same as longjmp() but runs gc() / defer() destructors.
- */
-void gclongjmp(jmp_buf, int) nothrow wontreturn paramsnonnull();
-
-/**
- * Calls FN(ARG) when function returns.
- */
-#ifndef __VSCODE_INTELLISENSE__
-#define defer(FN, ARG)                                                 \
+#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
+#define _gc(THING) _defer((void *)_weakfree, (void *)(THING))
+#define _defer(FN, ARG)                                                \
   ({                                                                   \
     autotype(ARG) Arg = (ARG);                                         \
     /* prevent weird opts like tail call */                            \
@@ -23419,9 +23685,7 @@ void gclongjmp(jmp_buf, int) nothrow wontreturn paramsnonnull();
     asm volatile("" : "+g"(Arg) : : "memory");                         \
     Arg;                                                               \
   })
-#endif /* __VSCODE_INTELLISENSE__ */
-
-void __defer(struct StackFrame *, void *, void *) hidden paramsnonnull((1, 2));
+#endif /* defined(__GNUC__) && !defined(__STRICT_ANSI__) */
 
 COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
@@ -23518,7 +23782,10 @@ extern const long AT_ENTRY;
 extern const long AT_EUID;
 extern const long AT_EXECFD;
 extern const long AT_EXECFN;
+extern const long AT_FLAGS;
 extern const long AT_GID;
+extern const long AT_HWCAP2;
+extern const long AT_HWCAP;
 extern const long AT_ICACHEBSIZE;
 extern const long AT_NOTELF;
 extern const long AT_NO_AUTOMOUNT;
@@ -23546,7 +23813,10 @@ COSMOPOLITAN_C_END_
 #define AT_EUID          SYMBOLIC(AT_EUID)
 #define AT_EXECFD        SYMBOLIC(AT_EXECFD)
 #define AT_EXECFN        SYMBOLIC(AT_EXECFN)
+#define AT_FLAGS         SYMBOLIC(AT_FLAGS)
 #define AT_GID           SYMBOLIC(AT_GID)
+#define AT_HWCAP         SYMBOLIC(AT_HWCAP)
+#define AT_HWCAP2        SYMBOLIC(AT_HWCAP2)
 #define AT_ICACHEBSIZE   SYMBOLIC(AT_ICACHEBSIZE)
 #define AT_NOTELF        SYMBOLIC(AT_NOTELF)
 #define AT_NO_AUTOMOUNT  SYMBOLIC(AT_NO_AUTOMOUNT)
@@ -23648,6 +23918,56 @@ COSMOPOLITAN_C_END_
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
+/*!BEGIN libc/stdio/spawn.h */
+
+#define COSMOPOLITAN_LIBC_STDIO_SPAWN_H_
+
+#define POSIX_SPAWN_RESETIDS      0x01
+#define POSIX_SPAWN_SETPGROUP     0x02
+#define POSIX_SPAWN_SETSIGDEF     0x04
+#define POSIX_SPAWN_SETSIGMASK    0x08
+#define POSIX_SPAWN_SETSCHEDPARAM 0x10
+#define POSIX_SPAWN_SETSCHEDULER  0x20
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+typedef char *posix_spawn_file_actions_t;
+typedef struct _posix_spawnattr posix_spawnattr_t;
+
+int posix_spawn(int *, const char *, const posix_spawn_file_actions_t *,
+                const posix_spawnattr_t *, char *const[], char *const[]);
+int posix_spawnp(int *, const char *, const posix_spawn_file_actions_t *,
+                 const posix_spawnattr_t *, char *const[], char *const[]);
+
+int posix_spawn_file_actions_init(posix_spawn_file_actions_t *);
+int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *);
+int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *, int);
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *, int, int);
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t *, int,
+                                     const char *, int, unsigned);
+
+int posix_spawnattr_init(posix_spawnattr_t *);
+int posix_spawnattr_destroy(posix_spawnattr_t *);
+int posix_spawnattr_getflags(const posix_spawnattr_t *, short *);
+int posix_spawnattr_setflags(posix_spawnattr_t *, short);
+int posix_spawnattr_getpgroup(const posix_spawnattr_t *, int *);
+int posix_spawnattr_setpgroup(posix_spawnattr_t *, int);
+int posix_spawnattr_getschedpolicy(const posix_spawnattr_t *, int *);
+int posix_spawnattr_setschedpolicy(posix_spawnattr_t *, int);
+int posix_spawnattr_getschedparam(const posix_spawnattr_t *,
+                                  struct sched_param *);
+int posix_spawnattr_setschedparam(posix_spawnattr_t *,
+                                  const struct sched_param *);
+int posix_spawnattr_getsigmask(const posix_spawnattr_t *, sigset_t *);
+int posix_spawnattr_setsigmask(posix_spawnattr_t *, const sigset_t *);
+int posix_spawnattr_getdefault(const posix_spawnattr_t *, sigset_t *);
+int posix_spawnattr_setsigdefault(posix_spawnattr_t *, const sigset_t *);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+
 /*!BEGIN libc/stdio/stdio_ext.h */
 
 #define COSMOPOLITAN_LIBC_STDIO_STDIO_EXT_H_
@@ -23701,6 +24021,9 @@ COSMOPOLITAN_C_END_
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 COSMOPOLITAN_C_START_
 
+void flockfile(FILE *);
+void funlockfile(FILE *);
+int ftrylockfile(FILE *);
 int getc_unlocked(FILE *) paramsnonnull();
 int getchar_unlocked(void);
 int putc_unlocked(int, FILE *) paramsnonnull();
@@ -24656,25 +24979,13 @@ COSMOPOLITAN_C_END_
 
 #define COSMOPOLITAN_LIBC_SYSV_CONSTS_CLD_H_
 
-#define CLD_CONTINUED SYMBOLIC(CLD_CONTINUED)
-#define CLD_DUMPED SYMBOLIC(CLD_DUMPED)
-#define CLD_EXITED SYMBOLIC(CLD_EXITED)
-#define CLD_KILLED SYMBOLIC(CLD_KILLED)
-#define CLD_STOPPED SYMBOLIC(CLD_STOPPED)
-#define CLD_TRAPPED SYMBOLIC(CLD_TRAPPED)
+#define CLD_CONTINUED 6
+#define CLD_DUMPED    3
+#define CLD_EXITED    1
+#define CLD_KILLED    2
+#define CLD_STOPPED   5
+#define CLD_TRAPPED   4
 
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const long CLD_CONTINUED;
-extern const long CLD_DUMPED;
-extern const long CLD_EXITED;
-extern const long CLD_KILLED;
-extern const long CLD_STOPPED;
-extern const long CLD_TRAPPED;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
 /*!BEGIN libc/sysv/consts/clock.h */
@@ -24738,56 +25049,6 @@ COSMOPOLITAN_C_END_
 #define DT_REG     LITERALLY(8)
 #define DT_LNK     LITERALLY(10)
 #define DT_SOCK    LITERALLY(12)
-
-
-
-/*!BEGIN libc/sysv/consts/eai.h */
-
-#define COSMOPOLITAN_LIBC_SYSV_CONSTS_EAI_H_
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const long EAI_ADDRFAMILY;
-extern const long EAI_AGAIN;
-extern const long EAI_ALLDONE;
-extern const long EAI_BADFLAGS;
-extern const long EAI_CANCELED;
-extern const long EAI_FAIL;
-extern const long EAI_FAMILY;
-extern const long EAI_IDN_ENCODE;
-extern const long EAI_INPROGRESS;
-extern const long EAI_INTR;
-extern const long EAI_MEMORY;
-extern const long EAI_NODATA;
-extern const long EAI_NONAME;
-extern const long EAI_NOTCANCELED;
-extern const long EAI_OVERFLOW;
-extern const long EAI_SERVICE;
-extern const long EAI_SOCKTYPE;
-extern const long EAI_SYSTEM;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
-
-#define EAI_ADDRFAMILY SYMBOLIC(EAI_ADDRFAMILY)
-#define EAI_AGAIN SYMBOLIC(EAI_AGAIN)
-#define EAI_ALLDONE SYMBOLIC(EAI_ALLDONE)
-#define EAI_BADFLAGS SYMBOLIC(EAI_BADFLAGS)
-#define EAI_CANCELED SYMBOLIC(EAI_CANCELED)
-#define EAI_FAIL SYMBOLIC(EAI_FAIL)
-#define EAI_FAMILY SYMBOLIC(EAI_FAMILY)
-#define EAI_IDN_ENCODE SYMBOLIC(EAI_IDN_ENCODE)
-#define EAI_INPROGRESS SYMBOLIC(EAI_INPROGRESS)
-#define EAI_INTR SYMBOLIC(EAI_INTR)
-#define EAI_MEMORY SYMBOLIC(EAI_MEMORY)
-#define EAI_NODATA SYMBOLIC(EAI_NODATA)
-#define EAI_NONAME SYMBOLIC(EAI_NONAME)
-#define EAI_NOTCANCELED SYMBOLIC(EAI_NOTCANCELED)
-#define EAI_OVERFLOW SYMBOLIC(EAI_OVERFLOW)
-#define EAI_SERVICE SYMBOLIC(EAI_SERVICE)
-#define EAI_SOCKTYPE SYMBOLIC(EAI_SOCKTYPE)
-#define EAI_SUCCESS LITERALLY(0)
-#define EAI_SYSTEM SYMBOLIC(EAI_SYSTEM)
 
 
 
@@ -26049,47 +26310,6 @@ COSMOPOLITAN_C_END_
 #define ITIMER_VIRTUAL 1
 #define ITIMER_PROF 2
 
-
-
-/*!BEGIN libc/sysv/consts/lc.h */
-
-#define COSMOPOLITAN_LIBC_SYSV_CONSTS_LC_H_
-
-#define LC_ALL SYMBOLIC(LC_ALL)
-#define LC_ALL_MASK SYMBOLIC(LC_ALL_MASK)
-#define LC_COLLATE SYMBOLIC(LC_COLLATE)
-#define LC_COLLATE_MASK SYMBOLIC(LC_COLLATE_MASK)
-#define LC_CTYPE SYMBOLIC(LC_CTYPE)
-#define LC_CTYPE_MASK SYMBOLIC(LC_CTYPE_MASK)
-#define LC_MESSAGES SYMBOLIC(LC_MESSAGES)
-#define LC_MESSAGES_MASK SYMBOLIC(LC_MESSAGES_MASK)
-#define LC_MONETARY SYMBOLIC(LC_MONETARY)
-#define LC_MONETARY_MASK SYMBOLIC(LC_MONETARY_MASK)
-#define LC_NUMERIC SYMBOLIC(LC_NUMERIC)
-#define LC_NUMERIC_MASK SYMBOLIC(LC_NUMERIC_MASK)
-#define LC_TIME SYMBOLIC(LC_TIME)
-#define LC_TIME_MASK SYMBOLIC(LC_TIME_MASK)
-
-#if !(__ASSEMBLER__ + __LINKER__ + 0)
-COSMOPOLITAN_C_START_
-
-extern const long LC_ALL;
-extern const long LC_ALL_MASK;
-extern const long LC_COLLATE;
-extern const long LC_COLLATE_MASK;
-extern const long LC_CTYPE;
-extern const long LC_CTYPE_MASK;
-extern const long LC_MESSAGES;
-extern const long LC_MESSAGES_MASK;
-extern const long LC_MONETARY;
-extern const long LC_MONETARY_MASK;
-extern const long LC_NUMERIC;
-extern const long LC_NUMERIC_MASK;
-extern const long LC_TIME;
-extern const long LC_TIME_MASK;
-
-COSMOPOLITAN_C_END_
-#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
 /*!BEGIN libc/sysv/consts/limits.h */
@@ -28616,6 +28836,34 @@ static inline long double emodl(long double x, long double y) {
 #endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
 
 
+/*!BEGIN libc/unicode/locale.h */
+
+#define COSMOPOLITAN_LIBC_UNICODE_LOCALE_H_
+
+#define LC_CTYPE         0
+#define LC_NUMERIC       1
+#define LC_CTYPE_MASK    1
+#define LC_TIME          2
+#define LC_NUMERIC_MASK  2
+#define LC_COLLATE       3
+#define LC_MONETARY      4
+#define LC_TIME_MASK     4
+#define LC_MESSAGES      5
+#define LC_ALL           6
+#define LC_COLLATE_MASK  8
+#define LC_MONETARY_MASK 16
+#define LC_MESSAGES_MASK 32
+#define LC_ALL_MASK      0x1fbf
+
+#if !(__ASSEMBLER__ + __LINKER__ + 0)
+COSMOPOLITAN_C_START_
+
+char *setlocale(int, const char *);
+
+COSMOPOLITAN_C_END_
+#endif /* !(__ASSEMBLER__ + __LINKER__ + 0) */
+
+
 /*!BEGIN libc/x/x.h */
 
 #define COSMOPOLITAN_LIBC_X_H_
@@ -28643,7 +28891,9 @@ int xwrite(int, const void *, uint64_t);
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
 void xdie(void) wontreturn;
-char *xdtoa(long double) _XMAL;
+char *xdtoa(double) _XMAL;
+char *xdtoaf(float) _XMAL;
+char *xdtoal(long double) _XMAL;
 char *xasprintf(const char *, ...) printfesque(1) paramsnonnull((1)) _XMAL;
 char *xvasprintf(const char *, va_list) _XPNN _XMAL;
 char *xgetline(struct FILE *) _XPNN mallocesque;
@@ -28765,6 +29015,7 @@ char *gdtoa(const FPI *fpi, int be, unsigned *bits, int *kindp, int mode,
             int ndigits, int *decpt, char **rve);
 void freedtoa(char *);
 
+double atof(const char *);
 float strtof(const char *, char **);
 double strtod(const char *, char **);
 int strtodg(const char *, char **, const FPI *, int *, unsigned *);
