@@ -1,21 +1,26 @@
 /* COPYRIGHT Alex Blandin (c) 2020 */
 /* See LICENSE */
 
-/* short.hand */
+/* short.hand (with cosmopolitan libc support) */
 #ifndef SHORTHAND_H_INCLUDED
 #define SHORTHAND_H_INCLUDED
 
-/* trialing Cosmopolitan libc support, cosmopolitan.h has all the standard ones I use*/
-#ifdef _WIN32
+#ifndef COSMOPOLITAN_H_ /* proxy for "noncosmipolitan setup" */
 #include <assert.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#else
+/* trialing Cosmopolitan libc support, cosmopolitan.h has all the standard ones I use */
+#include "cosmo/cosmopolitan.h" /* we assumed cosmipolitan above, this is just for linting etc. */
 #endif
+
+typedef unsigned int uint;
 
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -58,24 +63,33 @@ typedef int8_t  s8;
 typedef double f64;
 typedef float f32;
 
-#if !defined(bool) && defined(_Bool)
-#define bool _Bool
+/* fallback bool defs */
+#ifndef bool
+  #ifdef _Bool
+    #define bool _Bool
+  #else
+    #define bool char
+  #endif
 #endif
-
-#if !defined(bool) && !defined(_Bool)
-#define bool char
-#endif
-
-/* personal preference */
-#define not !
-#define and &&
-#define or ||
 
 #ifndef true
-#define true 1
+  #define true 1
 #endif
 #ifndef false
-#define false 0
+  #define false 0
+#endif
+
+/* <iso646.h> for `and`, `or`, `not`, etc. */
+#include <iso646.h>
+/* fallback <iso646.h> */
+#ifndef and
+  #define and &&
+#endif
+#ifndef or
+  #define or ||
+#endif
+#ifndef not
+  #define not !
 #endif
 
 /* copy n bytes from src to dst */
@@ -157,8 +171,8 @@ u32 which_bit(u32 v) {
 /* toggle x's n'th bit */
 #define bs_toggle(x, n) ((x)[(n) / 8] ^= (1 << ((n) % 8)))
 
-#if !defined(bitcount)
-i32 bitcount64(uint64_t v) { /* clang-10 favoured bc. 64 bit magic??? */
+#ifndef bitcount
+i32 bitcount64(u64 v) { /* clang-10 favoured bc. 64 bit magic??? */
   i32 r = 0;
   while (v != 0) {
     v &= v - 1;
@@ -169,7 +183,7 @@ i32 bitcount64(uint64_t v) { /* clang-10 favoured bc. 64 bit magic??? */
 #endif
 
 /* from bit twiddling hacks (https://graphics.stanford.edu/~seander/bithacks.html) */
-#if !defined(bitcount32)
+#ifndef bitcount32
 i32 bitcount32(u32 v) { /* gcc favoured (clang converts to popcount, popcount is slower???) */
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
@@ -183,8 +197,8 @@ bool prime(u32 n) {
   if (n == 2 || n == 3 || n == 5 || n == 7) return true;
   if (!(n & 1) || !(n % 3) || !(n % 5) || !(n % 7)) return false;
   if (n < 121) return n > 1;
-
-  for (u32 i = 11; i * i <= n; i += 6)
+  if (!(n % 121) || !(n % 123)) return false; // (127 is first prime after 113)
+  for (u32 i = 125; i * i <= n; i += 6) // start after 121, from 11+6+6+6...
     if (!(n % i) || !(n % (i + 2))) return false;
 
   return true;
@@ -193,7 +207,15 @@ bool prime(u32 n) {
 
 /* just prints a newline */
 void println() {
-  printf("%n");
+  #ifdef COSMOPOLITAN_H_
+    printf("%n");
+  #else
+    #ifdef WIN32
+      printf("\r\n");
+    #else
+      printf("\n");
+    #endif
+  #endif
 }
 
 /* 2 u32s into a u64, `a` goes into "left" (higher) bits */
