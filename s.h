@@ -1,11 +1,8 @@
-/* COPYRIGHT Alex Blandin (c) 2020 */
-/* See LICENSE */
+/* (cosmo)short.hand */
+#ifndef SHORTHAND_H
+#define SHORTHAND_H
 
-/* short.hand (with cosmopolitan libc support) */
-#ifndef SHORTHAND_H_INCLUDED
-#define SHORTHAND_H_INCLUDED
-
-#ifndef COSMOPOLITAN_H_ /* proxy for "noncosmipolitan setup" */
+#ifndef COSMOPOLITAN_H_ /* proxy for "noncosmipolitan" setup */
 #include <assert.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -13,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <math.h>
 #include <time.h>
 #else
@@ -171,7 +169,7 @@ u32 which_bit(u32 v) {
 /* toggle x's n'th bit */
 #define bs_toggle(x, n) ((x)[(n) / 8] ^= (1 << ((n) % 8)))
 
-#ifndef bitcount
+#ifndef bitcount64
 i32 bitcount64(u64 v) { /* clang-10 favoured bc. 64 bit magic??? */
   i32 r = 0;
   while (v != 0) {
@@ -188,6 +186,26 @@ i32 bitcount32(u32 v) { /* gcc favoured (clang converts to popcount, popcount is
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
   return (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+}
+#endif
+
+#ifndef ilog2
+i32 ilog2(u32 x) {
+  return 31 - __builtin_clz(x|1);
+}
+#endif
+
+#ifndef ilog10
+i32 ilog10(u32 x) { /* Lemire and Kendall Willets to the rescue https://lemire.me/blog/2021/06/03/computing-the-number-of-digits-of-an-integer-even-faster/  */
+  static uint64_t table[] = {
+      4294967296,  8589934582,  8589934582,  8589934582,  12884901788,
+      12884901788, 12884901788, 17179868184, 17179868184, 17179868184,
+      21474826480, 21474826480, 21474826480, 21474826480, 25769703776,
+      25769703776, 25769703776, 30063771072, 30063771072, 30063771072,
+      34349738368, 34349738368, 34349738368, 34349738368, 38554705664,
+      38554705664, 38554705664, 41949672960, 41949672960, 41949672960,
+      42949672960, 42949672960};
+  return (x + table[ilog2(x)]) >> 32;
 }
 #endif
 
@@ -246,4 +264,85 @@ void seed_rng() {
   _unseeded = false;
 }
 
-#endif /* SHORTHAND_H_INCLUDED */
+/* Regehr and Cordes make this clean https://blog.regehr.org/archives/1063 https://stackoverflow.com/a/776523 */
+static inline u32 rotl32(u32 n, u32 c) {
+  const u32 mask = (CHAR_BIT*sizeof(n) - 1);
+  c &= mask;
+  return (n << c) | (n >> ((-c)&mask));
+}
+
+static inline u32 rotr32(u32 n, u32 c) {
+  const u32 mask = (CHAR_BIT*sizeof(n) - 1);
+  c &= mask;
+  return (n >> c) | (n << ((-c)&mask));
+}
+
+static inline u64 rotl64(u64 n, u64 c) {
+  const u64 mask = (CHAR_BIT*sizeof(n) - 1);
+  c &= mask;
+  return (n << c) | (n >> ((-c)&mask));
+}
+
+static inline u64 rotr64(u64 n, u64 c) {
+  const u64 mask = (CHAR_BIT*sizeof(n) - 1);
+  c &= mask;
+  return (n >> c) | (n << ((-c)&mask));
+}
+
+/* Justine Tunney here to save the day https://justine.lol/endian.html */
+#define READ16LE(P) ((255 & (P)[1]) << 8 | (255 & (P)[0]))
+#define READ16BE(P) ((255 & (P)[0]) << 8 | (255 & (P)[1]))
+#define READ32LE(P)                                          \
+  ((u32)(255 & (P)[3]) << 030 | (u32)(255 & (P)[2]) << 020 | \
+   (u32)(255 & (P)[1]) << 010 | (u32)(255 & (P)[0]) << 000)
+#define READ32BE(P)                                          \
+  ((u32)(255 & (P)[0]) << 030 | (u32)(255 & (P)[1]) << 020 | \
+   (u32)(255 & (P)[2]) << 010 | (u32)(255 & (P)[3]) << 000)
+#define READ64LE(P)                                          \
+  ((u64)(255 & (P)[7]) << 070 | (u64)(255 & (P)[6]) << 060 | \
+   (u64)(255 & (P)[5]) << 050 | (u64)(255 & (P)[4]) << 040 | \
+   (u64)(255 & (P)[3]) << 030 | (u64)(255 & (P)[2]) << 020 | \
+   (u64)(255 & (P)[1]) << 010 | (u64)(255 & (P)[0]) << 000)
+#define READ64BE(P)                                          \
+  ((u64)(255 & (P)[0]) << 070 | (u64)(255 & (P)[1]) << 060 | \
+   (u64)(255 & (P)[2]) << 050 | (u64)(255 & (P)[3]) << 040 | \
+   (u64)(255 & (P)[4]) << 030 | (u64)(255 & (P)[5]) << 020 | \
+   (u64)(255 & (P)[6]) << 010 | (u64)(255 & (P)[7]) << 000)
+
+#define WRITE16LE(P, V)                        \
+  ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+   (P)[1] = (0x000000000000FF00 & (V)) >> 010, (P) + 2)
+#define WRITE16BE(P, V)                        \
+  ((P)[0] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[1] = (0x00000000000000FF & (V)) >> 000, (P) + 2)
+#define WRITE32LE(P, V)                        \
+  ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+   (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
+   (P)[3] = (0x00000000FF000000 & (V)) >> 030, (P) + 4)
+#define WRITE32BE(P, V)                        \
+  ((P)[0] = (0x00000000FF000000 & (V)) >> 030, \
+   (P)[1] = (0x0000000000FF0000 & (V)) >> 020, \
+   (P)[2] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[3] = (0x00000000000000FF & (V)) >> 000, (P) + 4)
+#define WRITE64LE(P, V)                        \
+  ((P)[0] = (0x00000000000000FF & (V)) >> 000, \
+   (P)[1] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[2] = (0x0000000000FF0000 & (V)) >> 020, \
+   (P)[3] = (0x00000000FF000000 & (V)) >> 030, \
+   (P)[4] = (0x000000FF00000000 & (V)) >> 040, \
+   (P)[5] = (0x0000FF0000000000 & (V)) >> 050, \
+   (P)[6] = (0x00FF000000000000 & (V)) >> 060, \
+   (P)[7] = (0xFF00000000000000 & (V)) >> 070, (P) + 8)
+#define WRITE64BE(P, V)                        \
+  ((P)[0] = (0xFF00000000000000 & (V)) >> 070, \
+   (P)[1] = (0x00FF000000000000 & (V)) >> 060, \
+   (P)[2] = (0x0000FF0000000000 & (V)) >> 050, \
+   (P)[3] = (0x000000FF00000000 & (V)) >> 040, \
+   (P)[4] = (0x00000000FF000000 & (V)) >> 030, \
+   (P)[5] = (0x0000000000FF0000 & (V)) >> 020, \
+   (P)[6] = (0x000000000000FF00 & (V)) >> 010, \
+   (P)[7] = (0x00000000000000FF & (V)) >> 000, (P) + 8)
+
+
+#endif /* SHORTHAND_H */
